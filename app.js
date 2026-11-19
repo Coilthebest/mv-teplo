@@ -411,38 +411,35 @@
     }
   }
 
+  function drawCotton(ctx, hex) {
+    const outline = new Path2D('M187 51 Q156 58 119 74 Q108 80 99 95 L38 175 Q34 181 40 185 L94 217 Q99 219 103 214 L128 181 Q132 237 128 328 L121 504 Q121 518 133 521 Q247 537 367 521 Q380 518 379 504 L372 328 Q368 236 372 181 L397 214 Q401 220 407 217 L460 185 Q467 181 461 175 L401 95 Q391 79 381 74 Q342 58 313 51 Q250 72 187 51 Z');
+    ctx.save();
+    const fabric = ctx.createLinearGradient(45, 98, 455, 162);
+    for (const [at, target, strength] of [[0,0,.11],[.15,255,.04],[.22,0,.07],[.34,255,.05],[.6,255,.02],[.77,0,.055],[.85,255,.035],[1,0,.12]]) {
+      fabric.addColorStop(at, tint(hex, target, strength));
+    }
+    ctx.shadowColor = 'rgba(72, 48, 30, .20)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 5;
+    ctx.fillStyle = fabric;
+    ctx.fill(outline);
+    ctx.restore();
+    const neck = new Path2D('M187 51 Q250 67 313 51 C306 75 284 94 250 95 C217 95 194 77 187 51Z');
+    const rib = ctx.createLinearGradient(250, 52, 250, 95);
+    rib.addColorStop(0, tint(hex, 0, .21));
+    rib.addColorStop(.72, tint(hex, 0, .09));
+    rib.addColorStop(1, hex);
+    ctx.fillStyle = rib;
+    ctx.fill(neck);
+  }
+
   function drawTshirt(ctx) {
     const color = tshirtColors[state.shirtColor];
     const image = state.shirtPrint || state.upload || tshirtExample;
     ctx.save();
     ctx.translate(0, 12);
     ctx.scale(1.8, 1.8);
-    const fabric = ctx.createLinearGradient(40, 60, 450, 530);
-    fabric.addColorStop(0, tint(color.hex, 255, 0.12));
-    fabric.addColorStop(0.35, color.hex);
-    fabric.addColorStop(0.7, tint(color.hex, 0, 0.04));
-    fabric.addColorStop(1, tint(color.hex, 0, 0.11));
-    const outline = new Path2D('M172 46C192 71 215 82 250 82S308 71 328 46L390 75L468 180L403 226L369 181L380 522Q250 549 120 522L131 181L97 226L32 180L110 75Z');
-    ctx.fillStyle = fabric;
-    ctx.fill(outline);
-    ctx.strokeStyle = tint(color.hex, 0, 0.2);
-    ctx.lineWidth = 1.2;
-    ctx.stroke(outline);
-    const collar = new Path2D('M172 46C192 71 215 82 250 82S308 71 328 46L321 62C304 87 281 100 250 100S196 87 179 62Z');
-    ctx.fillStyle = tint(color.hex, 0, 0.09);
-    ctx.fill(collar);
-    ctx.strokeStyle = tint(color.hex, 0, 0.16);
-    ctx.lineWidth = 0.8;
-    ctx.stroke(collar);
-    ctx.strokeStyle = tint(color.hex, 255, 0.24);
-    ctx.lineWidth = 1.6;
-    ctx.stroke(new Path2D('M181 56C201 82 220 91 250 91S299 82 319 56'));
-    ctx.strokeStyle = tint(color.hex, 0, 0.13);
-    ctx.lineWidth = 1;
-    ctx.stroke(new Path2D('M110 75L143 175M390 75L357 175M49 180L99 215M451 180L401 215M131 509Q250 531 369 509'));
-    ctx.globalAlpha = 0.35;
-    ctx.stroke(new Path2D('M140 221L153 346L144 460M359 221L346 346L355 460'));
-    ctx.globalAlpha = 1;
+    drawCotton(ctx, color.hex);
     // Transparent PNGs keep their alpha; uploaded photos keep their original background.
     if (image.naturalWidth || image.width) drawContain(image, 145, 190, 210, 185, ctx);
     const title = state.upload ? $('#caption').value.trim() : 'MUSTANG';
@@ -854,6 +851,13 @@
   window.addEventListener('pagehide', () => { clearTimeout(draftTimer); persistDraft(); });
 
   async function initialize() {
+    const catalog = $('#collection-shirt');
+    const catalogContext = catalog.getContext('2d');
+    catalogContext.setTransform(1.9, 0, 0, 1.9, -25, -46);
+    drawCotton(catalogContext, tshirtColors.white.hex);
+    const everest = new Image();
+    everest.onload = () => drawContain(everest, 144, 145, 212, 252, catalogContext);
+    everest.src = 'assets/everest-print.webp';
     tshirtExample.decoding = 'async';
     tshirtExample.addEventListener('load', () => { if (state.product === 'tshirt') scheduleDraw(); });
     tshirtExample.src = 'assets/mustang-tshirt-print.png';

@@ -66,3 +66,5 @@
 @media (max-width: 680px) {
   .collection-keychain .mini-keychain { width: min(60cqw, 50cqh); }
 }
+
+canvas.shirt-mockup { object-fit: contain; }
