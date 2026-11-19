@@ -8,9 +8,16 @@ let state = {
   status: null,
 };
 
+const API_URL = 'https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m';
+
 async function config() {
-  try { const r = await fetch('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m/api/illustrations/config', { cache: 'no-store' }); if (!r.ok) throw new Error(); return await r.json(); }
-  catch { return { ready: false, unavailable: true }; }
+  try {
+    const r = await fetch(API_URL + '?route=config', { cache: 'no-store' });
+    if (!r.ok) throw new Error();
+    return await r.json();
+  } catch {
+    return { ready: false, unavailable: true };
+  }
 }
 
 async function call(url, options) {
@@ -26,10 +33,15 @@ async function call(url, options) {
 }
 
 function generate(image) {
-  return call('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m/api/illustrations', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ image }) });
+  return call(API_URL + '?route=generate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ image }),
+  });
 }
+
 function poll(id) {
-  return call('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m/api/illustrations?job=' + encodeURIComponent(id));
+  return call(API_URL + '?route=poll&job=' + encodeURIComponent(id));
 }
 
 function showStatus(text, isError = false) {
