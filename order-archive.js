@@ -29,13 +29,13 @@ function orderZip(files) {
   return new Blob([...local,...central,end.bytes],{type:'application/zip'});
 }
 
-async function captionedPng(blob,item) {
-  if (!item.caption && !item.year) return new Uint8Array(await blob.arrayBuffer());
+async function captionedJpeg(blob,item) {
   const picture=await createImageBitmap(blob);
   const canvas=document.createElement('canvas');
   canvas.width=picture.width;canvas.height=picture.height;
   const ctx=canvas.getContext('2d');
   const w=canvas.width,h=canvas.height;
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
   ctx.drawImage(picture,0,0,w,h);
   ctx.save();
   ctx.scale(w/1200,h/1600);
@@ -58,7 +58,7 @@ async function captionedPng(blob,item) {
   ctx.restore();
 
   picture.close();
-  const output=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('PNG')), 'image/png'));
+  const output=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?.type==='image/jpeg'?resolve(b):reject(Error('JPEG')), 'image/jpeg', 0.96));
   canvas.width=canvas.height=1;
   return new Uint8Array(await output.arrayBuffer());
 }

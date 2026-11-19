@@ -7,12 +7,20 @@
     try { image.src = url; await image.decode(); return image; } finally { URL.revokeObjectURL(url); }
   }
   async function config() {
-    try { const r = await fetch('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=config', { cache: 'no-store' }); if (!r.ok) throw new Error(); return await r.json(); }
-    catch { return { ready: false, unavailable: true }; }
+    for (let attempt=0; attempt<2; attempt++) {
+      try {
+        const r=await fetch('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=config',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if (r.ok) {
+          const result=await r.json();
+          if (result.ready || attempt) return result;
+        }
+      } catch {}
+    }
+    return {ready:false,unavailable:true};
   }
   async function call(path, options) {
     let response;
-    try { response = await fetch(path, { ...options, cache: 'no-store', signal: AbortSignal.timeout(60000) }); }
+    try { response = await fetch(path, { ...options, cache: 'no-store', signal: AbortSignal.timeout(125000) }); }
     catch { const error = new Error('Соединение прервалось. Новую обработку автоматически не запускаем.'); error.network = true; throw error; }
     let body;
     try { body = await response.json(); } catch { const error = new Error('Не удалось прочитать ответ сервера. Новую обработку автоматически не запускаем.'); error.network = true; throw error; }

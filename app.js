@@ -323,8 +323,9 @@
     const waitNotice = setTimeout(() => { time.textContent = 'Рисунок занимает чуть больше времени. Ещё немного…'; }, 120000);
     try {
       aiConfig = await AI.config();
-      if (!aiConfig.ready) { aiStatus('Создание иллюстраций временно недоступно. Попробуйте позже.', true); return; }
+      if (!aiConfig.ready) throw new Error('Не удалось подключиться к генерации. Попробуйте ещё раз.');
       if (state.job) aiStatus('Продолжаем обработку вашего фото. Обычно рисунок готов за 1–2 минуты.');
+      let pollFailures = 0;
       let response = state.job ? { status: 'processing', job: state.job, retryAfter: 3 } : await AI.start(state.upload);
       if (response.job) { state.job = response.job; await persistDraft(); }
       const deadline = Date.now() + 10 * 60 * 1000;
@@ -333,7 +334,13 @@
         if (Date.now() > deadline) { const error = new Error('Обработка занимает дольше обычного. Можно продолжить ожидание этой же иллюстрации.'); error.network = true; throw error; }
         await new Promise(resolve => setTimeout(resolve, Math.max(3, Math.min(15, response.retryAfter || 5)) * 1000));
         if (version !== uploadVersion) return;
-        response = await AI.poll(state.job);
+        try {
+          response = await AI.poll(state.job);
+          pollFailures = 0;
+        } catch (error) {
+          if ((!error.network && error.code !== 'gateway_timeout') || ++pollFailures > 3) throw error;
+          response = {status:'processing',retryAfter:3*pollFailures};
+        }
       }
       if (version !== uploadVersion) return;
       try { await applyIllustration(AI.imageBlob(response.image), response.sealedArtwork?.previewMark, true); } catch (error) { error.keepJob = true; throw error; }
@@ -666,8 +673,7 @@
       if (confirmGeneration) {
         await persistDraft();
         if (requestId !== uploadVersion) return;
-        if (aiConfig.ready) runGeneration();
-        else { aiStatus('Создание иллюстраций временно недоступно. Попробуйте позже.'); $('#ai-retry').textContent = 'Проверить подключение'; $('#ai-retry').hidden = false; }
+        await runGeneration();
       }
       return true;
     } catch (error) {

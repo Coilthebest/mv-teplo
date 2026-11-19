@@ -30,11 +30,7 @@
       const result=await request('payment-status',{});
       if(result.status!=='paid') throw Error('unpaid');
       const delivery=result.delivery, files=[];
-      if(!delivery||delivery.demo){
-        const demo=await fetch('assets/couple-art.webp');
-        if(!demo.ok) throw Error('demo');
-        files.push({name:'Пример Teplo.webp',bytes:new Uint8Array(await demo.arrayBuffer())});
-      } else {
+      if (!delivery?.files?.length) throw Error('missing_files');
         for(const [index,item] of delivery.files.entries()){
           progress.textContent='Готовим иллюстрацию '+(index+1)+' из '+delivery.files.length+'…';
           const chunks=[];
@@ -44,12 +40,11 @@
             if(r.last) break;
           }
           const label=[item.caption,item.year].filter(Boolean).join(' ').replace(/[\\/:*?"<>|\x00-\x1f]/g,' ').trim()||'Иллюстрация';
-          files.push({name:String(index+1).padStart(2,'0')+' — '+label+'.png',bytes:await captionedPng(new Blob(chunks,{type:'image/png'}),item)});
+          files.push({name:String(index+1).padStart(2,'0')+' — '+label+'.jpg',bytes:await captionedJpeg(new Blob(chunks,{type:'image/png'}),item)});
         }
-      }
       if (!files.length) throw Error('empty_delivery');
       const single=files.length===1;
-      const imageType=(!delivery||delivery.demo)?'image/webp':'image/png';
+      const imageType='image/jpeg';
       const blob=single?new Blob([files[0].bytes],{type:imageType}):orderZip(files);
       const a=document.createElement('a'),url=URL.createObjectURL(blob);
       a.href=url;a.download=single?files[0].name:'Teplo-'+id.slice(0,12)+'.zip';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
@@ -64,13 +59,11 @@
         const r=await request('payment-status',{});
         if(r.status==='paid'){
           localStorage.setItem(last,id);clearAttempt();
-          const demo=!r.delivery||r.delivery.demo;
-          const single=demo||r.delivery.files.length===1;
-          const info=demo?'Тестовая оплата прошла. Можно скачать пример иллюстрации.':
-            single?(r.physical?'Ваша HD-иллюстрация в подарок.':'Ваша HD-иллюстрация готова.'):
-            (r.physical?'Ваши HD-копии в подарок. ':'')+'Все иллюстрации заказа собраны в один архив.';
-          show('Спасибо вам большое.','Мы вас не подведём. Теперь вы клиент Тепла.',info);
-          control(demo?'Скачать пример иллюстрации':single?'Скачать HD-иллюстрацию · PNG':'Скачать все HD-копии · ZIP',download);
+          const count=r.delivery?.files?.length||0;
+          let info='Файлы заказа пока недоступны. Сохраните эту страницу и откройте её после обновления сервиса.';
+          if (count) info=r.delivery.preview?'Тестовая оплата. Вы можете скачать свои иллюстрации с водяным знаком.':r.physical?'Ваши HD-копии в подарок.':'Ваши HD-копии готовы.';
+          show('Спасибо вам большое.','Мы Вас не подведём, теперь Вы клиент Тепла',info);
+          if (count) control(count>1?'Скачать иллюстрации · ZIP':r.delivery.preview?'Скачать иллюстрацию · JPG':'Скачать HD-иллюстрацию · JPG',download);
           if(!matchMedia('(prefers-reduced-motion: reduce)').matches) for(let n=0;n<28;n++){
             const i=document.createElement('i');i.style.left=Math.random()*100+'%';i.style.background=['#cf9464','#c2a259','#92a493','#d4a397'][n%4];i.style.animationDelay=Math.random()*.6+'s';$('main').append(i);setTimeout(()=>i.remove(),3200);
           }
