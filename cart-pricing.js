@@ -17,7 +17,7 @@
     const rows = items.map(item => ({ ...item, qty: item.product === 'digital' ? 1 : quantity(item.qty), unit: unitPrice(item), discount: 0 }));
     const physical = rows.filter(row => row.product !== 'digital');
     const physicalCount = physical.reduce((sum, row) => sum + row.qty, 0);
-    const artworkKeys = new Set(physical.map(row => row.artworkKey));
+    const artworkKeys = new Set((physicalCount ? rows : []).map(row => row.artworkKey));
     const gifts = rows.filter(row => row.product === 'digital' && artworkKeys.has(row.artworkKey));
     gifts.forEach(row => { row.discount = row.unit; row.freeDigital = true; });
     const types = new Set(physical.map(row => row.product));

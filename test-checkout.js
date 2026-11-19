@@ -17,6 +17,7 @@ window.startTestCheckout = function(getCart) {
   }
   async function check() {
     const result=await request('payment-status',{order:attempt.order});
+    if (result.status==='paid') { location.replace('/thanks.html#'+attempt.order); return; }
     const number=attempt.order.slice(0,12);
     if (result.status==='pending') {
       status.textContent='Заказ '+number+' ожидает тестовой оплаты.';
@@ -39,7 +40,7 @@ window.startTestCheckout = function(getCart) {
       if (!cart.canOrder) throw Error('Проверьте минимальное количество товаров.');
       await window.TeploCheckout.ready;
       const recipient=window.TeploCheckout.validate();
-      if (!recipient.ok) throw Error('Заполните поля получателя тестовыми данными.');
+      if (!recipient.ok) throw Error('Заполните поля получателя.');
       const items=cart.rows.map(r=>({product:r.product,qty:r.qty,format:r.format,shirtColor:r.shirtColor,
         material:r.material,objectId:r.sealedArtwork?.objectId,caption:r.caption,year:r.year,yearLines:r.yearLines,photoHash:r.photoHash}));
       const order={items,pack:cart.pack,total:cart.total,recipient:recipient.data};
@@ -62,6 +63,7 @@ window.startTestCheckout = function(getCart) {
     if (!config.enabled) throw Error();
     button.disabled=false;
     status.textContent='';
+    if(config.mode==='live') {document.querySelector('.cart-checkout-note').textContent='Оплата через СБП. После оплаты вы получите HD-копии.';}
     if (attempt?.order) {window.TeploCart.open();await run();}
   }).catch(()=>{status.textContent='Тестовая касса пока не подключена. Проверьте версию функции и тестовые ключи.';});
 };
