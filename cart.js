@@ -190,4 +190,5 @@
     render();
   })();
   window.TeploCart = Object.freeze({ ready, add, open, spec });
+  window.startTestCheckout(() => ({ ...calculation(), pack }));
 })();
