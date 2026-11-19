@@ -37,3 +37,32 @@
  .collection-card:nth-child(5){grid-column:1/-1;width:calc(50% - 7.5px);justify-self:center}
 }
 @media(prefers-reduced-motion:reduce){.shirt-mockup{transition:none}}
+
+.collection-keychain { container-type: size; }
+.collection-keychain .mini-keychain {
+  position: relative;
+  width: min(44cqw, 49cqh);
+  transform: translateY(7cqh) rotate(-9deg);
+}
+.mini-keychain .mini-ring {
+  top: auto;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  width: 32%;
+  height: auto;
+  aspect-ratio: 1;
+  border-width: 3px;
+  transform: translateX(-50%);
+}
+.mini-keychain .mini-ring::after {
+  left: 50%;
+  top: calc(100% - 2px);
+  width: 6px;
+  height: 10px;
+  transform: translateX(-50%);
+}
+.collection-image.collection-tshirt { background: #f4e1c8; }
+.memory-theatre { touch-action: pan-y pinch-zoom; }
+@media (max-width: 680px) {
+  .collection-keychain .mini-keychain { width: min(60cqw, 50cqh); }
+}

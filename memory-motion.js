@@ -237,6 +237,23 @@
 
   previous.addEventListener('click', () => { void navigate(-1); });
   next.addEventListener('click', () => { void navigate(1); });
+  let swipeStart = null;
+  stage.addEventListener('touchstart', (event) => {
+    const touch = event.touches[0];
+    swipeStart = event.touches.length === 1 && !event.target.closest('button, a')
+      ? { x: touch.clientX, y: touch.clientY } : null;
+  }, { passive: true });
+  stage.addEventListener('touchcancel', () => { swipeStart = null; });
+  stage.addEventListener('touchend', (event) => {
+    if (!swipeStart) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - swipeStart.x;
+    const dy = touch.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.abs(dx) >= 35 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      void navigate(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
   stage.addEventListener('keydown', (event) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
     event.preventDefault();
