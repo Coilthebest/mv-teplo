@@ -94,8 +94,6 @@
     $('#cart-total').textContent = P.money(c.total);
     $('#cart-gifts').hidden = !c.physicalCount;
     $('#cart-gifts').textContent = 'Электронная копия каждого рисунка в HD-качестве — в подарок.';
-    $('#cart-save').disabled = !c.canOrder;
-    $('#cart-save').textContent = c.missing ? `Добавьте ещё ${c.missing} ${c.missing === 1 ? 'вещь' : 'вещи'}` : 'Скачать состав заказа';
     window.TeploCheckout.setOrderState(!!c.physicalCount);
     if (action && focusedId) {
       const replacement = [...$('#cart-items').querySelectorAll('button')].find(button => button.dataset.cartAction === action && button.dataset.id === focusedId && !button.disabled);
@@ -120,25 +118,6 @@
       }
       return { items: rest, pack };
     });
-  }
-  async function saveComposition() {
-    const c = calculation();
-    if (!c.canOrder) return;
-    await window.TeploCheckout.ready;
-    const recipient = window.TeploCheckout.validate();
-    if (!recipient.ok) { notice('Заполните обязательные данные получателя.'); return; }
-    const details = recipient.data;
-    const recipientHTML = `<section class="recipient"><h2>Получатель</h2><p>Имя: ${esc(details.name)}</p><p>Телефон: ${esc(details.phone)}</p>${c.physicalCount ? `${details.city ? `<p>Город: ${esc(details.city)}</p>` : ''}<p>Доставка до ПВЗ Яндекс Маркета: ${esc(details.pickup?.address || details.manualAddress)}</p>${details.pickup ? `<p>ID ПВЗ: ${esc(details.pickup.id)}</p>` : '<small>Адрес ПВЗ указан вручную. Доступность пункта нужно уточнить перед отправкой.</small>'}` : ''}</section>`;
-    const button = $('#cart-save'); button.disabled = true;
-    try {
-      const cards = c.rows.map(row => `<article><div><h2>${esc(P.productName(row))}</h2><p>${esc(spec(row))}</p><p>${esc(row.caption || 'Без надписи')} ${esc(row.year)}</p><p>${row.qty} шт. × ${P.money(row.unit)}${row.discount ? ` · скидка ${P.money(row.discount)}` : ''}</p><strong>${P.money(row.unit * row.qty - row.discount)}</strong></div></article>`).join('');
-      const html = `<!doctype html><html lang="ru"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Teplo — состав заказа</title><style>body{font:15px/1.6 system-ui,sans-serif;background:#fff8ec;color:#62351f;max-width:850px;margin:40px auto;padding:20px}h1,h2{font-family:Georgia,serif}h2{font-size:22px}article{display:flex;gap:25px;border-bottom:1px solid #dfcab0;padding:25px 0;break-inside:avoid}img{width:125px;height:170px;object-fit:contain;background:#f7ead5}small{display:block;color:#8a735e}.total{font-size:24px;font-weight:600}.note{padding:18px;background:#f5e2be}@media(max-width:500px){article{gap:15px}img{width:85px;height:120px}}</style><h1>Teplo · ваши истории</h1><p>Состав заказа от ${new Date().toLocaleDateString('ru-RU')}</p><p class="note">Это сохранённый расчёт, а не оформленный заказ. Он не отправлен в мастерскую и не оплачен.</p>${recipientHTML}${cards}<p>Товары: ${P.money(c.subtotal)}</p>${c.promotions.map(p => `<p>${esc(p.name)} · −${p.rate}%: −${P.money(p.discount)}</p>`).join('')}${c.discount ? `<p>Все скидки и подарки: −${P.money(c.discount)}</p>` : ''}${c.physicalCount ? `<p>Упаковка: ${pack === 'gift' ? 'подарочная' : 'обычная'} · ${P.money(c.packagingCost)} за заказ</p><p>Доставка: бесплатно до ПВЗ Яндекс Маркета</p><p>Электронные копии рисунков из заказа в HD-качестве — в подарок.</p>` : '<p>Электронный заказ: без доставки и упаковки.</p>'}<p class="total">Итого: ${P.money(c.total)}</p><small>Файл содержит список товаров и данные получателя. Передавайте его только тем, кому доверяете. Цены рассчитаны на дату сохранения.</small></html>`;
-      const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
-      const a = document.createElement('a'); a.href = url; a.download = `teplo-состав-заказа-${new Date().toISOString().slice(0, 10)}.html`; document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-      notice('Состав подготовлен к скачиванию. Заказ пока не отправлен.');
-    } catch { notice('Не получилось сохранить состав. Попробуйте ещё раз.'); }
-    finally { render(); }
   }
   document.querySelectorAll('[data-open-cart]').forEach(button => button.addEventListener('click', open));
   $('#close-cart').addEventListener('click', () => dialog.close());
@@ -173,7 +152,6 @@
     try { await transact(() => ({ items: [], pack: 'ordinary' })); document.dispatchEvent(new CustomEvent('teplo:cart-cleared')); notice('Корзина очищена, сохранённые фотографии удалены.'); }
     catch { notice('Не удалось очистить корзину. Попробуйте снова.'); }
   });
-  $('#cart-save').addEventListener('click', saveComposition);
   const ready = (async () => {
     try {
       db = await loadDB();

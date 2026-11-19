@@ -1,11 +1,10 @@
 'use strict';
 window.startTestCheckout = function(getCart) {
-  if (new URLSearchParams(location.search).get('checkout') !== 'test') return;
   const button=document.querySelector('#test-payment');
   const status=document.querySelector('#test-payment-status');
   const key='teplo-test-checkout-v1';
   const endpoint='https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=';
-  button.hidden=false;
+
   let busy=false, attempt;
   try { attempt=JSON.parse(localStorage.getItem(key)); } catch {}
   async function request(route,data) {
@@ -29,7 +28,7 @@ window.startTestCheckout = function(getCart) {
       return;
     }
     status.textContent=result.status==='paid'?'Тестовый заказ '+number+' оплачен. Деньги не списаны.':'Тестовый платёж отменён.';
-    localStorage.removeItem(key);attempt=null;button.textContent='Начать новый тестовый заказ';
+    localStorage.removeItem(key);attempt=null;button.textContent='Оплатить';
   }
   async function run() {
     if (busy) return;
@@ -62,7 +61,7 @@ window.startTestCheckout = function(getCart) {
   request('payment-config').then(async config=>{
     if (!config.enabled) throw Error();
     button.disabled=false;
-    status.textContent='Тестовый магазин. Используйте вымышленные данные получателя.';
+    status.textContent='';
     if (attempt?.order) {window.TeploCart.open();await run();}
   }).catch(()=>{status.textContent='Тестовая касса пока не подключена. Проверьте версию функции и тестовые ключи.';});
 };
