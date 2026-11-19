@@ -7,7 +7,7 @@
     try { image.src = url; await image.decode(); return image; } finally { URL.revokeObjectURL(url); }
   }
   async function config() {
-    try { const r = await fetch('/api/illustrations/config', { cache: 'no-store' }); if (!r.ok) throw new Error(); return await r.json(); }
+    try { const r = await fetch('https://teplo-api.donbaserg.workers.dev/api/illustrations/config', { cache: 'no-store' }); if (!r.ok) throw new Error(); return await r.json(); }
     catch { return { ready: false, unavailable: true }; }
   }
   async function call(path, options) {
@@ -25,9 +25,9 @@
     resize.width = Math.round(image.naturalWidth * scale); resize.height = Math.round(image.naturalHeight * scale);
     resize.getContext('2d').drawImage(image, 0, 0, resize.width, resize.height);
     const photo = resize.toDataURL('image/jpeg', .92);
-    return call('/api/illustrations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: photo }) });
+    return call('https://teplo-api.donbaserg.workers.dev/api/illustrations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: photo }) });
   }
-  function poll(job) { return call('/api/illustrations?job=' + encodeURIComponent(job)); }
+  function poll(job) { return call('https://teplo-api.donbaserg.workers.dev/api/illustrations?job=' + encodeURIComponent(job)); }
   function imageBlob(data) {
     const match = /^data:(image\/(?:bmp|png|jpeg|webp));base64,([A-Za-z0-9+/]+=*)$/.exec(data || '');
     if (!match) throw new Error('Сервер не вернул изображение.');
