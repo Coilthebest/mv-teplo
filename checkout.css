@@ -1,0 +1,63 @@
+/* Recipient details stay beside the personal stories, with delivery kept quiet. */
+.cart-recipient{margin:27px 0 22px;padding-top:27px;border-top:1px solid #e1cdb0}
+.cart-recipient>.eyebrow{font-size:9px;color:#a17950;margin:0 0 10px}
+.cart-recipient h3{font:25px/1.25 Georgia,serif;margin:0 0 23px}
+.recipient-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cart-recipient label:not(.remember-recipient),.pickup-label{display:block;font-size:11px;color:#876446;margin:0 0 9px;line-height:1.5}
+.cart-recipient label>span[aria-hidden],.pickup-label>span{color:#b38656}
+.cart-recipient input[type=text],.cart-recipient input[type=tel],.cart-recipient textarea{width:100%;min-width:0;border:1px solid #dec6a6;border-radius:3px;background:#fffcf6;color:#62351f;padding:13px 12px;font:12px/1.5 system-ui,sans-serif;box-sizing:border-box}
+.cart-recipient input::placeholder,.cart-recipient textarea::placeholder{color:#b1977c;font-size:11px}
+.cart-recipient input[type=text],.cart-recipient input[type=tel]{height:46px}
+.cart-recipient textarea{resize:vertical;min-height:79px}
+.cart-recipient [aria-invalid=true]{border-color:#bd6140!important}
+.recipient-delivery{margin-top:20px}
+.pickup-field{margin-top:20px}
+.choose-pickup{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:15px 13px;border:1px solid #c7a16f;border-radius:4px;background:#f7ead4;color:#79502e;font-size:11px}
+.choose-pickup svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.3;flex-shrink:0}
+.choose-pickup>span:first-of-type{margin-right:auto;text-align:left}
+.pickup-selected{padding:14px;background:#eef0e2;border:1px solid #d7dec1;border-radius:4px;margin-bottom:12px;overflow-wrap:anywhere}
+.pickup-selected>span{display:block;font-size:9px;color:#83915f;margin-bottom:5px}
+.pickup-selected strong{display:block;font-size:12px;font-weight:500;line-height:1.7;color:#69744e}
+.pickup-selected small{font-size:9px;color:#95a075;display:block;margin-top:5px}
+.manual-pickup-toggle,.clear-recipient{background:none;border:0;color:#9b7046;text-decoration:underline;text-underline-offset:4px;font-size:10px;padding:7px 0;margin-top:5px;text-align:left}
+.manual-pickup-field{margin-top:16px}
+.manual-pickup-field p,.pickup-privacy-note,.recipient-storage-note,.digital-contact-note{font-size:9px;line-height:1.8;color:#a48a6d;margin:7px 0 0}
+.pickup-privacy-note{margin-top:9px}
+.digital-contact-note{font-size:11px;background:#f6eddd;padding:12px;margin-top:17px;border-radius:4px}
+.checkout-error{font-size:10px;color:#ae5738;line-height:1.7;margin:7px 0 0}
+.remember-recipient{display:flex;align-items:flex-start;gap:8px;margin-top:22px;font-size:10px;color:#977759;line-height:1.7;cursor:pointer}
+.remember-recipient input{accent-color:#966538;margin:3px 0 0;flex-shrink:0}
+.recipient-storage-note{font-size:9px;margin-top:7px}
+.clear-recipient{font-size:9px;margin-top:7px;color:#aa8b6b}
+.cart-shipping-method{display:block;font-size:9px;line-height:1.6;margin-top:3px;color:#a2876a}
+.pickup-dialog{width:min(950px,calc(100% - 32px));max-width:950px;max-height:calc(100dvh - 32px);padding:0;overflow:auto;border-radius:7px;background:#fffbf3}
+.pickup-dialog-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:23px 26px 16px;border-bottom:1px solid #e5d1b4}
+.pickup-dialog-header .eyebrow{font-size:9px;margin:0 0 8px;color:#a17e56}
+.pickup-dialog h2{font:27px/1.2 Georgia,serif;margin:0;color:#62351f}
+#pickup-city-label{margin:8px 0 0;font-size:12px;color:#a17e56}
+.pickup-map-status{font-size:11px;line-height:1.7;padding:12px 26px;margin:0;color:#9b7954}
+.pickup-frame-slot{height:min(490px,calc(100dvh - 255px));min-height:300px;background:#f5edde}
+.pickup-frame-slot iframe{width:100%;height:100%;display:block;border:0}
+.pickup-dialog-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:15px 26px;font-size:10px;line-height:1.7;color:#9b7a57;border-top:1px solid #e5d1b4}
+.pickup-dialog-footer button{flex-shrink:0;border:0;background:none;text-decoration:underline;text-underline-offset:4px;color:#9a6234;font-size:11px;padding:6px 0}
+@media(max-width:680px){
+ .recipient-fields{grid-template-columns:1fr;gap:17px}
+ .cart-recipient h3{font-size:25px}
+ .cart-recipient input[type=text],.cart-recipient input[type=tel],.cart-recipient textarea{font-size:16px;padding:11px 12px}
+ .cart-recipient input[type=text],.cart-recipient input[type=tel]{height:48px}
+ .cart-recipient input::placeholder,.cart-recipient textarea::placeholder{font-size:11px}
+ .cart-recipient label:not(.remember-recipient),.pickup-label{font-size:11px}
+ .recipient-storage-note,.pickup-privacy-note,.manual-pickup-field p{font-size:10px}
+ .remember-recipient{font-size:11px}
+ .manual-pickup-toggle{font-size:11px}
+ .pickup-dialog{width:calc(100% - 16px);max-height:calc(100dvh - 16px)}
+ .pickup-dialog-header{padding:20px 17px 15px;gap:12px}
+ .pickup-dialog h2{font-size:22px}
+ .pickup-map-status{padding:10px 17px;font-size:10px}
+ .pickup-frame-slot{height:calc(100dvh - 285px);min-height:280px}
+ .pickup-dialog-footer{padding:12px 17px;display:block;font-size:10px}
+ .pickup-dialog-footer button{display:block;font-size:11px;margin-top:5px}
+}
+@media(min-width:801px) and (min-height:850px){.cart-summary{position:sticky;top:140px}}
+
+.choose-pickup .pickup-arrow{width:16px;height:16px}

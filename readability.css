@@ -1,0 +1,248 @@
+/* Readable text for the shop and checkout, without scaling the artwork. */
+:root{--muted:#735f50;--read-note:#795f49}
+body{font-size:16px;line-height:1.65}
+.desktop-nav,.nav-cta{font-size:15px}
+.button{font-size:16px;line-height:1.45;min-height:50px}
+.eyebrow,.hero .eyebrow,.section-heading .eyebrow,.story-heading .eyebrow,.faq-section .eyebrow{font-size:12px;line-height:1.6;letter-spacing:1.4px}
+.hero-description{font-size:17px;line-height:1.8}
+.hero-footnote,.hero-art-caption{font-size:13px;line-height:1.65;color:var(--read-note)}
+.hero-art-caption{left:10%;max-width:86%;text-wrap:pretty}
+.hero-seal{width:140px;height:140px;padding:12px 9px}
+.hero-seal b{font-size:17px;line-height:1.2}
+.hero-seal>span{font-size:9px;letter-spacing:.8px}
+.steps-grid b{font-size:16px;line-height:1.5}
+.steps-grid p>span{font-size:14px;line-height:1.65;color:var(--read-note)}
+.story-text,.memory-heading>p,.builder-explanation,.section-aside{font-size:16px;line-height:1.75;color:var(--read-note)}
+.text-link,.memory-bottom .text-link{font-size:15px;line-height:1.6}
+.motion-status,.memory-mode button,.motion-toggle{font-size:14px}
+.memory-mode button{padding:10px 16px}
+.motion-toggle{min-width:90px;padding-block:10px}
+.memory-caption-title{font-size:17px}
+.memory-caption-year{font-size:12px;color:#846344}
+.demo-badge{font-size:13px}
+.control-heading h3{font-size:17px}
+.control-heading>span{font-size:12px;width:29px;height:29px}
+.upload-zone>span{font-size:16px}
+.upload-zone>small,.input-status{font-size:13px;line-height:1.65;color:var(--read-note)}
+.field-label,.format-label{font-size:14px;line-height:1.6;color:var(--read-note)}
+.field-label>span{font-size:12px}
+input[type=text],select{font-size:16px}
+.product-option{min-height:106px;gap:7px;padding:12px 5px}
+.product-option span,.product-option small{font-size:14px;line-height:1.4}
+.product-option small{color:#80512c}
+.product-option .digital-quality{font-size:12px;line-height:1.3}
+.material-option b{font-size:14px;line-height:1.5}
+.material-option small{font-size:12px;line-height:1.5;color:var(--read-note)}
+.tshirt-color{font-size:13px;padding-block:10px;line-height:1.4;color:var(--read-note)}
+.tshirt-upload-note{font-size:13px;line-height:1.7;color:var(--read-note)}
+.color-dot{width:32px;height:32px}
+.preview-top{font-size:13px;line-height:1.55;flex-wrap:wrap;align-items:center;color:var(--read-note);gap:10px}
+#preview-mode{flex:1 1 190px}
+.reset-button{flex-shrink:0}
+.reset-button span{font-size:13px}
+.preview-empty>strong{font-size:28px;line-height:1.35}
+.preview-empty>p,.preview-empty>.text-link{font-size:15px;line-height:1.75}
+.preview-bottom strong{font-size:18px;line-height:1.5}
+.preview-bottom>div>span{font-size:14px;line-height:1.7;color:var(--read-note)}
+.preview-bottom .preview-price{font-size:26px}
+.preview-actions #add-to-cart{font-size:16px;min-height:56px}
+.preview-actions #view-selection{font-size:14px;min-height:48px}
+.preview-actions #download-button{min-height:48px}
+.preview-disclaimer,.digital-help,.cancel-cart-edit{font-size:13px;line-height:1.75;color:var(--read-note)}
+.order-rules{font-size:14px;line-height:1.65;color:var(--read-note);gap:10px 23px}
+.quantity-field{font-size:14px}
+.quantity-field input{font-size:16px}
+.collection-title h3{font-size:23px;line-height:1.35}
+.collection-card>p{font-size:15px;line-height:1.65;color:var(--read-note)}
+.collection-number{font-size:12px}
+.collection-price{font-size:21px}
+.collection-price span{font-size:14px;line-height:1.6;color:var(--read-note)}
+.collection-note{font-size:13px;line-height:1.75;color:var(--read-note)}
+.digital-offer h3{font-size:27px;line-height:1.4}
+.digital-offer p{font-size:15px;line-height:1.75;color:var(--read-note)}
+.bundle-percent{font-size:36px}
+.bundle-offers b{font-size:17px;line-height:1.5}
+.bundle-offers p span{font-size:15px;line-height:1.7;color:var(--read-note)}
+.bundle-offers strong{font-size:22px;line-height:1.5}
+.bundle-offers strong small{font-size:13px;line-height:1.6;color:var(--read-note)}
+.bundle-offers .bundle-note{font-size:13px;line-height:1.75;color:var(--read-note)}
+.faq-list summary{font-size:17px;line-height:1.6}
+.faq-list details>p{font-size:16px;line-height:1.85;color:var(--read-note)}
+.footer-top>p{font-size:19px}
+.footer-top .text-link{font-size:15px}
+.footer-bottom,.footer-privacy{font-size:13px;line-height:1.7}
+.dialog-summary dt{font-size:13px}
+.dialog-summary dd{font-size:16px;line-height:1.6}
+.dialog-note,.dialog-back{font-size:14px;line-height:1.75}
+.privacy-copy{font-size:16px;line-height:1.85}
+.toast{font-size:14px;line-height:1.6}
+.delivery-copy p>span{font-size:14px}
+.delivery-copy p>span b{font-size:15px}
+.delivery-copy>small{font-size:12px;color:#70502f}
+.cart-toggle{font-size:14px;padding:12px 15px}
+.cart-toggle b{font-size:12px;min-width:24px;height:24px}
+.cart-dialog{width:min(1100px,100%);max-width:1100px}
+.cart-header{padding:24px 28px 20px}
+.cart-header .eyebrow{font-size:12px}
+.cart-header h2{font-size:38px;line-height:1.2}
+.cart-header h2 span{font-size:16px}
+.cart-close{width:44px;height:44px;font-size:29px}
+.cart-layout{grid-template-columns:minmax(0,1fr) 350px;padding:25px 28px 30px;gap:28px}
+.cart-progress strong{font-size:16px;line-height:1.6}
+.cart-progress p{font-size:13px;line-height:1.65;color:var(--read-note)}
+.cart-item{gap:17px;padding:24px 27px 24px 0}
+.cart-item h3{font-size:17px;line-height:1.5}
+.cart-item p{font-size:14px;line-height:1.65;color:var(--read-note)}
+.cart-item .cart-artwork-title{font-size:14px;line-height:1.65}
+.cart-item-tools{gap:5px 15px;margin-top:11px}
+.cart-item-tools button,.cart-clear{font-size:13px;line-height:1.6;min-height:32px;color:#86552d}
+.cart-item-bottom{flex-wrap:wrap;gap:12px;margin-top:16px}
+.cart-quantity button{width:38px;height:38px;font-size:20px}
+.cart-quantity output{font-size:16px;min-width:30px}
+.cart-row-price{margin-left:auto}
+.cart-row-price strong{font-size:18px;line-height:1.5}
+.cart-row-price del,.cart-row-price small{font-size:13px;line-height:1.6;color:var(--read-note)}
+.cart-file-count{font-size:14px}
+.cart-remove{width:35px;height:35px;font-size:27px;right:-3px;top:17px}
+.cart-add-more{font-size:15px;line-height:1.5;padding:16px 12px;min-height:53px}
+.cart-summary{padding:24px 22px;position:static;max-height:none}
+.cart-summary h3{font-size:29px;line-height:1.3;margin-bottom:20px}
+.cart-summary legend{font-size:15px;line-height:1.6}
+.cart-summary label{gap:10px;margin-bottom:15px}
+.cart-summary label b{font-size:15px;line-height:1.6;gap:9px}
+.cart-summary label small{font-size:13px;line-height:1.6;color:var(--read-note)}
+.cart-summary input{width:18px;height:18px;margin-top:4px}
+.cart-discounts p{font-size:14px;line-height:1.65;padding:12px;margin-bottom:13px}
+.cart-discounts .cart-promo-hint{color:var(--read-note)}
+.cart-totals>div{font-size:15px;line-height:1.65;margin-block:13px;gap:13px}
+.cart-totals dt{color:var(--read-note)}
+.cart-totals .cart-grand-total{font-size:28px;line-height:1.4}
+.cart-grand-total dt{font-size:18px}
+.cart-gifts{font-size:14px;line-height:1.7;color:#647146}
+.cart-summary .button{font-size:15px;line-height:1.5;min-height:55px;padding:15px 12px}
+.cart-checkout-note{font-size:12px;line-height:1.75;color:var(--read-note)}
+.cart-storage-note{font-size:13px;line-height:1.75;padding-inline:28px;color:var(--read-note)}
+.cart-shipping-method{font-size:13px;line-height:1.6;color:var(--read-note)}
+.cart-empty p{font-size:16px;line-height:1.8}
+.cart-empty small{font-size:14px;line-height:1.7}
+.cart-floating{font-size:14px;gap:18px;padding:16px 20px}
+.cart-floating strong{font-size:17px}
+.cart-recipient{margin-top:30px;padding-top:28px}
+.cart-recipient>.eyebrow{font-size:12px;color:var(--read-note)}
+.cart-recipient h3{font-size:29px;line-height:1.35;margin-bottom:25px}
+.cart-recipient label:not(.remember-recipient),.pickup-label{font-size:14px;line-height:1.6;color:var(--read-note)}
+.cart-recipient input[type=text],.cart-recipient input[type=tel],.cart-recipient textarea{font-size:16px;line-height:1.5;padding:12px 14px}
+.cart-recipient input[type=text],.cart-recipient input[type=tel]{height:50px}
+.cart-recipient input::placeholder,.cart-recipient textarea::placeholder{font-size:15px;color:#876f58}
+.cart-recipient textarea{min-height:100px}
+.choose-pickup{font-size:15px;line-height:1.5;padding:16px 14px;min-height:58px}
+.choose-pickup svg{width:24px;height:24px}
+.choose-pickup .pickup-arrow{width:18px;height:18px}
+.pickup-selected>span{font-size:13px}
+.pickup-selected strong{font-size:16px;line-height:1.65}
+.pickup-selected small{font-size:13px;line-height:1.6;color:#657447}
+.manual-pickup-toggle,.clear-recipient{font-size:13px;line-height:1.6;min-height:36px;color:#86552d}
+.manual-pickup-field p,.pickup-privacy-note,.recipient-storage-note{font-size:13px;line-height:1.7;color:var(--read-note)}
+.digital-contact-note{font-size:14px;line-height:1.7;color:var(--read-note)}
+.checkout-error{font-size:14px;line-height:1.65;color:#a54728}
+.remember-recipient{font-size:14px;line-height:1.6;color:var(--read-note)}
+.remember-recipient input{width:18px;height:18px;margin-top:3px}
+.pickup-dialog[open]{display:flex;flex-direction:column;height:min(840px,calc(100dvh - 32px));overflow:hidden}
+.pickup-dialog-header,.pickup-map-status,.pickup-dialog-footer{flex-shrink:0}
+.pickup-dialog h2{font-size:30px;line-height:1.3}
+.pickup-dialog-header .eyebrow{font-size:12px}
+#pickup-city-label{font-size:15px;line-height:1.6}
+.pickup-map-status{font-size:14px;line-height:1.6}
+.pickup-frame-slot{height:auto;flex:1 1 auto;min-height:240px}
+.pickup-dialog-footer{font-size:13px;line-height:1.7}
+.pickup-dialog-footer button{font-size:14px;min-height:36px}
+@media(max-width:1100px){.desktop-nav,.nav-cta{font-size:14px}.cart-layout{grid-template-columns:minmax(0,1fr) 330px;gap:24px;padding-inline:24px}}
+@media(max-width:900px){.cart-dialog{max-width:650px}.cart-layout{grid-template-columns:1fr;padding:24px;gap:28px}.cart-summary{position:static;max-height:none;overflow:visible}.recipient-fields{grid-template-columns:1fr}}
+@media(max-width:680px){
+ .hero-description{font-size:16px;line-height:1.8}
+ .hero .button{font-size:16px}
+ .hero-footnote{font-size:13px;line-height:1.7}
+ .hero-seal{width:124px;height:124px;right:1%;padding:11px 8px}
+ .hero-seal b{font-size:15px}
+ .hero-seal>span{font-size:8px;letter-spacing:.6px}
+ .hero-art-caption{font-size:12px;left:6%;max-width:88%;line-height:1.6}
+ .steps-grid b{font-size:16px}
+ .steps-grid p>span{font-size:14px}
+ .memory-heading>p,.builder-explanation,.section-aside{font-size:15px}
+ .motion-status,.memory-mode button,.motion-toggle{font-size:13px}
+ .memory-mode button{padding:9px 12px}
+ .memory-caption-title{font-size:13px;line-height:1.25}
+ .memory-caption-year{font-size:10px;line-height:1.3}
+ .control-heading h3{font-size:17px}
+ .product-option{min-height:105px;padding-inline:3px}
+ .product-option span,.product-option small{font-size:13px}
+ .product-option .digital-quality{font-size:11px}
+ .tshirt-color{font-size:12px}
+ .quantity-field{font-size:13px;gap:8px}
+ .preview-empty>strong{font-size:25px}
+ .preview-empty>p,.preview-empty>.text-link{font-size:14px}
+ .preview-bottom strong{font-size:17px}
+ .preview-bottom>div>span{font-size:14px}
+ .preview-bottom .preview-price{font-size:25px}
+ .order-rules{font-size:13px;line-height:1.7;gap:10px 16px}
+ .collection-title h3{font-size:20px;line-height:1.35}
+ .collection-card>p{font-size:14px;line-height:1.65}
+ .collection-price{font-size:20px}
+ .collection-price span{font-size:13px;line-height:1.65}
+ .digital-offer h3{font-size:23px}
+ .digital-offer p{font-size:14px}
+ .bundle-offers b{font-size:16px}
+ .bundle-offers p span{font-size:14px}
+ .bundle-offers strong{font-size:21px}
+ .bundle-offers strong small{font-size:13px}
+ .faq-list summary{font-size:16px}
+ .faq-list details>p{font-size:15px}
+ .footer-top .text-link{font-size:14px}
+ .footer-top>p{font-size:18px}
+ .footer-bottom,.footer-privacy{font-size:12px}
+ .delivery-banner-inner{min-height:76px;padding-block:6px;gap:10px}
+ .delivery-icon{width:32px;height:32px;padding:5px}
+ .delivery-copy p{gap:4px;line-height:1.2}
+ .delivery-copy strong{font-size:14px}
+ .delivery-copy p>span{font-size:11px;gap:5px;padding:3px 10px}
+ .delivery-copy p>span b{font-size:12px}
+ .delivery-copy>small{font-size:10px;margin-top:3px}
+ .cart-dialog{width:100%;max-width:none}
+ .cart-header{padding:22px 20px 18px}
+ .cart-header h2{font-size:35px}
+ .cart-header .eyebrow{font-size:11px}
+ .cart-layout{padding:22px 20px;gap:26px}
+ .cart-item{gap:13px;padding-right:27px}
+ .cart-item>img{width:75px;height:105px}
+ .cart-item h3{font-size:16px}
+ .cart-item p,.cart-item .cart-artwork-title{font-size:13px}
+ .cart-item-tools button{font-size:13px;min-height:33px}
+ .cart-quantity button{width:35px;height:38px}
+ .cart-quantity output{min-width:25px}
+ .cart-row-price strong{font-size:17px}
+ .cart-row-price del,.cart-row-price small{font-size:12px}
+ .cart-summary{padding:24px 20px}
+ .cart-summary label b,.cart-summary legend,.cart-totals>div{font-size:15px}
+ .cart-summary label small{font-size:13px}
+ .cart-summary .button{font-size:15px}
+ .cart-storage-note{padding-inline:20px}
+ .cart-floating{padding:14px 16px;font-size:13px;gap:15px}
+ .cart-floating strong{font-size:16px}
+ .cart-recipient h3{font-size:27px}
+ .cart-recipient label:not(.remember-recipient),.pickup-label{font-size:14px}
+ .cart-recipient input::placeholder,.cart-recipient textarea::placeholder{font-size:15px}
+ .manual-pickup-toggle,.clear-recipient{font-size:13px}
+ .remember-recipient{font-size:14px}
+ .pickup-dialog[open]{height:calc(100dvh - 16px)}
+ .pickup-dialog h2{font-size:24px}
+ #pickup-city-label{font-size:14px}
+ .pickup-dialog-footer{font-size:13px}
+ .pickup-dialog-footer button{font-size:14px}
+}
+@media(max-width:380px){.delivery-banner-inner{gap:6px}.delivery-icon{width:26px;height:26px;padding:4px}}
+@media(max-height:620px){.pickup-dialog[open]{overflow:auto}.pickup-dialog-header{position:sticky;top:0;z-index:2;background:#fffbf3}.pickup-frame-slot{flex:0 0 300px}}
+
+.hero-art{margin-bottom:2.8rem}
+.hero-art .hero-art-caption{display:block;inset:auto 0 0;transform:translateY(65%);max-width:none;margin:0 auto;padding:0 8px;text-align:center;text-wrap:balance;font:normal clamp(17px,1.6vw,23px)/1.22 var(--serif);letter-spacing:0;color:#603d28}
+.hero-art-caption em{display:block;margin-top:.22em;font-size:.9em;color:#885a37}
+@media(max-width:680px){.hero-art{margin-bottom:2rem}.hero-art .hero-art-caption{font-size:clamp(15px,4.25vw,19px);transform:translateY(40%)}}
