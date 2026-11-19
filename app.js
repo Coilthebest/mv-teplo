@@ -223,7 +223,7 @@
     return AI.draft('put', saved, activeSlot).then(result => {
       if (result === null && !warnedAboutStorage) {
         warnedAboutStorage = true;
-        notify('Браузер не смог сохранить черновик. Скачайте готовую иллюстрацию перед закрытием страницы.');
+        notify('Браузер не смог сохранить черновик. Оставьте страницу открытой, чтобы продолжить работу.');
       }
     });
   }

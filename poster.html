@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style><script src="image-interactions.js" defer></script>
 <title>Подпись для HD-постера · Teplo</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#fbf4e8;color:#4e3022;font:16px/1.5 system-ui,sans-serif}main{max-width:970px;margin:auto;padding:clamp(18px,4vw,52px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start}h1{font:normal 38px/1.1 Georgia,serif;margin:0 0 14px}label{display:block;margin:18px 0 4px}input:not([type=checkbox]){width:100%;padding:11px;border:1px solid #bda98f;border-radius:6px;background:#fffaf2;font:inherit}button{margin-top:20px;padding:13px 20px;border:0;border-radius:6px;background:#623820;color:white;font:inherit}button:disabled{opacity:.45}canvas{width:100%;height:auto;box-shadow:0 8px 25px #59341e20}@media(max-width:650px){main{grid-template-columns:1fr;gap:20px}h1{font-size:31px}}
@@ -8,7 +9,7 @@
 <label for="title">Название</label><input id="title" maxlength="32" placeholder="Эверест">
 <label for="year">Год</label><input id="year" inputmode="numeric" maxlength="4" placeholder="2023">
 <label><input id="lines" type="checkbox" checked> Полоски по бокам года</label>
-<button id="save" disabled>Скачать PNG с подписью</button><p id="status" role="status"></p></section><canvas hidden aria-label="Предпросмотр постера"></canvas></main>
+<p id="status" role="status"></p></section><canvas hidden aria-label="Предпросмотр постера"></canvas></main>
 <script>
 const canvas=document.querySelector('canvas'), ctx=canvas.getContext('2d');
 const input=id=>document.getElementById(id);
@@ -38,16 +39,14 @@ function render(){
   ctx.restore();
 }
 input('file').onchange=async e=>{
-  const current=++revision,file=e.target.files[0];picture=null;canvas.hidden=true;input('save').disabled=true;input('status').textContent='';
+  const current=++revision,file=e.target.files[0];picture=null;canvas.hidden=true;input('status').textContent='';
   if(!file)return;
   const url=URL.createObjectURL(file);
   try{const image=new Image();image.src=url;await image.decode();if(current!==revision)return;
     picture=image;canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
-    render();canvas.hidden=false;input('save').disabled=false;input('status').textContent=canvas.width+' × '+canvas.height+' пикселей';
+    render();canvas.hidden=false;input('status').textContent=canvas.width+' × '+canvas.height+' пикселей';
   }catch{if(current===revision)input('status').textContent='Не удалось открыть изображение. Выбери PNG, JPG или WebP.'}
   finally{URL.revokeObjectURL(url)}
 };
 for(const id of ['title','year','lines'])input(id).oninput=render;
-input('save').onclick=()=>{const name=[input('title').value.trim()||'Teplo',input('year').value.trim()].filter(Boolean).join('-');
-  canvas.toBlob(blob=>{if(!blob){input('status').textContent='Не удалось сохранить PNG.';return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000)},'image/png')};
 </script></html>
