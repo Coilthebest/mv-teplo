@@ -246,3 +246,17 @@ input[type=text],select{font-size:16px}
 .hero-art .hero-art-caption{display:block;inset:auto 0 0;transform:translateY(65%);max-width:none;margin:0 auto;padding:0 8px;text-align:center;text-wrap:balance;font:normal clamp(17px,1.6vw,23px)/1.22 var(--serif);letter-spacing:0;color:#603d28}
 .hero-art-caption em{display:block;margin-top:.22em;font-size:.9em;color:#885a37}
 @media(max-width:680px){.hero-art{margin-bottom:2rem}.hero-art .hero-art-caption{font-size:clamp(15px,4.25vw,19px);transform:translateY(40%)}}
+
+.delivery-copy strong small {
+  display: block;
+  margin-top: 2px;
+  color: #70502f;
+  font-size: .77em;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: normal;
+  text-transform: none;
+}
+@media (max-width: 680px) {
+  .delivery-copy p { flex-direction: column; gap: 6px; }
+}

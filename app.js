@@ -214,7 +214,7 @@
 
   function persistDraft() {
     if (!state.sourceFile || restoring || activeSlot < 0) return;
-    const saved = { storyId, photoHash, sourceFile: state.sourceFile, generatedFile: state.illustrationFile, sealedArtwork: state.sealedArtwork,
+    const saved = { storyId, photoHash, sourceFile: state.sourceFile, generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
       job: state.job, legacy: state.legacy, caption: $('#caption').value, year: $('#year').value, yearLines: $('#year-lines').checked,
       product: state.product, material: state.material, format: $('#product-format').value,
       shirtColor: state.shirtColor, shirtSize: state.shirtSize, qty: $('#item-quantity').value, test: Boolean(aiConfig.test) };
@@ -258,7 +258,7 @@
     state.job = saved.job || null;
     state.legacy = Boolean(saved.legacy);
     if (saved.generatedFile instanceof Blob) {
-      await applyIllustration(saved.generatedFile); state.sealedArtwork = saved.sealedArtwork;
+      await applyIllustration(saved.generatedFile, saved.previewMarked || saved.sealedArtwork?.previewMark); state.sealedArtwork = saved.sealedArtwork;
       aiStatus('Иллюстрация готова. Выберите подарок или измените надпись.');
     } else if (!state.job || !aiConfig.ready) {
       $('#ai-retry').hidden = false;
@@ -290,9 +290,23 @@
     finally { restoring = false; $('.builder').inert = false; renderSlots(); }
     if (state.job && aiConfig.ready) runGeneration();
   }
-  async function applyIllustration(blob) {
-    const image = await AI.loadImage(blob);
+  async function applyIllustration(blob, marked, fresh = false) {
+    let image = await AI.loadImage(blob);
     if (!image.naturalWidth || !image.naturalHeight) throw new Error('Получилось изображение слишком низкого разрешения.');
+    if (!marked) {
+      const preview = document.createElement('canvas');
+      preview.width = image.naturalWidth;
+      preview.height = image.naturalHeight;
+      const context = preview.getContext('2d');
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(0, 0, preview.width, preview.height);
+      markTeploPreview(pixels.data, preview.width, preview.height, 4, preview.width * 4, 0);
+      context.putImageData(pixels, 0, 0);
+      const markedBlob = await AI.asBlob(preview);
+      image = await AI.loadImage(markedBlob);
+      if (fresh) blob = markedBlob;
+    }
+    state.previewMarked = Boolean(marked || fresh);
     state.sourceHash = null; state.illustrationFile = blob; state.illustration = image; state.shirtPrint = AI.printVignette(image); state.legacy = false;
   }
   async function runGeneration() {
@@ -322,7 +336,7 @@
         response = await AI.poll(state.job);
       }
       if (version !== uploadVersion) return;
-      try { await applyIllustration(AI.imageBlob(response.image)); } catch (error) { error.keepJob = true; throw error; }
+      try { await applyIllustration(AI.imageBlob(response.image), response.sealedArtwork?.previewMark, true); } catch (error) { error.keepJob = true; throw error; }
       state.sealedArtwork = response.sealedArtwork; state.job = null;
       await persistDraft(); aiStatus(aiConfig.test ? 'Проверочный ответ получен. Это заранее сохранённый образец, без новой обработки.' : 'Иллюстрация готова. Добавьте название и год — они меняются без новой обработки.');
       completed = true;
@@ -710,7 +724,7 @@
       caption: $('#caption').value.trim(), year: $('#year').value.trim(), yearLines: $('#year-lines').checked,
       qty: state.product === 'digital' ? 1 : TeploPricing.quantity($('#item-quantity').value),
       sourceFile: file, storyId,
-      generatedFile: state.illustrationFile, sealedArtwork: state.sealedArtwork,
+      generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
       testArtwork: Boolean(aiConfig.test && state.illustration),
     };
     button.disabled = true;
@@ -752,7 +766,7 @@
     try {
       if (!await loadUpload(item.sourceFile, { confirmGeneration: false })) return;
       storyId = item.storyId || storyId; photoHash = item.photoHash || null;
-      if (item.generatedFile instanceof Blob) { await applyIllustration(item.generatedFile); state.sealedArtwork = item.sealedArtwork; }
+      if (item.generatedFile instanceof Blob) { await applyIllustration(item.generatedFile, item.previewMarked || item.sealedArtwork?.previewMark); state.sealedArtwork = item.sealedArtwork; }
       else state.legacy = true;
     } catch { notify('Не удалось открыть эскиз из корзины.'); return; }
     finally { restoring = false; $('.builder').inert = false; renderSlots(); }
