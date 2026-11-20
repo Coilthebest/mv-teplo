@@ -262,6 +262,7 @@
     $('#caption').value = ''; $('#year').value = ''; $('#year-lines').checked = true;
     state.printLayout=layout(); state.material = 'matte'; state.shirtColor = 'white'; state.shirtSize = 'M';
     $('#summary-image').removeAttribute('src');
+    $('#cart-add-error').hidden = true;
     setProduct('frame'); updateCaption();
   }
 
@@ -677,6 +678,12 @@
       return;
     }
     const requestId = ++uploadVersion;
+    if (confirmGeneration) {
+      // Keep our own bytes after the iOS photo picker releases its temporary file.
+      try { file = new File([await file.arrayBuffer()], file.name, { type: file.type, lastModified: file.lastModified }); }
+      catch { setStatus('Не удалось прочитать фото. Выберите его ещё раз.', true); return; }
+      if (requestId !== uploadVersion) return;
+    }
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
     image.decoding = 'async';
@@ -757,26 +764,27 @@
 
   async function addToCart() {
     if (!state.upload || !state.sourceFile || savingCart || state.generating || !(state.illustration || state.legacy)) return;
+    $('#cart-add-error').hidden = true;
     savingCart = true; renderSlots();
     const button = $('#add-to-cart');
     const file = state.sourceFile;
     const editId = state.editingCartId;
-    const item = {
-      product: state.product,
-      material: state.product === 'paper' ? state.material : '',
-      format: $('#product-format').value,
-      shirtColor: state.product === 'tshirt' ? state.shirtColor : '',
-      printLayout:state.product==='tshirt'?{...state.printLayout}:undefined,
-      colorName: state.product === 'tshirt' ? tshirtColors[state.shirtColor].name : '',
-      caption: $('#caption').value.trim(), year: $('#year').value.trim(), yearLines: $('#year-lines').checked,
-      qty: state.product === 'digital' ? 1 : TeploPricing.quantity($('#item-quantity').value),
-      sourceFile: file, storyId,
-      generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
-      testArtwork: Boolean(aiConfig.test && state.illustration),
-    };
-    button.disabled = true;
-    button.textContent = 'Сохраняем вашу историю…';
     try {
+      const item = {
+        product: state.product,
+        material: state.product === 'paper' ? state.material : '',
+        format: $('#product-format').value,
+        shirtColor: state.product === 'tshirt' ? state.shirtColor : '',
+        printLayout:state.product==='tshirt'?{...state.printLayout}:undefined,
+        colorName: state.product === 'tshirt' ? tshirtColors[state.shirtColor].name : '',
+        caption: $('#caption').value.trim(), year: $('#year').value.trim(), yearLines: $('#year-lines').checked,
+        qty: state.product === 'digital' ? 1 : TeploPricing.quantity($('#item-quantity').value),
+        sourceFile: file, storyId,
+        generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
+        testArtwork: Boolean(aiConfig.test && state.illustration),
+      };
+      button.disabled = true;
+      button.textContent = 'Сохраняем вашу историю…';
       draw();
       const thumbnail=document.createElement('canvas');
       thumbnail.width=360;thumbnail.height=Math.round(360*canvas.height/canvas.width);
@@ -800,7 +808,9 @@
       window.TeploCart.open();
     } catch (error) {
       const messages = { quantity_limit: 'Для одного варианта можно добавить до 99 штук.', cart_full: 'В корзине уже 50 вариантов. Удалите лишнее или увеличьте количество имеющихся.', removed_item: 'Этот товар уже удалён. Добавьте его в корзину заново.' };
-      notify(messages[error.message] || 'Не удалось сохранить товар. Проверьте доступное место в браузере и попробуйте ещё раз.');
+      const hint = $('#cart-add-error');
+      hint.textContent = messages[error.message] || 'Не удалось добавить товар. Попробуйте ещё раз. Код ошибки: ' + (error.name || 'cart');
+      hint.hidden = false;
       if (error.message === 'removed_item') endCartEdit();
     } finally { savingCart = false; renderSlots(); updatePurchase(); queueDraft(); }
   }

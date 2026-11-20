@@ -43,23 +43,10 @@
     for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
     return new Blob([array], { type: match[1] });
   }
-  let database;
-  async function db() {
-    if (database) return database;
-    database = new Promise((resolve, reject) => { const r = indexedDB.open('teplo-illustration', 1); r.onupgradeneeded = () => r.result.createObjectStore('draft'); r.onsuccess = () => resolve(r.result); r.onerror = reject; });
-    return database;
-  }
+  const records = TeploStore('teplo-illustration', 'draft');
   async function draft(action, value, slot = 0) {
-    try {
-      const database = await db();
-      return await new Promise((resolve, reject) => {
-        const tx = database.transaction('draft', action === 'get' ? 'readonly' : 'readwrite');
-        const store = tx.objectStore('draft');
-        const key = slot === 0 ? 'current' : 'story:' + slot;
-        const request = action === 'get' ? store.get(key) : action === 'delete' ? store.delete(key) : store.put({ ...value, savedAt: Date.now() }, key);
-        let result; request.onsuccess = () => { result = request.result; }; tx.oncomplete = () => resolve(result); tx.onerror = tx.onabort = reject;
-      });
-    } catch { return null; }
+    try { return await records(action, slot === 0 ? 'current' : 'story:' + slot, action === 'put' ? { ...value, savedAt: Date.now() } : undefined); }
+    catch { return null; }
   }
   function fitPaper(ctx, image, width, height) {
     const sourceWidth = image.naturalWidth || image.width;

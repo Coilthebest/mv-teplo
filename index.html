@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#fff8ec">
   <meta name="description" content="Превратите любимую фотографию в тёплую рисованную историю. Персональные постеры в рамке и без, магниты, брелоки, наклейки и футболки с вашим принтом.">
   <title>Teplo — мастерская воспоминаний</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" sizes="120x120" type="image/png">
   <link rel="stylesheet" href="styles.css?v=framed-hero-soft-steps">
   <link rel="stylesheet" href="memories.css?v=gallery-arrows">
   <link rel="stylesheet" href="tshirt.css?v=guides-eta">
@@ -19,11 +19,12 @@
   <script src="checkout-rules.js?v=no-city-field" defer></script>
   <script src="checkout.js?v=guides-eta" defer></script>
   <script src="test-checkout.js?v=guides-eta" defer></script>
-  <script src="cart.js?v=shirt-layout4" defer></script>
+  <script src="story-storage.js?v=1" defer></script>
+  <script src="cart.js?v=safari-bytes" defer></script>
   <link rel="stylesheet" href="illustration.css?v=drawing-ready">
-  <script src="illustration.js?v=shirt-layout4" defer></script>
+  <script src="illustration.js?v=safari-bytes" defer></script>
   <script src="preview-mark.js" defer></script>
-  <script src="app.js?v=print150" defer></script>
+  <script src="app.js?v=safari-bytes" defer></script>
   <script src="memory-motion.js?v=swipe" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -196,7 +197,8 @@
               <div class="story-grid" id="story-grid" role="group" aria-labelledby="stories-title"></div>
             </section>
             <div class="preview-bottom"><div><strong id="product-name">История в рамке</strong><span id="product-spec">10 × 15 см</span></div><strong class="preview-price" id="preview-price">760 ₽</strong></div>
-            <div class="preview-actions"><button id="add-to-cart" class="button button-primary" disabled>Добавить в корзину <span aria-hidden="true">+</span></button><button id="view-selection" class="button button-outline" disabled>Посмотреть эскиз <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button></div>
+            <div class="preview-actions"><button type="button" id="add-to-cart" class="button button-primary" disabled>Добавить в корзину <span aria-hidden="true">+</span></button><button id="view-selection" class="button button-outline" disabled>Посмотреть эскиз <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button></div>
+            <p id="cart-add-error" role="alert" hidden></p>
             <button type="button" id="cancel-cart-edit" class="cancel-cart-edit" hidden>Отменить редактирование товара</button>
             <p class="preview-disclaimer">Здесь показан эскиз изделия с вашей иллюстрацией. Цвет и пропорции готового изделия могут отличаться. HD-файл можно получить после оплаты заказа.</p>
           </div>

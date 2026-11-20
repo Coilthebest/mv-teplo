@@ -5,38 +5,14 @@
   const dialog = $('#cart-dialog');
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const notice = message => document.dispatchEvent(new CustomEvent('teplo:notice', { detail: message }));
-  let items = [], pack = 'ordinary', db = null, queue = Promise.resolve();
+  let items = [], pack = 'ordinary', queue = Promise.resolve();
   const previewUrls = new Map();
   const signature = item => JSON.stringify([item.artworkKey, item.product, item.material, item.format,item.shirtColor,item.product==='tshirt'?printSpec(item):'']);
   const calculation = () => P.calculate(items, pack);
   const thingWord = n => ({ one: 'вещь', few: 'вещи', many: 'вещей', other: 'вещи' })[new Intl.PluralRules('ru-RU').select(n)];
-  function loadDB() {
-    return new Promise((resolve, reject) => {
-      let expired=false;
-      const request = indexedDB.open('teplo-cart', 1);
-      const timer=setTimeout(()=>{expired=true;reject(Error('storage_timeout'));},5000);
-      request.onupgradeneeded = () => request.result.createObjectStore('cart');
-      request.onsuccess = () => { clearTimeout(timer); if(expired) request.result.close(); else resolve(request.result); };
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => reject(new Error('blocked'));
-    });
-  }
-  function readSaved() {
-    return new Promise((resolve, reject) => {
-      const request = db.transaction('cart').objectStore('cart').get('current');
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-  }
-  function persist(nextItems, nextPack) {
-    if (!db) return Promise.resolve();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('cart', 'readwrite');
-      tx.objectStore('cart').put({ version: 1, items: nextItems, pack: nextPack }, 'current');
-      tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error || new Error('save_failed'));
-    });
+  const records = TeploStore('teplo-cart', 'cart');
+  function persist(items, pack) {
+    return records('put', 'current', { version: 1, items, pack });
   }
   function transact(change) {
     const job = queue.then(async () => {
@@ -44,7 +20,6 @@
       const next = change(items.map(item => ({ ...item })), pack);
       try { await persist(next.items, next.pack); }
       catch(err){
-        if(!['QuotaExceededError','UnknownError','InvalidStateError','DataCloneError','AbortError','SecurityError'].includes(err?.name)) throw err;
         $('#cart-storage-note').textContent='Корзина доступна в этой вкладке. Браузер не смог сохранить последнее изменение на устройстве.';
       }
       items = next.items; pack = next.pack;
@@ -164,15 +139,12 @@
   });
   const ready = (async () => {
     try {
-      db = await loadDB();
-      db.onversionchange = () => { db.close(); db = null; };
-      const saved = await readSaved();
+      const saved = await records('get', 'current');
       if (saved?.version === 1 && Array.isArray(saved.items)) {
         items = saved.items.filter(item => P.unitPrice(item) && item.preview instanceof Blob && item.sourceFile instanceof Blob).slice(0, 50);
         pack = saved.pack === 'gift' ? 'gift' : 'ordinary';
       }
     } catch {
-      db = null;
       $('#cart-storage-note').textContent = 'Хранилище браузера недоступно. Корзина работает до закрытия или обновления этой страницы.';
     }
     render();
