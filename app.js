@@ -16,8 +16,8 @@
   const products = {
     digital: { name: 'Электронная версия в HD-качестве', formats: ['PNG · электронный файл'] },
     frame: { name: 'История в рамке', formats: ['10 × 15 см'] },
-    magnet: { name: 'Маленькая история на магните', formats: ['7 × 5 см', '6 × 9 см (рекомендуем)', '10 × 7 см', '13 × 9 см', '15 × 10 см'], defaultFormat: '6 × 9 см (рекомендуем)' },
-    keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см'] },
+    magnet: { name: 'Маленькая история на магните', formats: Object.keys(TeploPricing.magnets), defaultFormat: '6 × 9 см (рекомендуем)' },
+    keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см', 'Акриловый · 35 × 58 мм', 'Акриловый · 40 × 56 мм'] },
     paper: { name: 'История без рамки', formats: ['10 × 15 см'] },
     tshirt: { name: 'Футболка с вашей историей', formats: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], defaultFormat: 'M' },
   };
@@ -111,9 +111,9 @@
     mode.replaceChildren();
     const dot = document.createElement('span');
     dot.className = 'dot';
-    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Проверочный образец · без генерации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : isTshirt ? 'Пример футболки · загрузите своё фото' : 'Начнём с вашей фотографии'));
-    $('#preview-stage').classList.toggle('is-empty', !hasPhoto && !isTshirt);
-    $('#preview-empty').hidden = hasPhoto || isTshirt;
+    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Проверочный образец · без генерации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : isTshirt ? 'Пример футболки · загрузите своё фото' : state.product === 'magnet' ? 'Пример магнита · выберите формат' : 'Начнём с вашей фотографии'));
+    $('#preview-stage').classList.toggle('is-empty', !hasPhoto && !isTshirt && state.product !== 'magnet');
+    $('#preview-empty').hidden = hasPhoto || isTshirt || state.product === 'magnet';
     $('#stage-annotation').textContent = 'Ваш момент. Ваша история.';
     $('.preview-disclaimer').textContent = state.illustration ? isTshirt ? 'Принт без внешней бумажной подложки. Проверьте светлые детали на эскизе: цвет и посадка готовой футболки могут отличаться. HD-файл иллюстрации сохраняется отдельно.' : defaultDisclaimer : isTshirt
       ? hasPhoto ? 'Здесь показана футболка с вашим исходным изображением. Фон фото в демоверсии сохраняется; PNG с прозрачностью примеряется без подложки. Цвет и посадка готового изделия могут отличаться.' : 'Так может выглядеть футболка с готовой иллюстрацией без бумажной подложки. Загрузите своё фото, чтобы собрать личный эскиз. Цвет и посадка готового изделия могут отличаться.'
@@ -565,8 +565,13 @@
       g.fillRect(65,218,110,147);
     } else if (view === 'keychain') {
       g.translate(450,550); g.rotate(-.09);
-      g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-218,-202,436,576,21); g.fill();
-      g.drawImage(poster,-205,-189,410,547);
+      const format = state.product === 'keychain' ? $('#product-format').value : '';
+      const bodyWidth = format.includes('35 × 58') ? 576 * 35 / 58 : format.includes('40 × 56') ? 576 * 40 / 56 : 436;
+      g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-bodyWidth/2,-202,bodyWidth,576,21); g.fill();
+      const inner = bodyWidth - 26;
+      g.fillStyle = '#f7e8d4';
+      g.fillRect(-inner/2,-189,inner,547);
+      drawContain(poster,-inner/2,-189,inner,547,g);
       g.strokeStyle = '#93948c'; g.lineWidth = 15;
       g.beginPath(); g.arc(0,-345,97,0,2*Math.PI); g.stroke();
       g.strokeStyle = '#d4d4c9'; g.lineWidth = 4; g.stroke();
@@ -588,7 +593,7 @@
     if(!matchMedia('(max-width:800px)').matches) return;
     const mini=$('#choice-canvas'),g=mini.getContext('2d');
     g.clearRect(0,0,mini.width,mini.height);
-    if(state.upload || state.product==='tshirt') drawContain(canvas,0,0,mini.width,mini.height,g);
+    if(state.upload || state.product==='tshirt' || state.product==='magnet') drawContain(canvas,0,0,mini.width,mini.height,g);
     else if(choiceExample.naturalWidth){
       if(['frame','keychain','sticker'].includes(giftView())) renderGift(mini,giftView(),choiceExample);
       else drawContain(choiceExample,0,0,mini.width,mini.height,g);
@@ -626,7 +631,10 @@
       drawTshirt(ctx);
       return;
     }
-    if (!state.upload) return;
+    if (!state.upload) {
+      if (state.product === 'magnet' && choiceExample.naturalWidth) AI.fitPaper(ctx, choiceExample, canvas.width, height);
+      return;
+    }
     if (state.illustration) {
       if (state.product === 'magnet' || state.product === 'digital') {
         AI.fitPaper(ctx, poster, canvas.width, height);
@@ -862,7 +870,28 @@
   $$('.product-option').forEach((button) => button.addEventListener('click', () => setProduct(button.dataset.product)));
   $$('[data-choose-product]').forEach((link) => link.addEventListener('click', () => {
     setProduct(link.dataset.chooseProduct, link.dataset.chooseMaterial);
+    if (link.dataset.chooseFormat) {
+      $('#product-format').value = link.dataset.chooseFormat;
+      updateProductSpec();
+    }
   }));
+  const nextKey = $('#next-key-example');
+  const keyPhoto = $('#key-example-photo');
+  const keyLink = $('#key-example-link');
+  const examples = [
+    { image: 'key-hike', title: 'Великий поход', size: '35 × 58 мм' },
+    { image: 'key-cafe', title: 'Albert & Sofia', size: '40 × 56 мм' }
+  ];
+  let keyIndex = 0;
+  nextKey.addEventListener('click', () => {
+    keyIndex = (keyIndex + 1) % examples.length;
+    const example = examples[keyIndex];
+    keyPhoto.src = 'assets/' + example.image + '.webp';
+    keyPhoto.alt = 'Акриловый брелок «' + example.title + '»';
+    keyLink.dataset.chooseFormat = 'Акриловый · ' + example.size;
+    $('#key-example-size').textContent = example.size;
+    nextKey.querySelector('small').textContent = (keyIndex + 1) + ' / 2';
+  });
   $('#caption').addEventListener('input', updateCaption);
   $('#year-lines').addEventListener('change', updateCaption);
   $('#year').addEventListener('input', () => {

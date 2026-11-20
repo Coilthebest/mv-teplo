@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="tshirt.css?v=guides-eta">
   <script src="memories.js?v=lia-birthday" defer></script>
   <link rel="stylesheet" href="cart.css?v=paid-preview-2">
-  <script src="cart-pricing.js?v=hd-order" defer></script>
+  <script src="cart-pricing.js?v=magnet-sizes1" defer></script>
   <link rel="stylesheet" href="checkout.css?v=yandex-pickup-3">
   <link rel="stylesheet" href="readability.css?v=delivery-4">
   <script src="checkout-rules.js?v=no-city-field" defer></script>
@@ -24,10 +24,20 @@
   <link rel="stylesheet" href="illustration.css?v=drawing-ready">
   <script src="illustration.js?v=safari-bytes" defer></script>
   <script src="preview-mark.js" defer></script>
-  <script src="app.js?v=safari-bytes" defer></script>
+  <script src="app.js?v=real-works1" defer></script>
   <script src="memory-motion.js?v=swipe" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
+  <style>
+    .examples-jump{display:inline-flex;align-items:center;gap:.8rem;min-height:44px;padding:5px 15px;margin:0 0 15px;border:1px solid #b68d63;border-radius:5px;background:#fff8eb;color:#62351f;font-size:14px;text-decoration:none}
+    .examples-jump:hover,.examples-jump:focus-visible{background:#f4e3c9}
+    .collection-image .work-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .key-example{display:grid;min-width:0}
+    .key-example>.collection-card,.key-switch-track{grid-area:1/1}
+    .key-switch-track.collection-image:after{display:none}.key-switch-track.collection-image{background:transparent;position:relative;align-self:start;pointer-events:none}
+    #next-key-example{position:absolute;bottom:10px;right:10px;pointer-events:auto;min-width:60px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #cead88;border-radius:24px;background:#fff8ed;color:#59361e;font-size:21px;cursor:pointer}
+    #next-key-example small{font-size:11px}
+  </style>
 </head>
 <body>
   <a class="skip-link" href="#constructor">Перейти к конструктору</a>
@@ -143,6 +153,7 @@
             </div>
             <div class="control-group last-control">
               <div class="control-heading"><span>03</span><h3>На чём сохраним?</h3></div>
+              <a href="#collection" class="examples-jump">Примеры реальных работ <span aria-hidden="true">↓</span></a>
               <div class="product-options" role="group" aria-label="Товар">
                 <button class="product-option selected" data-product="frame" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1"/><rect x="8" y="6" width="8" height="12"/></svg><span>Иллюстрация в рамке</span><small>760 ₽</small></button>
                 <button class="product-option" data-product="magnet" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="m8 14 3-4 5 6M9 8h.1"/></svg><span>Магнит</span><small>от 600 ₽</small></button>
@@ -207,11 +218,17 @@
     </section>
 
     <section class="collection-section container" id="collection" aria-labelledby="collection-title">
-      <div class="section-heading"><div><p class="eyebrow">Маленькие вещи. Большой смысл.</p><h2 id="collection-title">Пусть хорошее <em>будет рядом.</em></h2></div><p class="section-aside">Одна иллюстрация —<br>ваши способы сказать «помню».</p></div>
+      <div class="section-heading"><div><p class="eyebrow">Примеры реальных работ</p><h2 id="collection-title">Пусть хорошее <em>будет рядом.</em></h2></div><p class="section-aside">Одна иллюстрация —<br>ваши способы сказать «помню».</p></div>
       <div class="collection-grid">
         <a class="collection-card" href="#constructor" data-choose-product="frame"><div class="collection-image collection-frame"><div class="mini-frame"><img src="assets/matchday-art.webp" alt="Постер Matchday в деревянной рамке" loading="lazy" width="1086" height="1448"></div><span class="collection-number">01 /</span></div><div class="collection-title"><h3>Постер в рамке</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Для дома, в который хочется возвращаться</p><div class="collection-price">760 ₽ <span>10 × 15 см</span></div></a>
-        <a class="collection-card" href="#constructor" data-choose-product="magnet"><div class="collection-image collection-magnet"><div class="mini-magnet"><img src="assets/balloon-art.webp" alt="Магнит с иллюстрацией воздушного шара" loading="lazy" width="1086" height="1448"></div><span class="collection-number">02 /</span></div><div class="collection-title"><h3>Магнит</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Маленькое «а помнишь?» каждый день</p><div class="collection-price">от 600 ₽ <span>6 × 9 см · рекомендуем</span></div></a>
-        <a class="collection-card" href="#constructor" data-choose-product="keychain"><div class="collection-image collection-keychain"><div class="mini-keychain"><span class="mini-ring" aria-hidden="true"></span><img src="assets/new-year.webp" alt="Брелок с семейной иллюстрацией «Новый год 2026»" loading="lazy" width="540" height="720"></div><span class="collection-number">03 /</span></div><div class="collection-title"><h3>Брелок</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Самое близкое — всегда с собой</p><div class="collection-price">650 ₽ <span>3 × 4 см</span></div></a>
+        <a class="collection-card" href="#constructor" data-choose-product="magnet"><div class="collection-image collection-magnet"><img class="work-photo" src="assets/magnets.webp" alt="Три магнита разных форматов с иллюстрациями Гусь-Железный, День рождения Лии и Albert &amp; Sofia" loading="lazy"><span class="collection-number">02 /</span></div><div class="collection-title"><h3>Магнит</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Маленькое «а помнишь?» каждый день</p><div class="collection-price">от 600 ₽ <span>6 × 9 см · рекомендуем</span></div></a>
+        <div class="key-example">
+          <a class="collection-card" id="key-example-link" href="#constructor" data-choose-product="keychain" data-choose-format="Акриловый · 35 × 58 мм">
+            <div class="collection-image collection-keychain"><img class="work-photo" id="key-example-photo" src="assets/key-hike.webp" alt="Акриловый брелок «Великий поход»" loading="lazy"><span class="collection-number">03 /</span></div>
+            <div class="collection-title"><h3>Брелок</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Самое близкое — всегда с собой</p><div class="collection-price">650 ₽ <span id="key-example-size" aria-live="polite">35 × 58 мм</span></div>
+          </a>
+          <div class="key-switch-track collection-image"><button type="button" id="next-key-example" aria-label="Следующий пример брелока" aria-controls="key-example-photo"><small>1 / 2</small> →</button></div>
+        </div>
         <a class="collection-card" href="#constructor" data-choose-product="paper" data-choose-material="sticker"><div class="collection-image collection-sticker">
           <svg class="wine-bottle" viewBox="0 0 240 440" role="img" aria-labelledby="wine-sticker-title"><title id="wine-sticker-title">Наклейка Teplo с иллюстрацией пары на винной бутылке</title>
             <defs><linearGradient id="wine-glass" x1="0" x2="1"><stop stop-color="#1c2d25"/><stop offset=".18" stop-color="#3c4a30"/><stop offset=".38" stop-color="#4e5938"/><stop offset=".58" stop-color="#2a3c2b"/><stop offset="1" stop-color="#172b22"/></linearGradient><linearGradient id="wine-foil" x1="0" x2="1"><stop stop-color="#6c382b"/><stop offset=".4" stop-color="#a16d4f"/><stop offset="1" stop-color="#65392c"/></linearGradient><linearGradient id="wine-label" x1="0" x2="1"><stop stop-color="#543e2218"/><stop offset=".3" stop-color="#ffffff10"/><stop offset=".65" stop-color="#fff0"/><stop offset="1" stop-color="#38250f20"/></linearGradient><clipPath id="wine-label-clip"><rect x="65" y="218" width="110" height="147" rx="2"/></clipPath></defs>
