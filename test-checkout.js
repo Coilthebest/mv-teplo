@@ -5,7 +5,7 @@ window.startTestCheckout = function(getCart) {
   const key='teplo-test-checkout-v1';
   const endpoint='https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=';
 
-  let busy=false, attempt;
+  let busy=false, attempt, supportsPlacement=false;
   try { attempt=JSON.parse(localStorage.getItem(key)); } catch {}
   async function request(route,data) {
     const res=await fetch(endpoint+route,{method:data?'POST':'GET',cache:'no-store',
@@ -41,7 +41,9 @@ window.startTestCheckout = function(getCart) {
       await window.TeploCheckout.ready;
       const recipient=window.TeploCheckout.validate();
       if (!recipient.ok) throw Error('Заполните поля получателя.');
-      const items=cart.rows.map(r=>({product:r.product,qty:r.qty,format:r.product==='tshirt'?r.format+' · '+window.TeploCart.printSpec(r):r.format,shirtColor:r.shirtColor,
+      const needsPlacement = cart.rows.some(r => r.product !== 'tshirt' && r.printLayout && (r.printLayout.scale !== 100 || r.printLayout.x || r.printLayout.y));
+      if (needsPlacement && !supportsPlacement) throw Error('Приём заказов с индивидуальным расположением принта скоро откроется. Ваш макет сохранён в корзине.');
+      const items=cart.rows.map(r=>({product:r.product,qty:r.qty,printLayout:r.printLayout,format:!supportsPlacement && r.product==='tshirt'?r.format+' · '+window.TeploCart.printSpec(r):r.format,shirtColor:r.shirtColor,
         material:r.material,objectId:r.sealedArtwork?.objectId,caption:r.caption,year:r.year,yearLines:r.yearLines,photoHash:r.photoHash}));
       const order={items,pack:cart.pack,total:cart.total,recipient:recipient.data};
       const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(order)));
@@ -62,6 +64,7 @@ window.startTestCheckout = function(getCart) {
   button.disabled=true;
   request('payment-config').then(async config=>{
     if (!config.enabled) throw Error();
+    supportsPlacement=config.printLayout===true;
     button.disabled=false;
     status.textContent='';
     if(config.mode==='live') {document.querySelector('.cart-checkout-note').textContent='Оплата через СБП. После оплаты вы получите HD-копии.';}

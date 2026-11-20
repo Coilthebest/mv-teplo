@@ -36,6 +36,7 @@ async function captionedJpeg(blob,item) {
   const ctx=canvas.getContext('2d');
   const w=canvas.width,h=canvas.height;
   ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  placeTeploPrint(ctx,0,0,w,h,item.printLayout, () => {
   ctx.drawImage(picture,0,0,w,h);
   ctx.save();
   ctx.scale(w/1200,h/1600);
@@ -57,6 +58,7 @@ async function captionedJpeg(blob,item) {
   }
   ctx.restore();
 
+  });
   picture.close();
   const output=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?.type==='image/jpeg'?resolve(b):reject(Error('JPEG')), 'image/jpeg', 0.96));
   canvas.width=canvas.height=1;

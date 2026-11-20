@@ -38,7 +38,10 @@
     const bound=(v,min,max,initial)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):initial;
     return {scale:bound(value.scale,65,150,100),x:bound(value.x,-100,100,0),y:bound(value.y,-100,100,0)};
   }
-  state.printLayout=layout();
+  state.layouts = {};
+  function placement(view = giftView()) {
+    return state.layouts[view] || (state.layouts[view] = layout());
+  }
   const choiceExample=new Image();
   choiceExample.onload=()=>scheduleDraw();
   choiceExample.src='assets/couple-art.webp';
@@ -111,9 +114,9 @@
     mode.replaceChildren();
     const dot = document.createElement('span');
     dot.className = 'dot';
-    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Проверочный образец · без генерации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : isTshirt ? 'Пример футболки · загрузите своё фото' : state.product === 'magnet' ? 'Пример магнита · выберите формат' : 'Начнём с вашей фотографии'));
-    $('#preview-stage').classList.toggle('is-empty', !hasPhoto && !isTshirt && state.product !== 'magnet');
-    $('#preview-empty').hidden = hasPhoto || isTshirt || state.product === 'magnet';
+    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Проверочный образец · без генерации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : 'Пример изделия · загрузите своё фото'));
+    $('#preview-stage').classList.remove('is-empty');
+    $('#preview-empty').hidden = true;
     $('#stage-annotation').textContent = 'Ваш момент. Ваша история.';
     $('.preview-disclaimer').textContent = state.illustration ? isTshirt ? 'Принт без внешней бумажной подложки. Проверьте светлые детали на эскизе: цвет и посадка готовой футболки могут отличаться. HD-файл иллюстрации сохраняется отдельно.' : defaultDisclaimer : isTshirt
       ? hasPhoto ? 'Здесь показана футболка с вашим исходным изображением. Фон фото в демоверсии сохраняется; PNG с прозрачностью примеряется без подложки. Цвет и посадка готового изделия могут отличаться.' : 'Так может выглядеть футболка с готовой иллюстрацией без бумажной подложки. Загрузите своё фото, чтобы собрать личный эскиз. Цвет и посадка готового изделия могут отличаться.'
@@ -134,7 +137,7 @@
     $('#product-name').textContent = selectedProductName();
     $('#paper-options').hidden = key !== 'paper';
     $('#tshirt-options').hidden = key !== 'tshirt';
-    $('#print-controls').hidden=key!=='tshirt';
+    $('#print-controls').hidden=false;
     $('#art-object').classList.remove('aligning');
     $('.format-label').textContent = key === 'tshirt' ? 'Размер футболки' : 'Формат';
     updateTshirtControls();
@@ -154,7 +157,7 @@
   function updateTshirtControls() {
     for(const key of ['scale','x','y']){
       const slider=$('#print-'+key);
-      slider.value=state.printLayout[key];
+      slider.value=placement()[key];
       slider.previousElementSibling.value=slider.value+'%';
     }
     setPressed($$('.tshirt-color'), 'shirtColor', state.shirtColor);
@@ -181,7 +184,7 @@
   }
 
   function currentCanvasHeight() {
-    if (state.product === 'digital' && state.illustration) return 1200;
+    if (state.product === 'digital') return 1200;
     if (state.product === 'tshirt') return 1080;
     if (state.product === 'magnet') {
       const dimensions = $('#product-format').value.match(/(\d+) × (\d+)/);
@@ -233,12 +236,16 @@
     $('#stories-count').textContent = slots.filter(Boolean).length + ' из 10';
   }
 
+  function structuredLayouts() {
+    return Object.fromEntries(Object.entries(state.layouts).map(([view, value]) => [view, layout(value)]));
+  }
+
   function persistDraft() {
     if (!state.sourceFile || restoring || activeSlot < 0) return;
     const saved = { storyId, photoHash, sourceFile: state.sourceFile, generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
       job: state.job, legacy: state.legacy, caption: $('#caption').value, year: $('#year').value, yearLines: $('#year-lines').checked,
       product: state.product, material: state.material, format: $('#product-format').value,
-      shirtColor: state.shirtColor, shirtSize: state.shirtSize, printLayout:{...state.printLayout}, qty: $('#item-quantity').value, test: Boolean(aiConfig.test) };
+      shirtColor: state.shirtColor, shirtSize: state.shirtSize, layouts:structuredLayouts(), qty: $('#item-quantity').value, test: Boolean(aiConfig.test) };
     slots[activeSlot] = saved;
     renderSlots();
     return AI.draft('put', saved, activeSlot).then(result => {
@@ -266,7 +273,7 @@
     state.editingCartId = null;
     $('#item-quantity').value = 1;
     $('#caption').value = ''; $('#year').value = ''; $('#year-lines').checked = true;
-    state.printLayout=layout(); state.material = 'matte'; state.shirtColor = 'white'; state.shirtSize = 'M';
+    state.layouts={}; state.material = 'matte'; state.shirtColor = 'white'; state.shirtSize = 'M';
     $('#summary-image').removeAttribute('src');
     $('#cart-add-error').hidden = true;
     setProduct('frame'); updateCaption();
@@ -287,7 +294,10 @@
       $('#ai-retry').textContent = state.job ? 'Продолжить ожидание' : 'Создать иллюстрацию';
     }
     state.shirtColor = tshirtColors[saved.shirtColor] ? saved.shirtColor : 'white';
-    state.printLayout=layout(saved.printLayout);
+    state.layouts = {};
+    for (const view of ['frame','magnet','keychain','paper','sticker','digital','tshirt']) {
+      state.layouts[view] = layout(saved.layouts?.[view] || (view === 'tshirt' ? saved.printLayout : undefined));
+    }
     state.shirtSize = saved.shirtSize || 'M';
     setProduct(saved.product || 'frame', saved.material || 'matte');
     if (saved.format) restoreFormat(saved.format);
@@ -470,7 +480,7 @@
     ctx.translate(0, 12);
     ctx.scale(1.8, 1.8);
     drawCotton(ctx, color.hex);
-    const {scale,x,y}=state.printLayout, factor=scale/100;
+    const {scale,x,y}=placement('tshirt'), factor=scale/100;
     // At large scales the print can cover the full torso. Keep slider directions consistent.
     const width=image.naturalWidth || image.width || 210;
     const height=image.naturalHeight || image.height || 185;
@@ -566,7 +576,7 @@
       g.stroke(new Path2D('M109 94v30c0 30-38 45-38 75v198'));
       g.fillStyle = horizontalGradient(g, 99, 141, [[0,'#674337'],[.4,'#ad7d59'],[1,'#603e31']]);
       g.fillRect(99,17,42,77);
-      g.drawImage(poster,65,218,110,147);
+      placeTeploPrint(g,65,218,110,147,placement(view), () => g.drawImage(poster,65,218,110,147));
       g.fillStyle = horizontalGradient(g,65,175,[[0,'#40281030'],[.3,'#ffffff05'],[.75,'#ffffff00'],[1,'#40281026']]);
       g.fillRect(65,218,110,147);
     } else if (view === 'keychain') {
@@ -577,7 +587,7 @@
       const inner = bodyWidth - 26;
       g.fillStyle = '#f7e8d4';
       g.fillRect(-inner/2,-189,inner,547);
-      drawContain(poster,-inner/2,-189,inner,547,g);
+      placeTeploPrint(g,-inner/2,-189,inner,547,placement(view), () => drawContain(poster,-inner/2,-189,inner,547,g));
       g.strokeStyle = '#93948c'; g.lineWidth = 15;
       g.beginPath(); g.arc(0,-345,97,0,2*Math.PI); g.stroke();
       g.strokeStyle = '#d4d4c9'; g.lineWidth = 4; g.stroke();
@@ -589,7 +599,7 @@
       g.fillRect(-323,-478,646,956);
       // Fill the entire 10 × 15 opening with a centred print crop.
       const width = poster.height * 2 / 3;
-      g.drawImage(poster,(poster.width-width)/2,0,width,poster.height,-310,-465,620,930);
+      placeTeploPrint(g,-310,-465,620,930,placement(view), () => g.drawImage(poster,(poster.width-width)/2,0,width,poster.height,-310,-465,620,930));
     }
     g.restore();
   }
@@ -599,11 +609,7 @@
     if(!matchMedia('(max-width:800px)').matches) return;
     const mini=$('#choice-canvas'),g=mini.getContext('2d');
     g.clearRect(0,0,mini.width,mini.height);
-    if(state.upload || state.product==='tshirt' || state.product==='magnet') drawContain(canvas,0,0,mini.width,mini.height,g);
-    else if(choiceExample.naturalWidth){
-      if(['frame','keychain','sticker'].includes(giftView())) renderGift(mini,giftView(),choiceExample);
-      else drawContain(choiceExample,0,0,mini.width,mini.height,g);
-    }
+    drawContain(canvas,0,0,mini.width,mini.height,g);
     $('#choice-name').textContent=selectedProductName();
     $('#choice-spec').textContent=currentSpec();
   }
@@ -612,21 +618,22 @@
     gallery.hidden = !state.illustration;
     const selected = giftView();
     const buttons = $$('[data-gift-view]');
-    const showMockup = Boolean(state.illustration && buttons.some(button => button.dataset.giftView === selected));
+    const example = !state.upload && choiceExample.naturalWidth ? choiceExample : null;
+    const showMockup = Boolean((state.illustration || example) && buttons.some(button => button.dataset.giftView === selected));
     $('#preview-stage').classList.toggle('gift-mockup', showMockup);
-    let poster;
+    let poster = example;
     if (state.illustration) {
       poster = AI.compose(state.illustration, $('#caption').value, $('#year').value, $('#year-lines').checked);
       for (const button of buttons) {
         renderGift(button.querySelector('canvas'), button.dataset.giftView, poster);
         button.setAttribute('aria-pressed', String(button.dataset.giftView === selected));
       }
-      if (showMockup) {
+    }
+    if (showMockup) {
         if (canvas.height !== 1080) canvas.height = 1080;
         renderGift(canvas, selected, poster);
         canvas.setAttribute('aria-label', selectedProductName() + ' · ' + currentSpec());
         return;
-      }
     }
     const height = currentCanvasHeight();
     const landscape = height < canvas.width;
@@ -637,19 +644,22 @@
       drawTshirt(ctx);
       return;
     }
-    if (!state.upload) {
-      if (state.product === 'magnet' && choiceExample.naturalWidth) AI.fitPaper(ctx, choiceExample, canvas.width, height);
+    if (poster) {
+      placeTeploPrint(ctx,0,0,canvas.width,height,placement(), () => {
+        if (state.product === 'magnet' || state.product === 'digital') AI.fitPaper(ctx,poster,canvas.width,height);
+        else {
+          ctx.fillStyle = '#f3e6d7';
+          ctx.fillRect(0,0,canvas.width,height);
+          drawContain(poster,0,0,canvas.width,height);
+        }
+      });
       return;
     }
-    if (state.illustration) {
-      if (state.product === 'magnet' || state.product === 'digital') {
-        AI.fitPaper(ctx, poster, canvas.width, height);
-      } else {
-        ctx.fillStyle = '#f3e6d7'; ctx.fillRect(0, 0, 900, height);
-        drawContain(poster, 0, 0, 900, height);
-      }
-      return;
-    }
+    if (!state.upload) return;
+    placeTeploPrint(ctx,0,0,canvas.width,height,placement(), () => drawOriginalSketch(height,landscape));
+  }
+
+  function drawOriginalSketch(height,landscape) {
     const paper = ctx.createLinearGradient(0, 0, 900, height);
     paper.addColorStop(0, '#f6ead7');
     paper.addColorStop(1, '#f0dfc5');
@@ -789,7 +799,7 @@
         material: state.product === 'paper' ? state.material : '',
         format: $('#product-format').value,
         shirtColor: state.product === 'tshirt' ? state.shirtColor : '',
-        printLayout:state.product==='tshirt'?{...state.printLayout}:undefined,
+        printLayout:layout(placement()),
         colorName: state.product === 'tshirt' ? tshirtColors[state.shirtColor].name : '',
         caption: $('#caption').value.trim(), year: $('#year').value.trim(), yearLines: $('#year-lines').checked,
         qty: state.product === 'digital' ? 1 : TeploPricing.quantity($('#item-quantity').value),
@@ -813,7 +823,10 @@
       item.photoHash = photoHash || await digest(file);
       if (state.sourceFile === file) photoHash = item.photoHash;
       if (state.sourceFile === file) state.sourceHash = hash;
-      item.artworkKey = JSON.stringify(item.year && !item.yearLines ? [hash, item.caption, item.year, false] : [hash, item.caption, item.year]);
+      const artworkParts = item.year && !item.yearLines ? [hash,item.caption,item.year,false] : [hash,item.caption,item.year];
+      const pos = item.printLayout;
+      if (item.product === 'digital' && (pos.scale !== 100 || pos.x || pos.y)) artworkParts.push(pos);
+      item.artworkKey = JSON.stringify(artworkParts);
       await window.TeploCart.add(item, editId);
       endCartEdit();
       $('#item-quantity').value = 1;
@@ -851,10 +864,12 @@
     state.editingCartId = copy ? null : item.id;
     $('#caption').value = item.caption;
     $('#year').value = item.year; $('#year-lines').checked = item.yearLines !== false;
-    state.printLayout=layout(item.printLayout);
+    
     if (item.shirtColor && tshirtColors[item.shirtColor]) state.shirtColor = item.shirtColor;
     if (item.product === 'tshirt') state.shirtSize = item.format;
     setProduct(item.product, item.material || 'matte');
+    state.layouts[giftView()] = layout(item.printLayout);
+    updateTshirtControls();
     restoreFormat(item.format);
     $('#item-quantity').value = copy ? 1 : item.qty;
     updateProductSpec(); updateCaption(); updatePurchase();
@@ -899,12 +914,12 @@
   guidePanel.addEventListener('focusout',endAlignment);
   for(const key of ['scale','x','y']){
     $('#print-'+key).addEventListener('input',event=>{
-      state.printLayout[key]=Number(event.target.value);
+      placement()[key]=Number(event.target.value);
       updateTshirtControls();scheduleDraw();queueDraft();
     });
   }
   $('#print-reset').addEventListener('click',()=>{
-    state.printLayout=layout();updateTshirtControls();scheduleDraw();queueDraft();
+    state.layouts[giftView()]=layout();updateTshirtControls();scheduleDraw();queueDraft();
   });
   $$('.tshirt-color').forEach((button) => button.addEventListener('click', () => {
     if (!tshirtColors[button.dataset.shirtColor]) return;

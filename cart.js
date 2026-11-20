@@ -7,7 +7,7 @@
   const notice = message => document.dispatchEvent(new CustomEvent('teplo:notice', { detail: message }));
   let items = [], pack = 'ordinary', queue = Promise.resolve();
   const previewUrls = new Map();
-  const signature = item => JSON.stringify([item.artworkKey, item.product, item.material, item.format,item.shirtColor,item.product==='tshirt'?printSpec(item):'']);
+  const signature = item => JSON.stringify([item.artworkKey, item.product, item.material, item.format,item.shirtColor,printSpec(item)]);
   const calculation = () => P.calculate(items, pack);
   const thingWord = n => ({ one: 'вещь', few: 'вещи', many: 'вещей', other: 'вещи' })[new Intl.PluralRules('ru-RU').select(n)];
   const records = TeploStore('teplo-cart', 'cart');
@@ -42,7 +42,8 @@
     return 'принт '+p.scale+'%, X '+p.x+'%, Y '+p.y+'%';
   }
   function spec(item) {
-    return item.product === 'tshirt' ? `${item.colorName} · ${item.format} · ${printSpec(item)}` : item.product === 'paper' ? `${item.material === 'sticker' ? 'Наклейка' : 'Матовая бумага'} · ${item.format}` : item.format;
+    const description = item.product === 'tshirt' ? `${item.colorName} · ${item.format}` : item.product === 'paper' ? `${item.material === 'sticker' ? 'Наклейка' : 'Матовая бумага'} · ${item.format}` : item.format;
+    return description + ' · ' + printSpec(item);
   }
   function itemMarkup(row) {
     const amount = row.unit * row.qty - row.discount;
