@@ -17,7 +17,7 @@
     digital: { name: 'Электронная версия в HD-качестве', formats: ['PNG · электронный файл'] },
     frame: { name: 'История в рамке', formats: ['10 × 15 см'] },
     magnet: { name: 'Маленькая история на магните', formats: Object.keys(TeploPricing.magnets), defaultFormat: '6 × 9 см (рекомендуем)' },
-    keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см', 'Акриловый · 35 × 58 мм', 'Акриловый · 40 × 56 мм'] },
+    keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см', 'Акриловый · 40 × 56 мм'] },
     paper: { name: 'История без рамки', formats: ['10 × 15 см'] },
     tshirt: { name: 'Футболка с вашей историей', formats: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], defaultFormat: 'M' },
   };
@@ -168,6 +168,12 @@
     updateProduct();
   }
 
+  function restoreFormat(format) {
+    const select = $('#product-format');
+    if (Array.from(select.options).some(option => option.value === format)) select.value = format;
+    else if (state.product === 'keychain') select.value = 'Акриловый · 40 × 56 мм';
+  }
+
   function currentSpec() {
     const format = $('#product-format').value;
     if (state.product === 'tshirt') return `${tshirtColors[state.shirtColor].name} · размер ${format}`;
@@ -284,7 +290,7 @@
     state.printLayout=layout(saved.printLayout);
     state.shirtSize = saved.shirtSize || 'M';
     setProduct(saved.product || 'frame', saved.material || 'matte');
-    if (saved.format) $('#product-format').value = saved.format;
+    if (saved.format) restoreFormat(saved.format);
     $('#item-quantity').value = saved.qty || 1;
     updateProductSpec(); updatePreviewMode(); updateCaption(); updatePurchase();
   }
@@ -566,7 +572,7 @@
     } else if (view === 'keychain') {
       g.translate(450,550); g.rotate(-.09);
       const format = state.product === 'keychain' ? $('#product-format').value : '';
-      const bodyWidth = format.includes('35 × 58') ? 576 * 35 / 58 : format.includes('40 × 56') ? 576 * 40 / 56 : 436;
+      const bodyWidth = format.includes('40 × 56') ? 576 * 40 / 56 : 436;
       g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-bodyWidth/2,-202,bodyWidth,576,21); g.fill();
       const inner = bodyWidth - 26;
       g.fillStyle = '#f7e8d4';
@@ -849,7 +855,7 @@
     if (item.shirtColor && tshirtColors[item.shirtColor]) state.shirtColor = item.shirtColor;
     if (item.product === 'tshirt') state.shirtSize = item.format;
     setProduct(item.product, item.material || 'matte');
-    $('#product-format').value = item.format;
+    restoreFormat(item.format);
     $('#item-quantity').value = copy ? 1 : item.qty;
     updateProductSpec(); updateCaption(); updatePurchase();
     $('#caption').focus({ preventScroll: true });
@@ -875,23 +881,6 @@
       updateProductSpec();
     }
   }));
-  const nextKey = $('#next-key-example');
-  const keyPhoto = $('#key-example-photo');
-  const keyLink = $('#key-example-link');
-  const examples = [
-    { image: 'key-hike', title: 'Великий поход', size: '35 × 58 мм' },
-    { image: 'key-cafe', title: 'Albert & Sofia', size: '40 × 56 мм' }
-  ];
-  let keyIndex = 0;
-  nextKey.addEventListener('click', () => {
-    keyIndex = (keyIndex + 1) % examples.length;
-    const example = examples[keyIndex];
-    keyPhoto.src = 'assets/' + example.image + '.webp';
-    keyPhoto.alt = 'Акриловый брелок «' + example.title + '»';
-    keyLink.dataset.chooseFormat = 'Акриловый · ' + example.size;
-    $('#key-example-size').textContent = example.size;
-    nextKey.querySelector('small').textContent = (keyIndex + 1) + ' / 2';
-  });
   $('#caption').addEventListener('input', updateCaption);
   $('#year-lines').addEventListener('change', updateCaption);
   $('#year').addEventListener('input', () => {
