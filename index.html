@@ -10,20 +10,20 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v=framed-hero-soft-steps">
   <link rel="stylesheet" href="memories.css?v=gallery-arrows">
-  <link rel="stylesheet" href="tshirt.css?v=shirt-layout4">
+  <link rel="stylesheet" href="tshirt.css?v=guides-eta">
   <script src="memories.js?v=lia-birthday" defer></script>
   <link rel="stylesheet" href="cart.css?v=paid-preview-2">
   <script src="cart-pricing.js?v=hd-order" defer></script>
   <link rel="stylesheet" href="checkout.css?v=yandex-pickup-3">
   <link rel="stylesheet" href="readability.css?v=delivery-4">
   <script src="checkout-rules.js?v=no-city-field" defer></script>
-  <script src="checkout.js?v=no-city-field" defer></script>
-  <script src="test-checkout.js?v=shirt-layout4" defer></script>
+  <script src="checkout.js?v=guides-eta" defer></script>
+  <script src="test-checkout.js?v=guides-eta" defer></script>
   <script src="cart.js?v=shirt-layout4" defer></script>
   <link rel="stylesheet" href="illustration.css?v=drawing-ready">
   <script src="illustration.js?v=shirt-layout4" defer></script>
   <script src="preview-mark.js" defer></script>
-  <script src="app.js?v=shirt-layout4" defer></script>
+  <script src="app.js?v=guides-eta" defer></script>
   <script src="memory-motion.js?v=swipe" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -124,7 +124,7 @@
       <div class="container">
         <div class="section-heading builder-heading"><div><p class="eyebrow">Начнём с вашего момента</p><h2 id="constructor-title">Соберите <em>свою историю.</em></h2></div><span class="demo-badge"><span class="dot"></span> <span id="ai-badge">Подключаем обработку</span></span></div>
         <p class="builder-explanation">Загружаете фото, создаёте иллюстрацию, по желанию добавляете название и год.</p>
-        <div class="order-rules"><span>Минимальный заказ от 3 любых позиций</span><span>Доставка бесплатна</span><span>Электронная копия в подарок</span></div>
+        <div class="order-rules"><span>Минимальный заказ от 3 любых позиций<small class="single-hd">(Электронные версии можно заказывать по одной)</small></span><span>Доставка бесплатна</span><span>Электронная копия в подарок</span></div>
         <div class="builder">
           <div class="builder-controls">
             <div class="control-group">
@@ -160,7 +160,7 @@
                   <button type="button" class="tshirt-color" data-shirt-color="red" aria-pressed="false" aria-label="Красный"><span class="color-dot" style="--swatch:#bd3d38;--check:#fff" aria-hidden="true"></span><span>Красный</span></button>
                   <button type="button" class="tshirt-color" data-shirt-color="black" aria-pressed="false" aria-label="Чёрный"><span class="color-dot" style="--swatch:#272b2e;--check:#fff" aria-hidden="true"></span><span>Чёрный</span></button>
                 </div>
-                <div class="print-controls"><label>Размер принта<output for="print-scale">100%</output><input type="range" id="print-scale" min="65" max="112" value="100"></label><label>Левее / правее<output for="print-x">0%</output><input type="range" id="print-x" min="-100" max="100" value="0"></label><label>Выше / ниже<output for="print-y">0%</output><input type="range" id="print-y" min="-100" max="100" value="0"></label><button id="print-reset" type="button">По центру, 100%</button></div><p class="tshirt-upload-note">У готовой иллюстрации внешняя бумажная подложка убирается для принта. Проверьте светлые детали на эскизе перед печатью.</p>
+                <p class="tshirt-upload-note">У готовой иллюстрации внешняя бумажная подложка убирается для принта. Проверьте светлые детали на эскизе перед печатью.</p>
               </fieldset>
               <fieldset id="paper-options" class="paper-options" hidden>
                 <legend class="field-label">Вариант без рамки</legend>
@@ -180,9 +180,10 @@
               <div class="preview-empty" id="preview-empty"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="13" y="10" width="38" height="44" rx="2"/><path d="M19 42l10-12 7 8 6-7 3 4M20 47h24"/><circle cx="39" cy="23" r="4"/></svg><strong>Здесь будет ваша история</strong><p>Загрузите фотографию и посмотрите,<br>как она будет выглядеть на подарке.</p><button type="button" id="preview-upload" class="text-link">Выбрать фотографию <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4"/></svg></button></div>
               <div class="stage-grain" aria-hidden="true"></div>
               <div class="key-ring" aria-hidden="true"></div>
-              <div class="art-object" id="art-object"><canvas id="artwork-canvas" width="900" height="1350" role="img" aria-label="Предпросмотр персонального постера с вашей надписью"></canvas></div>
+              <div class="art-object" id="art-object"><canvas id="artwork-canvas" width="900" height="1350" role="img" aria-label="Предпросмотр персонального постера с вашей надписью"></canvas><svg id="print-guides" viewBox="0 0 900 1080" aria-hidden="true"><path d="M450 188V941 M232 533H668"/></svg></div>
               <span class="stage-annotation" id="stage-annotation">Натуральные оттенки.<br>Тёплые воспоминания.</span>
             </div>
+            <div id="print-controls" class="print-controls" hidden><label>Размер принта<output for="print-scale">100%</output><input type="range" id="print-scale" min="65" max="112" value="100"></label><label>Левее / правее<output for="print-x">0%</output><input type="range" id="print-x" min="-100" max="100" value="0"></label><label>Выше / ниже<output for="print-y">0%</output><input type="range" id="print-y" min="-100" max="100" value="0"></label><button id="print-reset" type="button">По центру, 100%</button></div>
             <div class="gift-views" id="gift-views" role="group" aria-label="Посмотреть иллюстрацию на подарке" hidden>
               <button type="button" data-gift-view="frame" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>В рамке</span></button>
               <button type="button" data-gift-view="keychain" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>Брелок</span></button>
@@ -222,7 +223,7 @@
             <rect x="65" y="218" width="110" height="147" rx="2" fill="#f5e6cd" stroke="#e1cdb0" stroke-width=".5"/>
             <image href="assets/couple-art.webp" x="65" y="218" width="110" height="147" preserveAspectRatio="xMidYMid slice" clip-path="url(#wine-label-clip)"/>
             <rect x="65" y="218" width="110" height="147" rx="2" fill="url(#wine-label)" stroke="none"/>
-          </svg><span class="collection-number">04 /</span></div><div class="collection-title"><h3>Наклейка</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Ваша история на бутылке особенного вечера</p><div class="collection-price">350 ₽ <span>10 × 15 см</span></div></a>
+          </svg><span class="collection-number">04 /</span></div><div class="collection-title"><h3>Наклейка</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Ваша история на бутылке для особенного вечера</p><div class="collection-price">350 ₽ <span>10 × 15 см</span></div></a>
         <a class="collection-card" href="#constructor" data-choose-product="tshirt"><div class="collection-image collection-tshirt">
           <canvas id="collection-shirt" class="shirt-mockup" width="900" height="1000" role="img" aria-label="Белая футболка с иллюстрацией пары в горах «Эверест 2023»"></canvas><span class="collection-number">05 /</span></div><div class="collection-title"><h3>Футболка</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Любимая история — в вашем стиле</p><div class="collection-price">2 870 ₽ <span>XS–XXL · 5 цветов</span></div></a>
         <a class="collection-card" href="#constructor" data-choose-product="paper" data-choose-material="matte"><div class="collection-image collection-paper"><div class="mini-magnet"><img src="assets/sochi-cafe-art.webp" alt="Иллюстрация Сочи на матовой бумаге без рамки" loading="lazy" width="1086" height="1448"></div><span class="collection-number">06 /</span></div><div class="collection-title"><h3>Фото без рамки</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Матовая бумага, на которой живёт ваш момент</p><div class="collection-price">350 ₽ <span>10 × 15 см</span></div></a>
@@ -272,7 +273,7 @@
           <p class="eyebrow">Последние штрихи</p><h3 id="recipient-title">Кому отправить историю?</h3>
           <div class="recipient-fields"><div><label for="recipient-name">Ваше имя <span aria-hidden="true">*</span></label><input id="recipient-name" type="text" autocomplete="given-name" maxlength="80" placeholder="Как к вам обращаться" required aria-describedby="recipient-name-error"><p id="recipient-name-error" class="checkout-error" hidden></p></div><div><label for="recipient-phone">Телефон <span aria-hidden="true">*</span></label><input id="recipient-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="50" placeholder="+7 999 123-45-67" required aria-describedby="recipient-phone-error"><p id="recipient-phone-error" class="checkout-error" hidden></p></div></div>
           <div id="recipient-delivery" class="recipient-delivery">
-            <div class="pickup-field"><span class="pickup-label">Пункт выдачи Яндекс Маркета <span aria-hidden="true">*</span></span><div id="pickup-selected" class="pickup-selected" hidden><span>Пункт выдачи выбран</span><strong id="pickup-address"></strong><small id="pickup-source-note"></small></div><button type="button" id="choose-pickup" class="choose-pickup" aria-haspopup="dialog" aria-controls="pickup-dialog" aria-describedby="recipient-pickup-error"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="choose-pickup-text">Выбрать ПВЗ на карте</span><svg class="pickup-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button><button type="button" id="manual-pickup-toggle" class="manual-pickup-toggle" aria-expanded="false" aria-controls="manual-pickup-field">Указать адрес ПВЗ вручную</button><div id="manual-pickup-field" class="manual-pickup-field" hidden><label for="recipient-pickup-address">Адрес пункта выдачи</label><textarea id="recipient-pickup-address" rows="2" maxlength="500" placeholder="Город, улица, дом и название ПВЗ, если известно" aria-describedby="recipient-pickup-error manual-pickup-help"></textarea><p id="manual-pickup-help">Укажите полный адрес ПВЗ Яндекс Маркета: город, улицу и дом. Перед отправкой уточним доступность этого пункта.</p></div><p id="recipient-pickup-error" class="checkout-error" hidden></p><p class="pickup-privacy-note">При открытии карты Яндексу передаётся город поиска.</p></div>
+            <div class="pickup-field"><span class="pickup-label">Пункт выдачи Яндекс Маркета <span aria-hidden="true">*</span></span><div id="pickup-selected" class="pickup-selected" hidden><span>Пункт выдачи выбран</span><strong id="pickup-address"></strong><small id="pickup-source-note"></small><small id="pickup-eta" role="status"></small></div><button type="button" id="choose-pickup" class="choose-pickup" aria-haspopup="dialog" aria-controls="pickup-dialog" aria-describedby="recipient-pickup-error"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="choose-pickup-text">Выбрать ПВЗ на карте</span><svg class="pickup-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button><button type="button" id="manual-pickup-toggle" class="manual-pickup-toggle" aria-expanded="false" aria-controls="manual-pickup-field">Указать адрес ПВЗ вручную</button><div id="manual-pickup-field" class="manual-pickup-field" hidden><label for="recipient-pickup-address">Адрес пункта выдачи</label><textarea id="recipient-pickup-address" rows="2" maxlength="500" placeholder="Город, улица, дом и название ПВЗ, если известно" aria-describedby="recipient-pickup-error manual-pickup-help"></textarea><p id="manual-pickup-help">Укажите полный адрес ПВЗ Яндекс Маркета: город, улицу и дом. Перед отправкой уточним доступность этого пункта.</p></div><p id="recipient-pickup-error" class="checkout-error" hidden></p><p class="pickup-privacy-note">При открытии карты Яндексу передаётся город поиска.</p></div>
           </div><p id="digital-contact-note" class="digital-contact-note" hidden>Для электронной версии пункт выдачи не нужен. Телефон оставьте для связи по заказу.</p>
           <label class="remember-recipient"><input type="checkbox" id="remember-recipient"><span>Запомнить данные в этом браузере</span></label><p id="recipient-storage-note" class="recipient-storage-note" role="status">Без этой галочки данные получателя не сохраняются после обновления страницы.</p><button type="button" id="clear-recipient" class="clear-recipient">Очистить данные получателя</button>
         </section><button type="button" id="clear-cart" class="cart-clear">Очистить корзину</button></div>

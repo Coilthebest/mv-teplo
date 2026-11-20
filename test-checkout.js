@@ -49,7 +49,8 @@ window.startTestCheckout = function(getCart) {
       if (!attempt || attempt.fingerprint!==fingerprint || Date.now()-attempt.started>12*3600000) {
         attempt={fingerprint,attempt:crypto.randomUUID(),started:Date.now()};localStorage.setItem(key,JSON.stringify(attempt));
       }
-      const result=await request('payment-create',{...order,attempt:attempt.attempt,started:attempt.started});
+      const shippingQuote=await window.TeploCheckout.shippingQuote();
+      const result=await request('payment-create',{...order,shippingQuote,attempt:attempt.attempt,started:attempt.started});
       attempt.order=result.order;
       if (result.url && new URL(result.url).protocol==='https:') attempt.url=result.url;
       localStorage.setItem(key,JSON.stringify(attempt));

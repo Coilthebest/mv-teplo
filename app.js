@@ -4,7 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const phoneLayout = matchMedia('(max-width: 680px)');
-  const previewParts = ['.preview-top', '#preview-stage', '#gift-views', '.stories'].map($);
+  const previewParts = ['.preview-top', '#preview-stage', '#print-controls', '#gift-views', '.stories'].map($);
   function placePreview() {
     const anchor = phoneLayout.matches ? $('#drop-zone') : $('.preview-bottom');
     anchor.before(...previewParts);
@@ -134,6 +134,8 @@
     $('#product-name').textContent = selectedProductName();
     $('#paper-options').hidden = key !== 'paper';
     $('#tshirt-options').hidden = key !== 'tshirt';
+    $('#print-controls').hidden=key!=='tshirt';
+    $('#art-object').classList.remove('aligning');
     $('.format-label').textContent = key === 'tshirt' ? 'Размер футболки' : 'Формат';
     updateTshirtControls();
     $$('input[name="paper-material"]').forEach((input) => { input.checked = input.value === state.material; });
@@ -852,6 +854,15 @@
     updateCaption();
   });
   $('#product-format').addEventListener('change', updateProductSpec);
+  const guidePanel=$('#print-controls');
+  const endAlignment=()=>$('#art-object').classList.remove('aligning');
+  function beginAlignment(event){
+    if(event.target.type==='range' && (event.type!=='keydown' || ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(event.key))) $('#art-object').classList.add('aligning');
+  }
+  guidePanel.addEventListener('pointerdown',beginAlignment);
+  guidePanel.addEventListener('keydown',beginAlignment);
+  for(const name of ['pointerup','pointercancel','keyup','blur']) window.addEventListener(name,endAlignment);
+  guidePanel.addEventListener('focusout',endAlignment);
   for(const key of ['scale','x','y']){
     $('#print-'+key).addEventListener('input',event=>{
       state.printLayout[key]=Number(event.target.value);

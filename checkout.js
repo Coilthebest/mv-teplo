@@ -9,7 +9,25 @@
     return { name: $('#recipient-name').value, phone: $('#recipient-phone').value, city: pickup?.city || '', pickup, manualAddress: manual ? $('#recipient-pickup-address').value : '' };
   }
   function snapshot() { return { version: 1, remember: $('#remember-recipient').checked, fields: raw(), manual }; }
+  let etaPoint=null,quote=null,etaTask=Promise.resolve();
+  function updateEstimate(){
+    const point=physical && !manual && pickup?.id || null;
+    if(point===etaPoint && !(quote && quote.expires<=Date.now())) return etaTask;
+    etaPoint=point;quote=null;
+    const el=$('#pickup-eta');el.textContent=point?'Уточняем срок доставки…':'';
+    etaTask=point?(async()=>{
+      try {
+        const r=await fetch('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=delivery-estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point}),signal:AbortSignal.timeout(8500)});
+        const q=r.ok?await r.json():null;
+        if(point===etaPoint && q?.point===point && q.signature){quote=q;el.textContent=q.label;return;}
+      } catch {}
+      if(point===etaPoint) el.textContent='Срок доставки до этого ПВЗ пока неизвестен.';
+    })():Promise.resolve();
+    return etaTask;
+  }
+  async function shippingQuote(){await updateEstimate();return quote;}
   function drawPickup() {
+    updateEstimate();
     $('#manual-pickup-field').hidden = !manual;
     $('#manual-pickup-toggle').setAttribute('aria-expanded', String(manual));
     $('#manual-pickup-toggle').textContent = manual ? 'Скрыть ручной ввод адреса' : 'Указать адрес ПВЗ вручную';
@@ -55,7 +73,7 @@
     return result;
   }
   function setOrderState(hasPhysical) {
-    physical = hasPhysical;
+    physical = hasPhysical;updateEstimate();
     $('#recipient-delivery').hidden = !physical;
     $('#digital-contact-note').hidden = physical;
     if (attempted) showErrors(R.validate(raw(), physical).errors, false);
@@ -136,5 +154,5 @@
       }
     } catch { db = null; }
   })();
-  window.TeploCheckout = Object.freeze({ ready, validate, setOrderState });
+  window.TeploCheckout = Object.freeze({ ready, validate, setOrderState, shippingQuote });
 })();
