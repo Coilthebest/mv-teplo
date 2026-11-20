@@ -98,8 +98,10 @@
     extend(true, true, height - y - h);
     ctx.drawImage(image, x, y, w, h);
   }
+  let posterCanvas;
   function compose(image, title, year, yearLines = true) {
-    const poster = document.createElement('canvas'); poster.width = 1200; poster.height = 1600;
+    if (!posterCanvas) {posterCanvas=document.createElement('canvas');posterCanvas.width=1200;posterCanvas.height=1600;}
+    const poster=posterCanvas;
     const ctx = poster.getContext('2d'); ctx.fillStyle = '#f3e6d7'; ctx.fillRect(0, 0, 1200, 1600); fitPaper(ctx, image, 1200, 1600);
     function line(text, y, size, spacing) {
       const letters = Array.from(text); let total;

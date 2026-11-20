@@ -7,14 +7,16 @@
   const notice = message => document.dispatchEvent(new CustomEvent('teplo:notice', { detail: message }));
   let items = [], pack = 'ordinary', db = null, queue = Promise.resolve();
   const previewUrls = new Map();
-  const signature = item => JSON.stringify([item.artworkKey, item.product, item.material, item.format, item.shirtColor]);
+  const signature = item => JSON.stringify([item.artworkKey, item.product, item.material, item.format,item.shirtColor,item.product==='tshirt'?printSpec(item):'']);
   const calculation = () => P.calculate(items, pack);
   const thingWord = n => ({ one: 'вещь', few: 'вещи', many: 'вещей', other: 'вещи' })[new Intl.PluralRules('ru-RU').select(n)];
   function loadDB() {
     return new Promise((resolve, reject) => {
+      let expired=false;
       const request = indexedDB.open('teplo-cart', 1);
+      const timer=setTimeout(()=>{expired=true;reject(Error('storage_timeout'));},5000);
       request.onupgradeneeded = () => request.result.createObjectStore('cart');
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => { clearTimeout(timer); if(expired) request.result.close(); else resolve(request.result); };
       request.onerror = () => reject(request.error);
       request.onblocked = () => reject(new Error('blocked'));
     });
@@ -40,7 +42,11 @@
     const job = queue.then(async () => {
       await ready;
       const next = change(items.map(item => ({ ...item })), pack);
-      await persist(next.items, next.pack);
+      try { await persist(next.items, next.pack); }
+      catch(err){
+        if(!['QuotaExceededError','UnknownError','InvalidStateError','DataCloneError','AbortError','SecurityError'].includes(err?.name)) throw err;
+        $('#cart-storage-note').textContent='Корзина доступна в этой вкладке. Браузер не смог сохранить последнее изменение на устройстве.';
+      }
       items = next.items; pack = next.pack;
       render();
       return next;
@@ -56,8 +62,12 @@
     }
     return previewUrls.get(item.id).url;
   }
+  function printSpec(item) {
+    const p=item.printLayout||{scale:100,x:0,y:0};
+    return 'принт '+p.scale+'%, X '+p.x+'%, Y '+p.y+'%';
+  }
   function spec(item) {
-    return item.product === 'tshirt' ? `${item.colorName} · ${item.format}` : item.product === 'paper' ? `${item.material === 'sticker' ? 'Наклейка' : 'Матовая бумага'} · ${item.format}` : item.format;
+    return item.product === 'tshirt' ? `${item.colorName} · ${item.format} · ${printSpec(item)}` : item.product === 'paper' ? `${item.material === 'sticker' ? 'Наклейка' : 'Матовая бумага'} · ${item.format}` : item.format;
   }
   function itemMarkup(row) {
     const amount = row.unit * row.qty - row.discount;
@@ -100,7 +110,7 @@
       (replacement || $('#close-cart')).focus({ preventScroll: true });
     }
   }
-  function open() { Promise.all([ready, window.TeploCheckout.ready]).then(() => { render(); if (!dialog.open) dialog.showModal(); }); }
+  function open() { ready.then(() => { render(); if (!dialog.open) dialog.showModal(); }); }
   function continueShopping() { dialog.close(); document.querySelector('#constructor').scrollIntoView({ behavior: 'smooth' }); document.dispatchEvent(new Event('teplo:next-story')); }
   async function add(item, editingId) {
     if (!(item.sourceFile instanceof Blob) || !(item.preview instanceof Blob) || !item.artworkKey || !P.unitPrice(item)) throw new Error('invalid_item');
@@ -167,6 +177,6 @@
     }
     render();
   })();
-  window.TeploCart = Object.freeze({ ready, add, open, spec });
+  window.TeploCart = Object.freeze({ ready, add, open, spec, printSpec });
   window.startTestCheckout(() => ({ ...calculation(), pack }));
 })();

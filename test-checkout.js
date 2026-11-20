@@ -41,7 +41,7 @@ window.startTestCheckout = function(getCart) {
       await window.TeploCheckout.ready;
       const recipient=window.TeploCheckout.validate();
       if (!recipient.ok) throw Error('Заполните поля получателя.');
-      const items=cart.rows.map(r=>({product:r.product,qty:r.qty,format:r.format,shirtColor:r.shirtColor,
+      const items=cart.rows.map(r=>({product:r.product,qty:r.qty,format:r.product==='tshirt'?r.format+' · '+window.TeploCart.printSpec(r):r.format,shirtColor:r.shirtColor,
         material:r.material,objectId:r.sealedArtwork?.objectId,caption:r.caption,year:r.year,yearLines:r.yearLines,photoHash:r.photoHash}));
       const order={items,pack:cart.pack,total:cart.total,recipient:recipient.data};
       const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(order)));

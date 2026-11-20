@@ -34,6 +34,14 @@
   };
   const state = { upload: null, product: 'frame', material: 'matte', shirtColor: 'white', shirtSize: 'M', sourceFile: null, sourceHash: null, editingCartId: null, illustration: null, illustrationFile: null, shirtPrint: null, job: null, generating: false, legacy: false };
   const AI = window.TeploIllustration;
+  function layout(value={}) {
+    const bound=(v,min,max,initial)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):initial;
+    return {scale:bound(value.scale,65,112,100),x:bound(value.x,-100,100,0),y:bound(value.y,-100,100,0)};
+  }
+  state.printLayout=layout();
+  const choiceExample=new Image();
+  choiceExample.onload=()=>scheduleDraw();
+  choiceExample.src='assets/couple-art.webp';
   let aiConfig = { ready: false };
   let draftTimer;
   const slots = Array(10).fill(null);
@@ -142,6 +150,11 @@
   }
 
   function updateTshirtControls() {
+    for(const key of ['scale','x','y']){
+      const slider=$('#print-'+key);
+      slider.value=state.printLayout[key];
+      slider.previousElementSibling.value=slider.value+'%';
+    }
     setPressed($$('.tshirt-color'), 'shirtColor', state.shirtColor);
     $('#tshirt-color-name').textContent = tshirtColors[state.shirtColor].name;
   }
@@ -217,7 +230,7 @@
     const saved = { storyId, photoHash, sourceFile: state.sourceFile, generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
       job: state.job, legacy: state.legacy, caption: $('#caption').value, year: $('#year').value, yearLines: $('#year-lines').checked,
       product: state.product, material: state.material, format: $('#product-format').value,
-      shirtColor: state.shirtColor, shirtSize: state.shirtSize, qty: $('#item-quantity').value, test: Boolean(aiConfig.test) };
+      shirtColor: state.shirtColor, shirtSize: state.shirtSize, printLayout:{...state.printLayout}, qty: $('#item-quantity').value, test: Boolean(aiConfig.test) };
     slots[activeSlot] = saved;
     renderSlots();
     return AI.draft('put', saved, activeSlot).then(result => {
@@ -245,7 +258,7 @@
     state.editingCartId = null;
     $('#item-quantity').value = 1;
     $('#caption').value = ''; $('#year').value = ''; $('#year-lines').checked = true;
-    state.material = 'matte'; state.shirtColor = 'white'; state.shirtSize = 'M';
+    state.printLayout=layout(); state.material = 'matte'; state.shirtColor = 'white'; state.shirtSize = 'M';
     $('#summary-image').removeAttribute('src');
     setProduct('frame'); updateCaption();
   }
@@ -265,6 +278,7 @@
       $('#ai-retry').textContent = state.job ? 'Продолжить ожидание' : 'Создать иллюстрацию';
     }
     state.shirtColor = tshirtColors[saved.shirtColor] ? saved.shirtColor : 'white';
+    state.printLayout=layout(saved.printLayout);
     state.shirtSize = saved.shirtSize || 'M';
     setProduct(saved.product || 'frame', saved.material || 'matte');
     if (saved.format) $('#product-format').value = saved.format;
@@ -447,6 +461,10 @@
     ctx.translate(0, 12);
     ctx.scale(1.8, 1.8);
     drawCotton(ctx, color.hex);
+    const {scale,x,y}=state.printLayout, factor=scale/100;
+    ctx.translate(250+x/100*(120-105*factor),305+y/100*(190-120*factor));
+    ctx.scale(factor,factor);
+    ctx.translate(-250,-305);
     // Transparent PNGs keep their alpha; uploaded photos keep their original background.
     if (image.naturalWidth || image.width) drawContain(image, 145, 190, 210, 185, ctx);
     const title = state.upload ? $('#caption').value.trim() : 'MUSTANG';
@@ -512,6 +530,10 @@
     return gradient;
   }
 
+  function roundedBox(g,x,y,w,h,r){
+    g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);
+    g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();
+  }
   function renderGift(target, view, poster) {
     const g = target.getContext('2d');
     g.save();
@@ -534,13 +556,13 @@
       g.fillRect(65,218,110,147);
     } else if (view === 'keychain') {
       g.translate(450,550); g.rotate(-.09);
-      g.fillStyle = '#bb976b'; g.beginPath(); g.roundRect(-218,-202,436,576,21); g.fill();
+      g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-218,-202,436,576,21); g.fill();
       g.drawImage(poster,-205,-189,410,547);
       g.strokeStyle = '#93948c'; g.lineWidth = 15;
       g.beginPath(); g.arc(0,-345,97,0,2*Math.PI); g.stroke();
       g.strokeStyle = '#d4d4c9'; g.lineWidth = 4; g.stroke();
       g.fillStyle = '#705b45'; g.beginPath(); g.arc(0,-174,12,0,2*Math.PI); g.fill();
-      g.strokeStyle = '#a8a89e'; g.lineWidth = 9; g.beginPath(); g.roundRect(-9,-251,18,80,9); g.stroke();
+      g.strokeStyle = '#a8a89e'; g.lineWidth = 9; g.beginPath(); roundedBox(g,-9,-251,18,80,9); g.stroke();
     } else {
       g.translate(450,540); g.rotate(.042);
       g.fillStyle = horizontalGradient(g,-320,320,[[0,'#bc966d'],[.26,'#ddbf96'],[.72,'#b9946e'],[1,'#d7b78d']]);
@@ -553,6 +575,19 @@
   }
 
   function draw() {
+    drawArtwork();
+    if(!matchMedia('(max-width:800px)').matches) return;
+    const mini=$('#choice-canvas'),g=mini.getContext('2d');
+    g.clearRect(0,0,mini.width,mini.height);
+    if(state.upload || state.product==='tshirt') drawContain(canvas,0,0,mini.width,mini.height,g);
+    else if(choiceExample.naturalWidth){
+      if(['frame','keychain','sticker'].includes(giftView())) renderGift(mini,giftView(),choiceExample);
+      else drawContain(choiceExample,0,0,mini.width,mini.height,g);
+    }
+    $('#choice-name').textContent=selectedProductName();
+    $('#choice-spec').textContent=currentSpec();
+  }
+  function drawArtwork() {
     const gallery = $('#gift-views');
     gallery.hidden = !state.illustration;
     const selected = giftView();
@@ -723,6 +758,7 @@
       material: state.product === 'paper' ? state.material : '',
       format: $('#product-format').value,
       shirtColor: state.product === 'tshirt' ? state.shirtColor : '',
+      printLayout:state.product==='tshirt'?{...state.printLayout}:undefined,
       colorName: state.product === 'tshirt' ? tshirtColors[state.shirtColor].name : '',
       caption: $('#caption').value.trim(), year: $('#year').value.trim(), yearLines: $('#year-lines').checked,
       qty: state.product === 'digital' ? 1 : TeploPricing.quantity($('#item-quantity').value),
@@ -734,7 +770,13 @@
     button.textContent = 'Сохраняем вашу историю…';
     try {
       draw();
-      const previewPromise = new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('preview_failed')), 'image/webp', .9));
+      const thumbnail=document.createElement('canvas');
+      thumbnail.width=360;thumbnail.height=Math.round(360*canvas.height/canvas.width);
+      const thumb=thumbnail.getContext('2d');
+      thumb.fillStyle='#fbf1e1';thumb.fillRect(0,0,thumbnail.width,thumbnail.height);
+      thumb.drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
+      item.preview=await new Promise((resolve,reject)=>thumbnail.toBlob(blob=>blob?resolve(blob):reject(Error('preview_failed')),'image/jpeg',.88));
+      thumbnail.width=thumbnail.height=1;
       const artwork = state.illustrationFile || file;
       const digest = async blob => [...new Uint8Array(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()))].map(v => v.toString(16).padStart(2, '0')).join('');
       const hash = state.sourceHash || await digest(artwork);
@@ -742,7 +784,6 @@
       if (state.sourceFile === file) photoHash = item.photoHash;
       if (state.sourceFile === file) state.sourceHash = hash;
       item.artworkKey = JSON.stringify(item.year && !item.yearLines ? [hash, item.caption, item.year, false] : [hash, item.caption, item.year]);
-      item.preview = await previewPromise;
       await window.TeploCart.add(item, editId);
       endCartEdit();
       $('#item-quantity').value = 1;
@@ -778,6 +819,7 @@
     state.editingCartId = copy ? null : item.id;
     $('#caption').value = item.caption;
     $('#year').value = item.year; $('#year-lines').checked = item.yearLines !== false;
+    state.printLayout=layout(item.printLayout);
     if (item.shirtColor && tshirtColors[item.shirtColor]) state.shirtColor = item.shirtColor;
     if (item.product === 'tshirt') state.shirtSize = item.format;
     setProduct(item.product, item.material || 'matte');
@@ -810,6 +852,15 @@
     updateCaption();
   });
   $('#product-format').addEventListener('change', updateProductSpec);
+  for(const key of ['scale','x','y']){
+    $('#print-'+key).addEventListener('input',event=>{
+      state.printLayout[key]=Number(event.target.value);
+      updateTshirtControls();scheduleDraw();queueDraft();
+    });
+  }
+  $('#print-reset').addEventListener('click',()=>{
+    state.printLayout=layout();updateTshirtControls();scheduleDraw();queueDraft();
+  });
   $$('.tshirt-color').forEach((button) => button.addEventListener('click', () => {
     if (!tshirtColors[button.dataset.shirtColor]) return;
     state.shirtColor = button.dataset.shirtColor;

@@ -68,3 +68,7 @@
 }
 
 canvas.shirt-mockup { object-fit: contain; }
+
+#choice-preview{display:none}
+@media(max-width:800px){#choice-preview{display:flex;align-items:center;gap:16px;margin:12px 0;padding:10px 14px;border:1px solid #e5d1b4;border-radius:8px;background:#fbf1e1}#choice-canvas{width:42%;height:auto;max-width:148px}#choice-preview strong,#choice-preview small{display:block}#choice-preview strong{font:normal 20px/1.1 Georgia,serif}#choice-preview small{margin-top:5px}}
+.print-controls{display:grid;gap:10px;margin:16px 0}.print-controls label{display:grid;grid-template-columns:1fr auto;align-items:center}.print-controls input{width:100%;grid-column:1/-1;accent-color:#734525;min-height:28px}.print-controls button{justify-self:start;background:transparent;color:#704325;text-decoration:underline;border:0;padding:6px 0}

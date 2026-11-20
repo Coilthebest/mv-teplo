@@ -10,7 +10,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v=framed-hero-soft-steps">
   <link rel="stylesheet" href="memories.css?v=gallery-arrows">
-  <link rel="stylesheet" href="tshirt.css?v=cotton-shirt">
+  <link rel="stylesheet" href="tshirt.css?v=shirt-layout4">
   <script src="memories.js?v=lia-birthday" defer></script>
   <link rel="stylesheet" href="cart.css?v=paid-preview-2">
   <script src="cart-pricing.js?v=hd-order" defer></script>
@@ -18,12 +18,12 @@
   <link rel="stylesheet" href="readability.css?v=delivery-4">
   <script src="checkout-rules.js?v=no-city-field" defer></script>
   <script src="checkout.js?v=no-city-field" defer></script>
-  <script src="test-checkout.js?v=thanks-1" defer></script>
-  <script src="cart.js?v=pay-button" defer></script>
+  <script src="test-checkout.js?v=shirt-layout4" defer></script>
+  <script src="cart.js?v=shirt-layout4" defer></script>
   <link rel="stylesheet" href="illustration.css?v=drawing-ready">
-  <script src="illustration.js?v=first-generation" defer></script>
+  <script src="illustration.js?v=shirt-layout4" defer></script>
   <script src="preview-mark.js" defer></script>
-  <script src="app.js?v=first-generation" defer></script>
+  <script src="app.js?v=shirt-layout4" defer></script>
   <script src="memory-motion.js?v=swipe" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -150,6 +150,7 @@
                 <button class="product-option" data-product="tshirt" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 4 2 4-2 5 5-3 4-2-2v11H8V10l-2 2-3-4Z"/><path d="M9 4c0 3 6 3 6 0"/></svg><span>Футболка</span><small>2 870 ₽</small></button>
                 <button class="product-option" data-product="digital" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/></svg><span>Эл. версия</span><span class="digital-quality">HD-качество</span><small>499 ₽</small></button>
               </div>
+              <figure id="choice-preview"><canvas id="choice-canvas" width="260" height="240"></canvas><figcaption><strong id="choice-name"></strong><small id="choice-spec"></small></figcaption></figure>
               <fieldset id="tshirt-options" class="tshirt-options" hidden>
                 <legend class="field-label">Цвет футболки <span id="tshirt-color-name">Белый</span></legend>
                 <div class="tshirt-colors" role="group" aria-label="Цвет футболки">
@@ -159,7 +160,7 @@
                   <button type="button" class="tshirt-color" data-shirt-color="red" aria-pressed="false" aria-label="Красный"><span class="color-dot" style="--swatch:#bd3d38;--check:#fff" aria-hidden="true"></span><span>Красный</span></button>
                   <button type="button" class="tshirt-color" data-shirt-color="black" aria-pressed="false" aria-label="Чёрный"><span class="color-dot" style="--swatch:#272b2e;--check:#fff" aria-hidden="true"></span><span>Чёрный</span></button>
                 </div>
-                <p class="tshirt-upload-note">У готовой иллюстрации внешняя бумажная подложка убирается для принта. Проверьте светлые детали на эскизе перед печатью.</p>
+                <div class="print-controls"><label>Размер принта<output for="print-scale">100%</output><input type="range" id="print-scale" min="65" max="112" value="100"></label><label>Левее / правее<output for="print-x">0%</output><input type="range" id="print-x" min="-100" max="100" value="0"></label><label>Выше / ниже<output for="print-y">0%</output><input type="range" id="print-y" min="-100" max="100" value="0"></label><button id="print-reset" type="button">По центру, 100%</button></div><p class="tshirt-upload-note">У готовой иллюстрации внешняя бумажная подложка убирается для принта. Проверьте светлые детали на эскизе перед печатью.</p>
               </fieldset>
               <fieldset id="paper-options" class="paper-options" hidden>
                 <legend class="field-label">Вариант без рамки</legend>
