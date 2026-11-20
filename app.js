@@ -36,7 +36,7 @@
   const AI = window.TeploIllustration;
   function layout(value={}) {
     const bound=(v,min,max,initial)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):initial;
-    return {scale:bound(value.scale,65,112,100),x:bound(value.x,-100,100,0),y:bound(value.y,-100,100,0)};
+    return {scale:bound(value.scale,65,150,100),x:bound(value.x,-100,100,0),y:bound(value.y,-100,100,0)};
   }
   state.printLayout=layout();
   const choiceExample=new Image();
@@ -464,7 +464,13 @@
     ctx.scale(1.8, 1.8);
     drawCotton(ctx, color.hex);
     const {scale,x,y}=state.printLayout, factor=scale/100;
-    ctx.translate(250+x/100*(120-105*factor),305+y/100*(190-120*factor));
+    // At large scales the print can cover the full torso. Keep slider directions consistent.
+    const width=image.naturalWidth || image.width || 210;
+    const height=image.naturalHeight || image.height || 185;
+    const halfPrint=Math.min(210,185*width/height)*factor/2;
+    const horizontalRoom=factor<=1.12?120-105*factor:Math.max(2.4,(120-halfPrint)*(factor-1.12)/0.38);
+    ctx.beginPath();ctx.rect(128,100,244,415);ctx.clip();
+    ctx.translate(250+x/100*horizontalRoom,305+y/100*(190-120*factor));
     ctx.scale(factor,factor);
     ctx.translate(-250,-305);
     // Transparent PNGs keep their alpha; uploaded photos keep their original background.
