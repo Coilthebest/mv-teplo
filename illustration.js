@@ -85,11 +85,46 @@
     extend(true, true, height - y - h);
     ctx.drawImage(image, x, y, w, h);
   }
+  // Retain the original canvas bounds so the title and drawing share the same coordinates.
+  const inkCache = new WeakMap();
+  function printInk(image) {
+    if (inkCache.has(image)) return inkCache.get(image);
+    const layer = document.createElement('canvas');
+    layer.width = image.naturalWidth || image.width;
+    layer.height = image.naturalHeight || image.height;
+    const g = layer.getContext('2d');
+    g.drawImage(image, 0, 0);
+    const pixels = g.getImageData(0, 0, layer.width, layer.height);
+    const data = pixels.data;
+    const samples = [[], [], []];
+    for (let x = 0; x < layer.width; x += Math.max(1, Math.floor(layer.width / 128))) {
+      for (const y of [0, layer.height - 1]) {
+        const i = 4 * (y * layer.width + x);
+        samples.forEach((channel, k) => channel.push(data[i + k]));
+      }
+    }
+    const paper = samples.map(v => v.sort((a, b) => a - b)[Math.floor(v.length / 2)]);
+    for (let i = 0; i < data.length; i += 4) {
+      const delta = Math.max(Math.abs(paper[0]-data[i]), Math.abs(paper[1]-data[i+1]), Math.abs(paper[2]-data[i+2]));
+      if (delta >= 55) continue;
+      const alpha = Math.min(1, Math.max(0, (delta - 5) / 50));
+      if (alpha > 0) {
+        for (let k = 0; k < 3; k++) data[i + k] = paper[k] + (data[i + k] - paper[k]) / alpha;
+      }
+      data[i + 3] *= alpha;
+    }
+    g.putImageData(pixels, 0, 0);
+    inkCache.set(image, layer);
+    return layer;
+  }
   let posterCanvas;
   function compose(image, title, year, yearLines = true) {
     if (!posterCanvas) {posterCanvas=document.createElement('canvas');posterCanvas.width=1200;posterCanvas.height=1600;}
     const poster=posterCanvas;
-    const ctx = poster.getContext('2d'); ctx.fillStyle = '#f3e6d7'; ctx.fillRect(0, 0, 1200, 1600); fitPaper(ctx, image, 1200, 1600);
+    const ctx = poster.getContext('2d'); ctx.clearRect(0, 0, 1200, 1600);
+    const ink = printInk(image);
+    const scale = Math.min(1200 / ink.width, 1600 / ink.height);
+    ctx.drawImage(ink, (1200 - ink.width * scale)/2, (1600 - ink.height * scale)/2, ink.width * scale, ink.height * scale);
     function line(text, y, size, spacing) {
       const letters = Array.from(text); let total;
       do { ctx.font = `${size}px Georgia, serif`; total = letters.reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + Math.max(0, letters.length - 1) * spacing; if (total <= 900) break; size--; spacing = Math.max(2, spacing - .1); } while (size > 16);
@@ -152,5 +187,5 @@
     trimmed.getContext('2d').drawImage(canvas, -left, -top);
     return trimmed;
   }
-  window.TeploIllustration = Object.freeze({ config, start, poll, imageBlob, loadImage, compose, fitPaper, printVignette, asBlob, asData, draft });
+  window.TeploIllustration = Object.freeze({ config, start, poll, imageBlob, loadImage, compose, printInk, fitPaper, printVignette, asBlob, asData, draft });
 })();
