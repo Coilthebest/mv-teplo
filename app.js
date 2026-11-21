@@ -580,7 +580,7 @@
       g.fillStyle = horizontalGradient(g,65,175,[[0,'#40281030'],[.3,'#ffffff05'],[.75,'#ffffff00'],[1,'#40281026']]);
       g.fillRect(65,218,110,147);
     } else if (view === 'keychain') {
-      g.translate(450,550); g.rotate(-.09);
+      g.translate(450,550);
       const format = state.product === 'keychain' ? $('#product-format').value : '';
       const bodyWidth = format.includes('40 × 56') ? 576 * 40 / 56 : 436;
       g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-bodyWidth/2,-202,bodyWidth,576,21); g.fill();
@@ -594,7 +594,7 @@
       g.fillStyle = '#705b45'; g.beginPath(); g.arc(0,-174,12,0,2*Math.PI); g.fill();
       g.strokeStyle = '#a8a89e'; g.lineWidth = 9; g.beginPath(); roundedBox(g,-9,-251,18,80,9); g.stroke();
     } else {
-      g.translate(450,540); g.rotate(.042);
+      g.translate(450,540);
       g.fillStyle = horizontalGradient(g,-320,320,[[0,'#bc966d'],[.26,'#ddbf96'],[.72,'#b9946e'],[1,'#d7b78d']]);
       g.fillRect(-323,-478,646,956);
       // Fill the entire 10 × 15 opening with a centred print crop.
