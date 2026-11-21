@@ -621,7 +621,7 @@
     const example = !state.upload && choiceExample.naturalWidth ? choiceExample : null;
     const showMockup = Boolean((state.illustration || example) && buttons.some(button => button.dataset.giftView === selected));
     $('#preview-stage').classList.toggle('gift-mockup', showMockup);
-    let poster = example;
+    let poster = example ? AI.printInk(example) : null;
     if (state.illustration) {
       poster = AI.compose(state.illustration, $('#caption').value, $('#year').value, $('#year-lines').checked);
       for (const button of buttons) {
@@ -646,12 +646,7 @@
     }
     if (poster) {
       placeTeploPrint(ctx,0,0,canvas.width,height,placement(), () => {
-        if (state.product === 'magnet' || state.product === 'digital') AI.fitPaper(ctx,poster,canvas.width,height);
-        else {
-          ctx.fillStyle = '#f3e6d7';
-          ctx.fillRect(0,0,canvas.width,height);
-          drawContain(poster,0,0,canvas.width,height);
-        }
+        drawContain(poster,0,0,canvas.width,height);
       });
       return;
     }
@@ -660,11 +655,6 @@
   }
 
   function drawOriginalSketch(height,landscape) {
-    const paper = ctx.createLinearGradient(0, 0, 900, height);
-    paper.addColorStop(0, '#f6ead7');
-    paper.addColorStop(1, '#f0dfc5');
-    ctx.fillStyle = paper;
-    ctx.fillRect(0, 0, 900, height);
     drawUpload(state.upload);
     const titleY = height - (landscape ? 115 : 190);
     const dateY = height - (landscape ? 52 : 118);
