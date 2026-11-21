@@ -45,7 +45,6 @@ async function captionedJpeg(blob,item) {
   const w=canvas.width,h=canvas.height,ctx=canvas.getContext('2d');
   ctx.fillStyle='#f3e6d7';ctx.fillRect(0,0,w,h);
   placeTeploPrint(ctx,0,0,w,h,item.printLayout,()=>{
-    if(product==='magnet') return TeploIllustration.fitPaper(ctx,poster,w,h);
     if(product==='paper' && item.material==='sticker') return ctx.drawImage(poster,0,0,w,h);
     if(product==='frame') {
       const crop=poster.height*2/3;
