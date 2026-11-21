@@ -32,32 +32,28 @@ function orderZip(files) {
 async function captionedJpeg(blob,item) {
   const picture=await createImageBitmap(blob);
   const canvas=document.createElement('canvas');
-  canvas.width=picture.width;canvas.height=picture.height;
-  const ctx=canvas.getContext('2d');
-  const w=canvas.width,h=canvas.height;
-  ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
-  placeTeploPrint(ctx,0,0,w,h,item.printLayout, () => {
-  ctx.drawImage(picture,0,0,w,h);
-  ctx.save();
-  ctx.scale(w/1200,h/1600);
-  ctx.fillStyle='#68503b';
-  function caption(text,y,size,space){
-    const letters=Array.from(text);
-    ctx.font=size+'px Georgia,serif';
-    const widths=letters.map(c=>ctx.measureText(c).width);
-    const total=widths.reduce((a,b)=>a+b,0)+Math.max(0,letters.length-1)*space;
-    ctx.save();ctx.translate(600,y);const scale=Math.min(1,900/Math.max(1,total));ctx.scale(scale,scale);
-    let x=-total/2;
-    letters.forEach((c,i)=>{ctx.fillText(c,x,0);x+=widths[i]+space});
-    ctx.restore();return total*scale;
-  }
-  const title=item.caption.trim().toLocaleUpperCase('ru'),year=item.year.trim();
-  if(title)caption(title,1360,47,12);
-  if(year){const y=title?1422:1360,edge=caption(year,y,30,12)/2+30;
-    if(item.yearLines){ctx.fillStyle='#9e7c5e';ctx.fillRect(600-edge-62,y-10,62,1.5);ctx.fillRect(600+edge,y-10,62,1.5);}
-  }
-  ctx.restore();
-
+  const poster=TeploIllustration.compose(picture,item.caption,item.year,item.yearLines);
+  const product=item.product;
+  let ratio=3/4;
+  if(product==='frame' || (product==='paper' && item.material!=='sticker')) ratio=2/3;
+  if(product==='keychain') ratio=((item.format||'').includes('40 × 56')?576*40/56-26:410)/547;
+  if(product==='paper' && item.material==='sticker') ratio=110/147;
+  const size=product==='magnet' && (item.format||'').match(/(\d+)\s*×\s*(\d+)/);
+  if(size) ratio=Number(size[1])/Number(size[2]);
+  canvas.height=picture.height;
+  canvas.width=Math.max(1,Math.round(canvas.height*ratio));
+  const w=canvas.width,h=canvas.height,ctx=canvas.getContext('2d');
+  ctx.fillStyle='#f3e6d7';ctx.fillRect(0,0,w,h);
+  placeTeploPrint(ctx,0,0,w,h,item.printLayout,()=>{
+    if(product==='magnet') return TeploIllustration.fitPaper(ctx,poster,w,h);
+    if(product==='paper' && item.material==='sticker') return ctx.drawImage(poster,0,0,w,h);
+    if(product==='frame') {
+      const crop=poster.height*2/3;
+      return ctx.drawImage(poster,(poster.width-crop)/2,0,crop,poster.height,0,0,w,h);
+    }
+    const factor=Math.min(w/poster.width,h/poster.height);
+    const width=poster.width*factor,height=poster.height*factor;
+    ctx.drawImage(poster,(w-width)/2,(h-height)/2,width,height);
   });
   picture.close();
   const output=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?.type==='image/jpeg'?resolve(b):reject(Error('JPEG')), 'image/jpeg', 0.96));
