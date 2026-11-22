@@ -1,0 +1,71 @@
+#garland-dialog {
+  width: min(680px, calc(100% - 24px));
+  max-height: 90dvh;
+  padding: clamp(18px, 4vw, 32px);
+  text-align: left;
+}
+
+#garland-dialog h2 { margin-right: 1.5rem; font-size: clamp(24px, 4vw, 34px); }
+
+.garland-formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem 1.3rem;
+  padding: .6rem 0;
+  margin: 1rem 0 0;
+  border: 0;
+}
+
+.garland-formats legend { font-weight: 700; }
+.garland-dialog input { accent-color: #83532e; }
+
+.garland-stories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: .65rem;
+}
+
+.garland-stories label {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: .35rem;
+  padding: .45rem;
+  border: 1px solid #d9c4a9;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .875rem;
+  overflow-wrap: anywhere;
+}
+
+.garland-stories label:has(:checked) { border-color: #83532e; background: #f6e8d3; }
+.garland-stories input { position: absolute; top: .65rem; left: .65rem; }
+
+.garland-stories img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  border: 6px solid #fffefa;
+  background: #f5eadb;
+  box-shadow: 0 1px 3px #62452c44;
+}
+
+.garland-order {
+  position: absolute;
+  top: .55rem;
+  right: .55rem;
+  padding: 0 .4rem;
+  border-radius: .3rem;
+  background: #60371f;
+  color: #fff;
+}
+
+.garland-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .8rem; }
+
+.collection-grid .collection-image { height: auto; aspect-ratio: 1; }
+.collection-image.collection-garland img { object-fit: contain; }
+
+.cart-item ol.cart-artwork-title {
+  padding-left: 1.25rem;
+  margin: .35rem 0;
+}

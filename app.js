@@ -18,12 +18,8 @@
     frame: { name: 'История в рамке', formats: ['10 × 15 см'] },
     magnet: { name: TeploPricing.names.magnet, formats: Object.keys(TeploPricing.magnets), defaultFormat: '6 × 9 см (рекомендуем)' },
     keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см', 'Акриловый · 40 × 56 мм'] },
-    paper: { name: 'История без рамки', formats: ['10 × 15 см'] },
+    paper: { name: 'Наклейка с вашей историей', formats: ['10 × 15 см'] },
     tshirt: { name: 'Футболка с вашей историей', formats: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], defaultFormat: 'M' },
-  };
-  const paperMaterials = {
-    matte: { name: 'Матовая бумага', productName: 'Постер без рамки', formats: products.paper.formats },
-    sticker: { name: 'Наклейка', productName: 'Наклейка с вашей историей', formats: products.paper.formats },
   };
   const tshirtColors = {
     white: { name: 'Белый', hex: '#fffdf8', ink: '#62351f' },
@@ -32,7 +28,7 @@
     red: { name: 'Красный', hex: '#bd3d38', ink: '#fff9ed' },
     black: { name: 'Чёрный', hex: '#272b2e', ink: '#fff9ed' },
   };
-  const state = { upload: null, product: 'frame', material: 'matte', shirtColor: 'white', shirtSize: 'M', sourceFile: null, sourceHash: null, editingCartId: null, illustration: null, illustrationFile: null, shirtPrint: null, job: null, generating: false, legacy: false };
+  const state = { upload: null, product: 'frame', material: 'sticker', shirtColor: 'white', shirtSize: 'M', sourceFile: null, sourceHash: null, editingCartId: null, illustration: null, illustrationFile: null, shirtPrint: null, job: null, generating: false, legacy: false };
   const AI = window.TeploIllustration;
   function layout(value={}) {
     const bound=(v,min,max,initial)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):initial;
@@ -126,7 +122,7 @@
   }
 
   function selectedProductName() {
-    return state.product === 'paper' ? paperMaterials[state.material].productName : products[state.product].name;
+    return products[state.product].name;
   }
 
   function updateProduct() {
@@ -135,14 +131,12 @@
     $('#preview-stage').dataset.product = key;
     $('#preview-stage').dataset.material = state.material;
     $('#product-name').textContent = selectedProductName();
-    $('#paper-options').hidden = key !== 'paper';
     $('#tshirt-options').hidden = key !== 'tshirt';
     $('#print-controls').hidden=false;
     $('#art-object').classList.remove('aligning');
     $('.format-label').textContent = key === 'tshirt' ? 'Размер футболки' : 'Формат';
     updateTshirtControls();
-    $$('input[name="paper-material"]').forEach((input) => { input.checked = input.value === state.material; });
-    const formats = key === 'paper' ? paperMaterials[state.material].formats : products[key].formats;
+    const formats = products[key].formats;
     $('#product-format').replaceChildren(...formats.map((text) => {
       const option = document.createElement('option');
       option.value = text;
@@ -164,10 +158,9 @@
     $('#tshirt-color-name').textContent = tshirtColors[state.shirtColor].name;
   }
 
-  function setProduct(key, material = state.material) {
+  function setProduct(key) {
     if (!products[key]) return;
     state.product = key;
-    if (paperMaterials[material]) state.material = material;
     updateProduct();
   }
 
@@ -180,7 +173,7 @@
   function currentSpec() {
     const format = $('#product-format').value;
     if (state.product === 'tshirt') return `${tshirtColors[state.shirtColor].name} · размер ${format}`;
-    return state.product === 'paper' ? `${paperMaterials[state.material].name} · ${format}` : format;
+    return state.product === 'paper' ? `Наклейка · ${format}` : format;
   }
 
   function currentCanvasHeight() {
@@ -273,7 +266,7 @@
     state.editingCartId = null;
     $('#item-quantity').value = 1;
     $('#caption').value = ''; $('#year').value = ''; $('#year-lines').checked = true;
-    state.layouts={}; state.material = 'matte'; state.shirtColor = 'white'; state.shirtSize = 'M';
+    state.layouts={}; state.material = 'sticker'; state.shirtColor = 'white'; state.shirtSize = 'M';
     $('#summary-image').removeAttribute('src');
     $('#cart-add-error').hidden = true;
     setProduct('frame'); updateCaption();
@@ -299,7 +292,7 @@
       state.layouts[view] = layout(saved.layouts?.[view] || (view === 'tshirt' ? saved.printLayout : undefined));
     }
     state.shirtSize = saved.shirtSize || 'M';
-    setProduct(saved.product || 'frame', saved.material || 'matte');
+    setProduct(saved.product === 'paper' && saved.material !== 'sticker' ? 'frame' : saved.product || 'frame');
     if (saved.format) restoreFormat(saved.format);
     $('#item-quantity').value = saved.qty || 1;
     updateProductSpec(); updatePreviewMode(); updateCaption(); updatePurchase();
@@ -837,6 +830,7 @@
   document.addEventListener('teplo:notice', event => notify(event.detail));
   document.addEventListener('teplo:edit-cart', async event => {
     const { item, copy } = event.detail;
+    if (item.product === 'garland') return;
     if (restoring || state.generating || savingCart) { notify('Дождитесь окончания обработки.'); return; }
     persistDraft();
     const matching = item.storyId ? slots.findIndex(record => record?.storyId === item.storyId) : -1;
@@ -859,7 +853,7 @@
     
     if (item.shirtColor && tshirtColors[item.shirtColor]) state.shirtColor = item.shirtColor;
     if (item.product === 'tshirt') state.shirtSize = item.format;
-    setProduct(item.product, item.material || 'matte');
+    setProduct(item.product);
     state.layouts[giftView()] = layout(item.printLayout);
     updateTshirtControls();
     restoreFormat(item.format);
@@ -877,12 +871,12 @@
 
   $$('[data-gift-view]').forEach(button => button.addEventListener('click', () => {
     const view = button.dataset.giftView;
-    if (view === 'sticker') setProduct('paper', 'sticker');
+    if (view === 'sticker') setProduct('paper');
     else setProduct(view);
   }));
   $$('.product-option').forEach((button) => button.addEventListener('click', () => setProduct(button.dataset.product)));
   $$('[data-choose-product]').forEach((link) => link.addEventListener('click', () => {
-    setProduct(link.dataset.chooseProduct, link.dataset.chooseMaterial);
+    setProduct(link.dataset.chooseProduct);
     if (link.dataset.chooseFormat) {
       $('#product-format').value = link.dataset.chooseFormat;
       updateProductSpec();
@@ -918,9 +912,6 @@
     state.shirtColor = button.dataset.shirtColor;
     updateTshirtControls();
     updateProductSpec();
-  }));
-  $$('input[name="paper-material"]').forEach((input) => input.addEventListener('change', () => {
-    if (input.checked) setProduct('paper', input.value);
   }));
   $('#photo-input').addEventListener('change', (event) => loadUpload(event.target.files[0]));
   $('#ai-retry').addEventListener('click', runGeneration);
@@ -960,13 +951,6 @@
   window.addEventListener('pagehide', () => { clearTimeout(draftTimer); persistDraft(); });
 
   async function initialize() {
-    const catalog = $('#collection-shirt');
-    const catalogContext = catalog.getContext('2d');
-    catalogContext.setTransform(1.9, 0, 0, 1.9, -25, -46);
-    drawCotton(catalogContext, tshirtColors.white.hex);
-    const everest = new Image();
-    everest.onload = () => drawContain(everest, 144, 145, 212, 252, catalogContext);
-    everest.src = 'assets/everest-print.webp';
     tshirtExample.decoding = 'async';
     tshirtExample.addEventListener('load', () => { if (state.product === 'tshirt') scheduleDraw(); });
     tshirtExample.src = 'assets/mustang-tshirt-print.png';
@@ -989,6 +973,20 @@
     restoring = false; $('.builder').inert = false;
     await selectSlot(Number.isInteger(index) && index >= 0 && index < slots.length ? index : 0);
   }
+  window.setupGarland({
+    stories() {
+      persistDraft();
+      return slots;
+    },
+    upload() {
+      const empty = slots.findIndex(record => !record);
+      if (empty < 0) {
+        $('#story-grid').scrollIntoView({ block: 'center' });
+        notify('Все ячейки заняты. Выберите фото в конструкторе или освободите ячейку кнопкой «Сначала».');
+      } else selectSlot(empty, true);
+    },
+    busy: () => restoring || state.generating || savingCart
+  });
   $('.builder').inert = true;
   initialize();
 })();
