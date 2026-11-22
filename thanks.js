@@ -30,17 +30,25 @@
       const result=await request('payment-status',{});
       if(result.status!=='paid') throw Error('unpaid');
       const delivery=result.delivery, files=[];
+      const seen = new Set();
+      // Prefer the explicitly chosen electronic layout when a physical item shares its art.
+      const entries = Array.from(delivery.files.entries()).sort((a,b) => Number(b[1].product==='digital') - Number(a[1].product==='digital'));
       if (!delivery?.files?.length) throw Error('missing_files');
-        for(const [index,item] of delivery.files.entries()){
-          progress.textContent='Готовим иллюстрацию '+(index+1)+' из '+delivery.files.length+'…';
+        for(const [position,[index,item]] of entries.entries()){
+          progress.textContent='Готовим иллюстрацию '+(position+1)+' из '+delivery.files.length+'…';
           const chunks=[];
           for(let part=0;;part++){
             const r=await request('payment-file',{ticket:delivery.ticket,expires:delivery.expires,index,part});
             chunks.push(Uint8Array.from(atob(r.data),c=>c.charCodeAt(0)));
             if(r.last) break;
           }
+          const original = new Blob(chunks,{type:'image/png'});
+          const digest = await crypto.subtle.digest('SHA-256',await original.arrayBuffer());
+          const key = new Uint8Array(digest).join(',');
+          if (seen.has(key)) continue;
+          seen.add(key);
           const label=[item.caption,item.year].filter(Boolean).join(' ').replace(/[\\/:*?"<>|\x00-\x1f]/g,' ').trim()||'Иллюстрация';
-          files.push({name:String(index+1).padStart(2,'0')+' — '+label+'.jpg',bytes:await captionedJpeg(new Blob(chunks,{type:'image/png'}),item)});
+          files.push({name:String(files.length+1).padStart(2,'0')+' — '+label+'.jpg',bytes:await captionedJpeg(original,{caption:item.caption,year:item.year,yearLines:item.yearLines,printLayout:item.product==='digital'?item.printLayout:null})});
         }
       if (!files.length) throw Error('empty_delivery');
       const single=files.length===1;
@@ -64,7 +72,7 @@
           if (count) info=r.delivery.preview?'Доступна предварительная версия иллюстрации.':'Вы можете скачать свои иллюстрации в HD-качестве';
           show('Спасибо Вам большое.','Мы Вас не подведём, теперь Вы клиент Тепла',info);
           if(r.physical){const eta=$('#order-eta');eta.textContent=r.deliveryEstimate||'Срок доставки до ПВЗ пока неизвестен.';eta.hidden=false;}
-          if (count) control(count>1?'Скачать иллюстрации · ZIP':r.delivery.preview?'Скачать иллюстрацию · JPG':'Скачать HD-иллюстрацию · JPG',download);
+          if (count) control(count>1?'Скачать HD-иллюстрации':r.delivery.preview?'Скачать иллюстрацию · JPG':'Скачать HD-иллюстрацию · JPG',download);
           if(!matchMedia('(prefers-reduced-motion: reduce)').matches) for(let n=0;n<28;n++){
             const i=document.createElement('i');i.style.left=Math.random()*100+'%';i.style.background=['#cf9464','#c2a259','#92a493','#d4a397'][n%4];i.style.animationDelay=Math.random()*.6+'s';$('main').append(i);setTimeout(()=>i.remove(),3200);
           }
