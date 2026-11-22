@@ -110,24 +110,28 @@
     mode.replaceChildren();
     const dot = document.createElement('span');
     dot.className = 'dot';
-    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Проверочный образец · без генерации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : 'Пример изделия · загрузите своё фото'));
+    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Пример готовой иллюстрации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : 'Пример изделия · загрузите своё фото'));
     $('#preview-stage').classList.remove('is-empty');
     $('#preview-empty').hidden = true;
     $('#stage-annotation').textContent = 'Ваш момент. Ваша история.';
     $('.preview-disclaimer').textContent = state.illustration ? isTshirt ? 'Принт без внешней бумажной подложки. Проверьте светлые детали на эскизе: цвет и посадка готовой футболки могут отличаться. HD-файл иллюстрации сохраняется отдельно.' : defaultDisclaimer : isTshirt
-      ? hasPhoto ? 'Здесь показана футболка с вашим исходным изображением. Фон фото в демоверсии сохраняется; PNG с прозрачностью примеряется без подложки. Цвет и посадка готового изделия могут отличаться.' : 'Так может выглядеть футболка с готовой иллюстрацией без бумажной подложки. Загрузите своё фото, чтобы собрать личный эскиз. Цвет и посадка готового изделия могут отличаться.'
+      ? hasPhoto ? 'Здесь показана футболка с вашим исходным изображением. Фон исходного фото сохраняется; PNG с прозрачностью примеряется без подложки. Цвет и посадка готового изделия могут отличаться.' : 'Так может выглядеть футболка с готовой иллюстрацией без бумажной подложки. Загрузите своё фото, чтобы собрать личный эскиз. Цвет и посадка готового изделия могут отличаться.'
       : defaultDisclaimer;
     $('#view-selection').disabled = !hasArtwork;
     $('#add-to-cart').disabled = !hasArtwork || savingCart || state.generating;
   }
 
   function selectedProductName() {
-    return products[state.product].name;
+    return state.product === 'paper' ? TeploPricing.productName(state) : products[state.product].name;
   }
 
   function updateProduct() {
     const key = state.product;
-    setPressed($$('.product-option'), 'product', key);
+    $$('.product-option[data-product]').forEach(button => {
+      const selected = button.dataset.product === key && (!button.dataset.material || button.dataset.material === state.material);
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
     $('#preview-stage').dataset.product = key;
     $('#preview-stage').dataset.material = state.material;
     $('#product-name').textContent = selectedProductName();
@@ -158,9 +162,10 @@
     $('#tshirt-color-name').textContent = tshirtColors[state.shirtColor].name;
   }
 
-  function setProduct(key) {
+  function setProduct(key, material = 'sticker') {
     if (!products[key]) return;
     state.product = key;
+    if (key === 'paper') state.material = material === 'matte' ? 'matte' : 'sticker';
     updateProduct();
   }
 
@@ -173,7 +178,7 @@
   function currentSpec() {
     const format = $('#product-format').value;
     if (state.product === 'tshirt') return `${tshirtColors[state.shirtColor].name} · размер ${format}`;
-    return state.product === 'paper' ? `Наклейка · ${format}` : format;
+    return state.product === 'paper' ? `${TeploPricing.productName(state)} · ${format}` : format;
   }
 
   function currentCanvasHeight() {
@@ -292,7 +297,7 @@
       state.layouts[view] = layout(saved.layouts?.[view] || (view === 'tshirt' ? saved.printLayout : undefined));
     }
     state.shirtSize = saved.shirtSize || 'M';
-    setProduct(saved.product === 'paper' && saved.material !== 'sticker' ? 'frame' : saved.product || 'frame');
+    setProduct(saved.product || 'frame', saved.material);
     if (saved.format) restoreFormat(saved.format);
     $('#item-quantity').value = saved.qty || 1;
     updateProductSpec(); updatePreviewMode(); updateCaption(); updatePurchase();
@@ -371,7 +376,7 @@
       if (version !== uploadVersion) return;
       try { await applyIllustration(AI.imageBlob(response.image), response.sealedArtwork?.previewMark, true); } catch (error) { error.keepJob = true; throw error; }
       state.sealedArtwork = response.sealedArtwork; state.job = null;
-      await persistDraft(); aiStatus(aiConfig.test ? 'Проверочный ответ получен. Это заранее сохранённый образец, без новой обработки.' : 'Иллюстрация готова. Добавьте название и год — они меняются без новой обработки.');
+      await persistDraft(); aiStatus(aiConfig.test ? 'Показан пример иллюстрации. Обработка вашего фото сейчас недоступна.' : 'Иллюстрация готова. Добавьте название и год — они меняются без новой обработки.');
       completed = true;
     } catch (error) {
       if (!error.network && !error.keepJob && error.code !== 'image_no_output') state.job = null;
@@ -755,7 +760,7 @@
 
   function updatePurchase() {
     const P = window.TeploPricing;
-    const price = P.unitPrice({ product: state.product, format: $('#product-format').value });
+    const price = P.unitPrice({ product: state.product, material: state.material, format: $('#product-format').value });
     const isDigital = state.product === 'digital';
     if (isDigital) $('#item-quantity').value = 1;
     $('#item-quantity').disabled = isDigital;
@@ -853,7 +858,7 @@
     
     if (item.shirtColor && tshirtColors[item.shirtColor]) state.shirtColor = item.shirtColor;
     if (item.product === 'tshirt') state.shirtSize = item.format;
-    setProduct(item.product);
+    setProduct(item.product, item.material);
     state.layouts[giftView()] = layout(item.printLayout);
     updateTshirtControls();
     restoreFormat(item.format);
@@ -874,9 +879,9 @@
     if (view === 'sticker') setProduct('paper');
     else setProduct(view);
   }));
-  $$('.product-option').forEach((button) => button.addEventListener('click', () => setProduct(button.dataset.product)));
+  $$('.product-option').forEach((button) => button.addEventListener('click', () => setProduct(button.dataset.product, button.dataset.material)));
   $$('[data-choose-product]').forEach((link) => link.addEventListener('click', () => {
-    setProduct(link.dataset.chooseProduct);
+    setProduct(link.dataset.chooseProduct, link.dataset.chooseMaterial);
     if (link.dataset.chooseFormat) {
       $('#product-format').value = link.dataset.chooseFormat;
       updateProductSpec();
@@ -942,6 +947,13 @@
   $('#dialog-back').addEventListener('click', () => $('#selection-dialog').close());
   $('#privacy-button').addEventListener('click', () => $('#privacy-dialog').showModal());
   $('#close-privacy').addEventListener('click', () => $('#privacy-dialog').close());
+  const legalDialog = $('#legal-dialog');
+  $$('[data-legal-document]').forEach(link => link.addEventListener('click', event => {
+    event.preventDefault();
+    $('#legal-title').textContent = link.textContent;
+    legalDialog.showModal();
+  }));
+  $('#close-legal').addEventListener('click', () => legalDialog.close());
   $('#drawing-dialog').addEventListener('cancel', event => event.preventDefault());
   $$('dialog:not(#drawing-dialog)').forEach((dialog) => dialog.addEventListener('click', (event) => {
     if (event.target !== dialog) return;
@@ -958,7 +970,7 @@
     updatePreviewMode();
     updateCaption();
     aiConfig = await AI.config();
-    $('#ai-badge').textContent = aiConfig.test ? 'Проверка интерфейса' : aiConfig.ready ? 'Иллюстрация из вашего фото' : 'Осталось подключить обработку';
+    $('#ai-badge').textContent = aiConfig.ready ? 'Иллюстрация из вашего фото' : 'Обработка фото временно недоступна';
     $('#ai-test-note').hidden = !aiConfig.test;
     aiStatus(aiConfig.ready ? 'Загрузите фото — создадим одну иллюстрацию. Название и год меняются без новой обработки.' : 'Создание иллюстраций временно недоступно. Попробуйте позже.');
     const records = await Promise.all(slots.map((_, index) => AI.draft('get', null, index)));
