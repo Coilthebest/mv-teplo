@@ -8,7 +8,8 @@
   let items = [], pack = 'ordinary', queue = Promise.resolve();
   const previewUrls = new Map();
   const signature = item => JSON.stringify([item.artworkKey, item.product, item.material, item.format,item.shirtColor,printSpec(item)]);
-  const calculation = () => P.calculate(items, pack);
+  let promo = null;
+  const calculation = () => P.calculate(items, pack, promo);
   const thingWord = n => ({ one: 'вещь', few: 'вещи', many: 'вещей', other: 'вещи' })[new Intl.PluralRules('ru-RU').select(n)];
   const records = TeploStore('teplo-cart', 'cart');
   function persist(items, pack) {
@@ -80,7 +81,7 @@
     $('#cart-total').textContent = P.money(c.total);
     $('#cart-gifts').hidden = !c.physicalCount;
     $('#cart-gifts').textContent = 'Электронная копия каждого рисунка в HD-качестве — в подарок.';
-    window.TeploCheckout.setOrderState(!!c.physicalCount);
+    window.TeploCheckout.setOrderState(!!c.physicalCount, promo?.door === true);
     if (action && focusedId) {
       const replacement = [...$('#cart-items').querySelectorAll('button')].find(button => button.dataset.cartAction === action && button.dataset.id === focusedId && !button.disabled);
       (replacement || $('#close-cart')).focus({ preventScroll: true });
@@ -151,5 +152,61 @@
     render();
   })();
   window.TeploCart = Object.freeze({ ready, add, open, spec, printSpec });
-  window.startTestCheckout(() => ({ ...calculation(), pack }));
+  const input = $('#cart-promo'), feedback = $('#promo-status');
+  let timer, revision = 0;
+  function rememberPromo(value) {
+    try {
+      if (value) sessionStorage.setItem('teplo-promo', value.code);
+      else sessionStorage.removeItem('teplo-promo');
+    } catch {}
+  }
+  function clearPromo() {
+    ++revision;
+    clearTimeout(timer);
+    promo = null;
+    rememberPromo(null);
+    input.value = '';
+    feedback.textContent = '';
+    $('#promo-chip').hidden = true;
+    render();
+  }
+  $('#remove-promo').addEventListener('click', () => { clearPromo(); input.focus(); });
+  document.addEventListener('teplo:cart-cleared', clearPromo);
+  function enablePromo(lookup) {
+    $('#promo-field').hidden = false;
+    async function check(value, version) {
+      feedback.textContent = 'Проверяем промокод…';
+      try {
+        const { offer } = await lookup(value);
+        if (version !== revision) return;
+        if (!offer) {
+          feedback.textContent = 'Такого промокода нет. Проверьте написание.';
+          return;
+        }
+        const keepPrevious = promo && promo.rate > offer.rate;
+        if (!keepPrevious) promo = offer;
+        rememberPromo(promo);
+        input.value = '';
+        $('#promo-name').textContent = promo.code + ' · −' + promo.rate + '%';
+        $('#promo-chip').hidden = false;
+        feedback.textContent = keepPrevious ? 'Сохранён более выгодный промокод.' : 'Промокод принят. Применяется самая выгодная скидка.';
+        render();
+      } catch {
+        if (version === revision) feedback.textContent = 'Не удалось проверить промокод. Нажмите Enter для повторной проверки.';
+      }
+    }
+    function schedule(immediate) {
+      clearTimeout(timer);
+      const version = ++revision, value = input.value.trim();
+      feedback.textContent = '';
+      if (value) timer = setTimeout(() => check(value, version), immediate ? 0 : 450);
+    }
+    input.addEventListener('input', () => schedule(false));
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); schedule(true); }
+    });
+    try { input.value = sessionStorage.getItem('teplo-promo') || ''; } catch {}
+    schedule(true);
+  }
+  window.startTestCheckout(() => ({ ...calculation(), pack, promoCode: promo?.code, promoDraft: !!input.value.trim() }), enablePromo);
 })();

@@ -70,8 +70,12 @@
           const count=r.delivery?.files?.length||0;
           let info='Файлы заказа пока недоступны. Сохраните эту страницу и откройте её после обновления сервиса.';
           if (count) info=r.delivery.preview?'Доступна предварительная версия иллюстрации.':'Вы можете скачать свои иллюстрации в HD-качестве';
-          show('Спасибо Вам большое.','Мы Вас не подведём, теперь Вы клиент Тепла',info);
-          if(r.physical){const eta=$('#order-eta');eta.textContent=r.deliveryEstimate||'Срок доставки до ПВЗ пока неизвестен.';eta.hidden=false;}
+          show('Спасибо Вам большое.','Мы Вас не подведём! Теперь вы клиент ',info);
+          const brand = document.createElement('em');
+          brand.className = 'customer-brand';
+          brand.textContent = 'mv-teplo.ru';
+          $('#message').append(brand, '.');
+          if(r.physical){const eta=$('#order-eta');eta.textContent=r.deliveryMethod === 'door' ? 'Бесплатная доставка до двери' : r.deliveryEstimate || 'Срок доставки до ПВЗ пока неизвестен.';eta.hidden=false;}
           if (count) control(count>1?'Скачать HD-иллюстрации':r.delivery.preview?'Скачать иллюстрацию · JPG':'Скачать HD-иллюстрацию · JPG',download);
           if(!matchMedia('(prefers-reduced-motion: reduce)').matches) for(let n=0;n<28;n++){
             const i=document.createElement('i');i.style.left=Math.random()*100+'%';i.style.background=['#cf9464','#c2a259','#92a493','#d4a397'][n%4];i.style.animationDelay=Math.random()*.6+'s';$('main').append(i);setTimeout(()=>i.remove(),3200);

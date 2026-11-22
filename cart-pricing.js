@@ -7,7 +7,7 @@
     '7 × 10 см': 65000, '8 × 8 см': 60000, '10 × 10 см': 60000,
     '7 × 5 см': 60000, '6 × 9 см (рекомендуем)': 60000, '10 × 7 см': 65000, '13 × 9 см': 70000, '15 × 10 см': 75000 });
   const packaging = Object.freeze({ ordinary: 10000, gift: 35000 });
-  const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит', keychain: 'Брелок', paper: 'Фото без рамки', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
+  const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит (Premium качество)', keychain: 'Брелок', paper: 'Фото без рамки', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
   const quantity = value => Math.max(1, Math.min(99, Math.trunc(Number(value)) || 1));
   const money = value => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: value % 100 ? 2 : 0, maximumFractionDigits: 2 }).format(value / 100);
   function unitPrice(item) {
@@ -16,7 +16,7 @@
   function productName(item) {
     return item.product === 'paper' && item.material === 'sticker' ? 'Наклейка' : names[item.product] || 'Изделие';
   }
-  function calculate(items, pack = 'ordinary') {
+  function calculate(items, pack = 'ordinary', promo = null) {
     const rows = items.map(item => ({ ...item, qty: item.product === 'digital' ? 1 : quantity(item.qty), unit: unitPrice(item), discount: 0 }));
     const physical = rows.filter(row => row.product !== 'digital');
     const physicalCount = physical.reduce((sum, row) => sum + row.qty, 0);
@@ -25,7 +25,8 @@
     gifts.forEach(row => { row.discount = row.unit; row.freeDigital = true; });
     const types = new Set(physical.map(row => row.product));
     const hasTrio = ['frame', 'magnet', 'keychain'].every(product => types.has(product));
-    const cartRate = hasTrio ? (types.has('tshirt') ? 15 : 10) : 0;
+    const bundleRate = hasTrio ? (types.has('tshirt') ? 15 : 10) : 0;
+    const cartRate = Math.max(bundleRate, promo?.rate || 0);
     const promotions = [];
     const paidFiles = rows.filter(row => row.product === 'digital' && !row.freeDigital);
     // Previous carts stored the generated image hash as the first part of the artwork key.
@@ -48,7 +49,7 @@
         cartSaving += row.discount;
       }
     }
-    if (cartSaving) promotions.push({ rate: cartRate, count: 1, discount: cartSaving, name: 'На всю корзину' });
+    if (cartSaving) promotions.push({ rate: cartRate, count: 1, discount: cartSaving, name: promo && promo.rate >= bundleRate ? 'Промокод «' + promo.code + '»' : 'Скидка за набор' });
     if (hdSaving) promotions.push({ rate: 50, count: 1, discount: hdSaving, name: 'Электронные версии HD · от 10 разных фото' });
     const subtotal = rows.reduce((sum, row) => sum + row.unit * row.qty, 0);
     const discount = rows.reduce((sum, row) => sum + row.discount, 0);

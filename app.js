@@ -769,7 +769,9 @@
     $('#selected-price').textContent = P.money(price);
     $('#preview-price').textContent = P.money(price * P.quantity($('#item-quantity').value));
     $('#digital-help').hidden = !isDigital;
-    $('#add-to-cart').innerHTML = state.editingCartId ? 'Обновить в корзине <span aria-hidden="true">✓</span>' : 'Добавить в корзину <span aria-hidden="true">+</span>';
+    const action = state.editingCartId ? 'Обновить в корзине' : 'Добавить в корзину';
+    const quality = state.product === 'magnet' ? ' (Premium качество)' : '';
+    $('#add-to-cart').textContent = action + quality;
     $('#cancel-cart-edit').hidden = !state.editingCartId;
     $('#add-to-cart').disabled = savingCart || state.generating || !(state.illustration || state.legacy);
   }
