@@ -78,3 +78,51 @@
 .memory-bottom .memory-arrows button:hover{background:#633d27}
 .memory-bottom .memory-arrows svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:680px){.memory-section .memory-bottom{grid-template-columns:1fr 1fr}.memory-bottom .memory-arrows{grid-column:1/-1;grid-row:1;justify-self:center}.memory-bottom .text-link{grid-column:2}}
+
+.memory-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: "status garland controls";
+}
+
+.memory-toolbar .motion-status { grid-area: status; min-width: 0; }
+.memory-toolbar .memory-controls { grid-area: controls; justify-self: end; }
+
+.memory-garland-link {
+  grid-area: garland;
+  justify-self: center;
+  display: block;
+  padding: .45rem 1.15rem .52rem;
+  border: 1px solid #d8bb91;
+  border-radius: 2rem;
+  background: #fff8eb;
+  box-shadow: 0 2px 8px #69452212;
+  color: #664328;
+  font: 500 clamp(1.05rem, 2vw, 1.58rem)/1.2 var(--serif);
+  text-align: center;
+}
+
+.memory-garland-link:hover {
+  background: #fffdf7;
+  text-decoration: underline;
+  text-underline-offset: .18em;
+}
+
+.memory-garland-link:focus-visible { outline: 2px solid #8d612f; outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .memory-toolbar {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "status controls" "garland garland";
+    row-gap: .85rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .memory-toolbar {
+    grid-template-columns: 1fr;
+    grid-template-areas: "status" "controls" "garland";
+  }
+
+  .memory-toolbar .memory-controls { width: 100%; }
+}
