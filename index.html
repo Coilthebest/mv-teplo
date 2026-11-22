@@ -9,7 +9,7 @@
   <title>Teplo — мастерская воспоминаний</title>
   <link rel="icon" href="/favicon.png" sizes="120x120" type="image/png">
   <link rel="stylesheet" href="styles.css?v=upright2">
-  <link rel="stylesheet" href="memories.css?v=gallery-arrows">
+  <link rel="stylesheet" href="memories.css?v=garland-example">
   <link rel="stylesheet" href="tshirt.css?v=guides-eta">
   <script src="memories.js?v=lia-birthday" defer></script>
   <link rel="stylesheet" href="cart.css?v=digital-paper4">
@@ -89,7 +89,7 @@
 
     <section class="memory-section" id="story" aria-labelledby="memory-title">
       <div class="container memory-heading"><div><p class="eyebrow">Воспоминания оживают</p><h2 id="memory-title">Из снимка —<br><em>в вашу историю.</em></h2></div><p>Знакомые лица. Любимые места.<br>Тот же момент — в мягких мазках,<br>на бумаге, которую хочется сохранить.</p></div>
-      <div class="container memory-toolbar"><span class="motion-status"><span class="dot"></span><span id="motion-status">Обычная фотография</span></span><div class="memory-controls"><div class="memory-mode" role="group" aria-label="Показать фотографии или иллюстрации"><button type="button" data-memory-mode="photo" aria-pressed="true">Фото</button><button type="button" data-memory-mode="art" aria-pressed="false">Иллюстрации</button></div><button type="button" id="motion-toggle" class="motion-toggle" aria-label="Приостановить анимацию" aria-pressed="true"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="pause-shape" d="M7 5v10m6-10v10"/><path class="play-shape" d="m7 4 8 6-8 6Z"/></svg><span>Пауза</span></button></div></div>
+      <div class="container memory-toolbar"><span class="motion-status"><span class="dot"></span><span id="motion-status">Обычная фотография</span></span><a class="memory-garland-link" href="#garland-example">Арт-гирлянда воспоминаний</a><div class="memory-controls"><div class="memory-mode" role="group" aria-label="Показать фотографии или иллюстрации"><button type="button" data-memory-mode="photo" aria-pressed="true">Фото</button><button type="button" data-memory-mode="art" aria-pressed="false">Иллюстрации</button></div><button type="button" id="motion-toggle" class="motion-toggle" aria-label="Приостановить анимацию" aria-pressed="true"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="pause-shape" d="M7 5v10m6-10v10"/><path class="play-shape" d="m7 4 8 6-8 6Z"/></svg><span>Пауза</span></button></div></div>
       <div class="memory-theatre" id="memory-theatre" role="region" aria-roledescription="карусель" tabindex="0" data-mode="photo" data-running="false" data-cycle="0" aria-label="Фотографии на прищепках превращаются в иллюстрации и обратно">
         <svg class="garland-wire" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M-30 20Q280 5 450 53T950 60T1470 22"/></svg>
         <div class="memory-cards"><figure class="hanging-memory" data-memory="couple" style="--tilt:-6deg;--sway-delay:-2s">
@@ -227,7 +227,7 @@
           <img class="work-photo" src="assets/catalog-wine.webp" alt="Винная бутылка с наклейкой Teplo с иллюстрацией пары под шатром" loading="lazy"></div><div class="collection-title"><h3>Наклейка</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Ваша история на бутылке для особенного вечера</p><div class="collection-price">350 ₽ <span>10 × 15 см</span></div></a>
         <a class="collection-card" href="#constructor" data-choose-product="tshirt"><div class="collection-image collection-tshirt">
           <img class="work-photo" src="assets/catalog-shirt.webp" alt="Белая футболка с принтом «Эверест 2023»" loading="lazy"></div><div class="collection-title"><h3>Футболка</h3><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></div><p>Любимая история — в вашем стиле</p><div class="collection-price">2 870 ₽ <span>XS–XXL · 5 цветов</span></div></a>
-        <a class="collection-card" href="#constructor" data-open-garland aria-haspopup="dialog">
+        <a class="collection-card" id="garland-example" href="#constructor" data-open-garland aria-haspopup="dialog">
           <div class="collection-image collection-garland"><img class="work-photo" src="assets/catalog-garland-square.webp" alt="Пять семейных иллюстраций в белых картонных рамках на шнуре с деревянными прищепками" loading="lazy"></div>
           <div class="collection-title"><h3>Арт-гирлянда воспоминаний</h3></div>
           <p>Белые картонные рамки на шнуре с деревянными прищепками</p>
