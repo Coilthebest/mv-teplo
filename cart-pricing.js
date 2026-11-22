@@ -6,21 +6,23 @@
     '3 × 3 см': 60000, '5 × 5 см': 60000, '5 × 7 см': 60000, '5 × 9 см': 60000,
     '7 × 10 см': 65000, '8 × 8 см': 60000, '10 × 10 см': 60000,
     '7 × 5 см': 60000, '6 × 9 см (рекомендуем)': 60000, '10 × 7 см': 65000, '13 × 9 см': 70000, '15 × 10 см': 75000 });
-  const packaging = Object.freeze({ ordinary: 0, gift: 40000 });
-  const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит акриловый (Premium)', keychain: 'Брелок', paper: 'Фото без рамки', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
+  const garlands = Object.freeze({ 5: 65000, 10: 98000 });
+  const packaging = Object.freeze({ ordinary: 0, gift: 37000 });
+  const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит акриловый (Premium)', keychain: 'Брелок', paper: 'Наклейка', garland: 'Арт-гирлянда воспоминаний', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
   const quantity = value => Math.max(1, Math.min(99, Math.trunc(Number(value)) || 1));
   const money = value => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: value % 100 ? 2 : 0, maximumFractionDigits: 2 }).format(value / 100);
   function unitPrice(item) {
+    if (item.product === 'garland') return Object.hasOwn(garlands, item.format) ? garlands[item.format] : 0;
     return item.product === 'magnet' ? magnets[item.format] ?? magnets['6 × 9 см (рекомендуем)'] : prices[item.product] ?? 0;
   }
   function productName(item) {
-    return item.product === 'paper' && item.material === 'sticker' ? 'Наклейка' : names[item.product] || 'Изделие';
+    return names[item.product] || 'Изделие';
   }
   function calculate(items, pack = 'ordinary', promo = null) {
     const rows = items.map(item => ({ ...item, qty: item.product === 'digital' ? 1 : quantity(item.qty), unit: unitPrice(item), discount: 0 }));
     const physical = rows.filter(row => row.product !== 'digital');
     const physicalCount = physical.reduce((sum, row) => sum + row.qty, 0);
-    const artworkKeys = new Set((physicalCount ? rows : []).map(row => row.artworkKey));
+    const artworkKeys = new Set((physicalCount ? rows : []).flatMap(row => row.product === 'garland' ? row.artworks.map(art => art.artworkKey) : [row.artworkKey]));
     const gifts = rows.filter(row => row.product === 'digital' && artworkKeys.has(row.artworkKey));
     gifts.forEach(row => { row.discount = row.unit; row.freeDigital = true; });
     const types = new Set(physical.map(row => row.product));
@@ -55,9 +57,10 @@
     const discount = rows.reduce((sum, row) => sum + row.discount, 0);
     const packagingCost = physicalCount ? packaging[pack] ?? packaging.ordinary : 0;
     const total = subtotal - discount + packagingCost;
-    return { rows, physicalCount, digitalCount: rows.length - physical.length, giftCount: artworkKeys.size, promotions, subtotal, discount, packagingCost, total, missing: physicalCount ? Math.max(0, 3 - physicalCount) : 0, canOrder: rows.length > 0 && (!physicalCount || physicalCount >= 3) };
+    const missing = physicalCount && !types.has('garland') ? Math.max(0, 3 - physicalCount) : 0;
+    return { rows, physicalCount, digitalCount: rows.length - physical.length, giftCount: artworkKeys.size, promotions, subtotal, discount, packagingCost, total, missing, canOrder: rows.length > 0 && missing === 0 };
   }
-  const api = Object.freeze({ prices, magnets, packaging, names, quantity, money, unitPrice, productName, calculate });
+  const api = Object.freeze({ prices, magnets, garlands, packaging, names, quantity, money, unitPrice, productName, calculate });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.TeploPricing = api;
 })(typeof window === 'undefined' ? globalThis : window);

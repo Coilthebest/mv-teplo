@@ -43,12 +43,16 @@
     return 'принт '+p.scale+'%, X '+p.x+'%, Y '+p.y+'%';
   }
   function spec(item) {
-    const description = item.product === 'tshirt' ? `${item.colorName} · ${item.format}` : item.product === 'paper' ? `${item.material === 'sticker' ? 'Наклейка' : 'Матовая бумага'} · ${item.format}` : item.format;
+    if (item.product === 'garland') return item.format + ' иллюстраций в белых картонных рамках · шнур и прищепки';
+    const description = item.product === 'tshirt' ? `${item.colorName} · ${item.format}` : item.product === 'paper' ? `Наклейка · ${item.format}` : item.format;
     return description + ' · ' + printSpec(item);
   }
   function itemMarkup(row) {
     const amount = row.unit * row.qty - row.discount;
-    return `<article class="cart-item" data-cart-id="${esc(row.id)}"><img src="${getPreview(row)}" alt="${esc(row.caption || 'Ваша история')} — ${esc(P.productName(row))}" width="84" height="112"><div class="cart-item-detail"><h3>${esc(P.productName(row))}</h3><p>${esc(spec(row))}</p><p class="cart-artwork-title">${esc(row.caption || 'Без надписи')}${row.year ? ` · ${esc(row.year)}` : ''}</p><div class="cart-item-tools"><button type="button" data-cart-action="edit" data-id="${esc(row.id)}">Изменить</button>${row.product !== 'digital' ? `<button type="button" data-cart-action="copy" data-id="${esc(row.id)}">Ещё вещь с этим рисунком</button>` : ''}</div><div class="cart-item-bottom">${row.product !== 'digital' ? `<div class="cart-quantity" aria-label="Количество: ${esc(P.productName(row))}"><button type="button" data-cart-action="minus" data-id="${esc(row.id)}" aria-label="Уменьшить количество: ${esc(P.productName(row))}" ${row.qty === 1 ? 'disabled' : ''}>−</button><output>${row.qty}</output><button type="button" data-cart-action="plus" data-id="${esc(row.id)}" aria-label="Увеличить количество: ${esc(P.productName(row))}" ${row.qty === 99 ? 'disabled' : ''}>+</button></div>` : '<span class="cart-file-count">1 файл</span>'}<div class="cart-row-price">${row.discount ? `<del>${P.money(row.unit * row.qty)}</del>` : ''}<strong>${row.freeDigital ? 'В подарок' : P.money(amount)}</strong>${row.qty > 1 ? `<small>${P.money(row.unit)} / шт.</small>` : ''}</div></div></div><button type="button" class="cart-remove" data-cart-action="remove" data-id="${esc(row.id)}" aria-label="Удалить: ${esc(P.productName(row))}">×</button></article>`;
+    const artworkList = row.product === 'garland'
+      ? `<ol class="cart-artwork-title">${row.artworks.map(art => `<li>${esc(art.caption || 'Без названия')}${art.year ? ' · ' + esc(art.year) : ''}</li>`).join('')}</ol>`
+      : `<p class="cart-artwork-title">${esc(row.caption || 'Без надписи')}${row.year ? ' · ' + esc(row.year) : ''}</p>`;
+    return `<article class="cart-item" data-cart-id="${esc(row.id)}"><img src="${getPreview(row)}" alt="${esc(row.caption || 'Ваша история')} — ${esc(P.productName(row))}" width="84" height="112"><div class="cart-item-detail"><h3>${esc(P.productName(row))}</h3><p>${esc(spec(row))}</p>${artworkList}<div class="cart-item-tools"><button type="button" data-cart-action="edit" data-id="${esc(row.id)}">Изменить</button>${!['digital', 'garland'].includes(row.product) ? `<button type="button" data-cart-action="copy" data-id="${esc(row.id)}">Ещё вещь с этим рисунком</button>` : ''}</div><div class="cart-item-bottom">${row.product !== 'digital' ? `<div class="cart-quantity" aria-label="Количество: ${esc(P.productName(row))}"><button type="button" data-cart-action="minus" data-id="${esc(row.id)}" aria-label="Уменьшить количество: ${esc(P.productName(row))}" ${row.qty === 1 ? 'disabled' : ''}>−</button><output>${row.qty}</output><button type="button" data-cart-action="plus" data-id="${esc(row.id)}" aria-label="Увеличить количество: ${esc(P.productName(row))}" ${row.qty === 99 ? 'disabled' : ''}>+</button></div>` : '<span class="cart-file-count">1 файл</span>'}<div class="cart-row-price">${row.discount ? `<del>${P.money(row.unit * row.qty)}</del>` : ''}<strong>${row.freeDigital ? 'В подарок' : P.money(amount)}</strong>${row.qty > 1 ? `<small>${P.money(row.unit)} / шт.</small>` : ''}</div></div></div><button type="button" class="cart-remove" data-cart-action="remove" data-id="${esc(row.id)}" aria-label="Удалить: ${esc(P.productName(row))}">×</button></article>`;
   }
   function render() {
     const c = calculation();
@@ -64,10 +68,11 @@
     $('#cart-floating').hidden = !count;
     $('#cart-floating-total').textContent = P.money(c.total);
     $('#cart-items').innerHTML = c.rows.map(itemMarkup).join('');
-    $('#cart-minimum').textContent = !c.physicalCount ? 'Электронный заказ — без минимума' : c.missing ? `Ещё ${c.missing} ${c.missing === 1 ? 'вещь' : 'вещи'} до минимального заказа` : `${c.physicalCount} ${thingWord(c.physicalCount)} · минимум собран`;
-    $('#cart-progress-fill').style.width = `${Math.min(100, c.physicalCount / 3 * 100)}%`;
+    const hasGarland = c.rows.some(row => row.product === 'garland');
+    $('#cart-minimum').textContent = hasGarland ? 'Арт-гирлянду можно заказать отдельно' : !c.physicalCount ? 'Электронный заказ — без минимума' : c.missing ? `Ещё ${c.missing} ${c.missing === 1 ? 'вещь' : 'вещи'} до минимального заказа` : `${c.physicalCount} ${thingWord(c.physicalCount)} · минимум собран`;
+    $('#cart-progress-fill').style.width = `${(c.canOrder && c.physicalCount ? 100 : Math.min(100, c.physicalCount / 3 * 100))}%`;
     $('.cart-progress').classList.toggle('complete', c.canOrder);
-    $('.cart-progress p').hidden = !c.physicalCount;
+    $('.cart-progress p').hidden = !c.physicalCount || hasGarland;
     $('#cart-packaging').hidden = !c.physicalCount;
     document.querySelectorAll('input[name="cart-packaging"]').forEach(input => { input.checked = input.value === pack; });
     $('#cart-discounts').innerHTML = c.promotions.map(p => `<p><b>−${p.rate}% · ${esc(p.name)}${p.count > 1 ? ` × ${p.count}` : ''}</b><span>−${P.money(p.discount)}</span></p>`).join('');
@@ -89,8 +94,14 @@
   }
   function open() { ready.then(() => { render(); if (!dialog.open) dialog.showModal(); }); }
   function continueShopping() { dialog.close(); document.querySelector('#constructor').scrollIntoView({ behavior: 'smooth' }); document.dispatchEvent(new Event('teplo:next-story')); }
+  function validItem(item) {
+    if (!P.unitPrice(item) || !(item.preview instanceof Blob)) return false;
+    if (item.product === 'garland') return Array.isArray(item.artworks) && item.artworks.length === Number(item.format);
+    if (item.product === 'paper' && item.material !== 'sticker') return false;
+    return item.sourceFile instanceof Blob;
+  }
   async function add(item, editingId) {
-    if (!(item.sourceFile instanceof Blob) || !(item.preview instanceof Blob) || !item.artworkKey || !P.unitPrice(item)) throw new Error('invalid_item');
+    if (!validItem(item) || !item.artworkKey) throw new Error('invalid_item');
     const clean = { ...item, qty: item.product === 'digital' ? 1 : P.quantity(item.qty) };
     await transact(list => {
       if (editingId && !list.some(entry => entry.id === editingId)) throw new Error('removed_item');
@@ -143,7 +154,7 @@
     try {
       const saved = await records('get', 'current');
       if (saved?.version === 1 && Array.isArray(saved.items)) {
-        items = saved.items.filter(item => P.unitPrice(item) && item.preview instanceof Blob && item.sourceFile instanceof Blob).slice(0, 50);
+        items = saved.items.filter(validItem).slice(0, 50);
         pack = saved.pack === 'gift' ? 'gift' : 'ordinary';
       }
     } catch {
