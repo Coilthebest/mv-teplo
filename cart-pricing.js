@@ -6,8 +6,8 @@
     '3 × 3 см': 60000, '5 × 5 см': 60000, '5 × 7 см': 60000, '5 × 9 см': 60000,
     '7 × 10 см': 65000, '8 × 8 см': 60000, '10 × 10 см': 60000,
     '7 × 5 см': 60000, '6 × 9 см (рекомендуем)': 60000, '10 × 7 см': 65000, '13 × 9 см': 70000, '15 × 10 см': 75000 });
-  const packaging = Object.freeze({ ordinary: 10000, gift: 35000 });
-  const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит (Premium качество)', keychain: 'Брелок', paper: 'Фото без рамки', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
+  const packaging = Object.freeze({ ordinary: 0, gift: 40000 });
+  const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит акриловый (Premium)', keychain: 'Брелок', paper: 'Фото без рамки', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
   const quantity = value => Math.max(1, Math.min(99, Math.trunc(Number(value)) || 1));
   const money = value => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: value % 100 ? 2 : 0, maximumFractionDigits: 2 }).format(value / 100);
   function unitPrice(item) {

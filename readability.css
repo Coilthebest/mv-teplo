@@ -271,3 +271,11 @@ input[type=text],select{font-size:16px}
 #cart-promo,#delivery-method,#door-address{box-sizing:border-box;width:100%;padding:.65rem .8rem;border:1px solid #cbb195;border-radius:6px;color:#563722;background:#fffaf2;font:inherit}
 #promo-status{margin:.35rem 0;color:#71482c}
 #promo-chip{margin-top:.5rem}#remove-promo{border:0;background:transparent;text-decoration:underline;margin-left:.45em}
+
+#cart-packaging .packaging-photo {
+  display: block;
+  width: min(100%, 220px);
+  height: auto;
+  margin-top: .55rem;
+  border-radius: .45rem;
+}

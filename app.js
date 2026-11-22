@@ -16,7 +16,7 @@
   const products = {
     digital: { name: 'Электронная версия в HD-качестве', formats: ['PNG · электронный файл'] },
     frame: { name: 'История в рамке', formats: ['10 × 15 см'] },
-    magnet: { name: 'Маленькая история на магните', formats: Object.keys(TeploPricing.magnets), defaultFormat: '6 × 9 см (рекомендуем)' },
+    magnet: { name: TeploPricing.names.magnet, formats: Object.keys(TeploPricing.magnets), defaultFormat: '6 × 9 см (рекомендуем)' },
     keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см', 'Акриловый · 40 × 56 мм'] },
     paper: { name: 'История без рамки', formats: ['10 × 15 см'] },
     tshirt: { name: 'Футболка с вашей историей', formats: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], defaultFormat: 'M' },
@@ -770,7 +770,7 @@
     $('#preview-price').textContent = P.money(price * P.quantity($('#item-quantity').value));
     $('#digital-help').hidden = !isDigital;
     const action = state.editingCartId ? 'Обновить в корзине' : 'Добавить в корзину';
-    const quality = state.product === 'magnet' ? ' (Premium качество)' : '';
+    const quality = state.product === 'magnet' ? ' · ' + P.names.magnet : '';
     $('#add-to-cart').textContent = action + quality;
     $('#cancel-cart-edit').hidden = !state.editingCartId;
     $('#add-to-cart').disabled = savingCart || state.generating || !(state.illustration || state.legacy);

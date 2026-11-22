@@ -131,7 +131,7 @@
     } catch { notice('Не удалось сохранить изменение. Освободите место в браузере и попробуйте снова.'); render(); }
   });
   $('#cart-packaging').addEventListener('change', async event => {
-    if (!P.packaging[event.target.value]) return;
+    if (!Object.hasOwn(P.packaging, event.target.value)) return;
     try { await transact(list => ({ items: list, pack: event.target.value })); }
     catch { notice('Не удалось сохранить упаковку. Попробуйте снова.'); render(); }
   });
