@@ -3,15 +3,17 @@
   const R = window.TeploCheckoutRules, $ = selector => document.querySelector(selector);
   const notice = message => document.dispatchEvent(new CustomEvent('teplo:notice', { detail: message }));
   const mapDialog = $('#pickup-dialog');
-  let physical = false, pickup = null, manual = false, attempted = false, touched = false;
+  let physical = false, pickup = null, allowDoor = false, attempted = false, touched = false;
   let db = null, writeQueue = Promise.resolve(), saveTimer, frame = null, requestId = null, mapTimer;
+  const isDoor = () => physical && allowDoor && $('#delivery-method').value === 'door';
   function raw() {
-    return { name: $('#recipient-name').value, phone: $('#recipient-phone').value, city: pickup?.city || '', pickup, manualAddress: manual ? $('#recipient-pickup-address').value : '' };
+    return { name: $('#recipient-name').value, phone: $('#recipient-phone').value, pickup: isDoor() ? null : pickup,
+      deliveryMethod: isDoor() ? 'door' : 'pickup', doorAddress: isDoor() ? $('#door-address').value : '' };
   }
-  function snapshot() { return { version: 1, remember: $('#remember-recipient').checked, fields: raw(), manual }; }
+  function snapshot() { return { version: 1, remember: $('#remember-recipient').checked, fields: raw() }; }
   let etaPoint=null,quote=null,etaTask=Promise.resolve();
   function updateEstimate(){
-    const point=physical && !manual && pickup?.id || null;
+    const point=physical && !isDoor() && pickup?.id || null;
     if(point===etaPoint && !(quote && quote.expires<=Date.now())) return etaTask;
     etaPoint=point;quote=null;
     const el=$('#pickup-eta');el.textContent=point?'Уточняем срок доставки…':'';
@@ -28,9 +30,10 @@
   async function shippingQuote(){await updateEstimate();return quote;}
   function drawPickup() {
     updateEstimate();
-    $('#manual-pickup-field').hidden = !manual;
-    $('#manual-pickup-toggle').setAttribute('aria-expanded', String(manual));
-    $('#manual-pickup-toggle').textContent = manual ? 'Скрыть ручной ввод адреса' : 'Указать адрес ПВЗ вручную';
+    $('#delivery-choice').hidden = !physical || !allowDoor;
+    $('#door-field').hidden = !isDoor();
+    $('.cart-shipping-method').textContent = isDoor() ? 'до двери' : 'до ПВЗ Яндекс Маркета';
+    $('#pickup-field').hidden = isDoor();
     $('#pickup-selected').hidden = !pickup;
     $('#pickup-address').textContent = pickup?.address || '';
     $('#pickup-source-note').textContent = pickup ? 'Выбран на карте Яндекса' : '';
@@ -52,11 +55,11 @@
   }
   function changed() {
     touched = true; clearTimeout(saveTimer);
-    if (attempted) showErrors(R.validate(raw(), physical).errors, false);
+    if (attempted) showErrors(R.validate(raw(), physical, allowDoor).errors, false);
     if ($('#remember-recipient').checked) saveTimer = setTimeout(() => writeRemembered(snapshot()), 350);
   }
   function showErrors(errors, focus) {
-    const fields = { name: '#recipient-name', phone: '#recipient-phone', pickup: manual ? '#recipient-pickup-address' : '#choose-pickup' };
+    const fields = { name: '#recipient-name', phone: '#recipient-phone', pickup: isDoor() ? '#door-address' : '#choose-pickup' };
     Object.entries(fields).forEach(([key, selector]) => {
       const message = $(`#recipient-${key}-error`);
       message.textContent = errors[key] || ''; message.hidden = !errors[key];
@@ -69,20 +72,17 @@
   }
   function validate(focus = true) {
     attempted = true;
-    const result = R.validate(raw(), physical); showErrors(result.errors, focus);
+    const result = R.validate(raw(), physical, allowDoor); showErrors(result.errors, focus);
     return result;
   }
-  function setOrderState(hasPhysical) {
-    physical = hasPhysical;updateEstimate();
+  function setOrderState(hasPhysical, doorEligible) {
+    if (doorEligible && !allowDoor) $('#delivery-method').value = 'door';
+    allowDoor = !!doorEligible;
+    physical = hasPhysical;
+    drawPickup();
     $('#recipient-delivery').hidden = !physical;
     $('#digital-contact-note').hidden = physical;
-    if (attempted) showErrors(R.validate(raw(), physical).errors, false);
-  }
-  function useManual() {
-    if (mapDialog.open) mapDialog.close();
-    pickup = null; manual = true; drawPickup(); changed();
-    $('#recipient-pickup-address').focus({ preventScroll: true });
-    $('#manual-pickup-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (attempted) showErrors(R.validate(raw(), physical, allowDoor).errors, false);
   }
   function openMap() {
     const city = pickup?.city || 'Москва';
@@ -94,38 +94,34 @@
     frame.setAttribute('sandbox', 'allow-scripts allow-forms');
     frame.setAttribute('allow', "geolocation 'none'");
     frame.referrerPolicy = 'no-referrer';
-    frame.src = `pickup.html?v=2#${new URLSearchParams({ city, requestId })}`;
+    frame.src = `pickup.html?v=3#${new URLSearchParams({ city, requestId })}`;
     $('#pickup-frame-slot').replaceChildren(frame);
     mapDialog.showModal();
     clearTimeout(mapTimer);
-    mapTimer = setTimeout(() => { if (mapDialog.open) $('#pickup-map-status').textContent = 'Если карта не загрузилась, укажите адрес ПВЗ вручную.'; }, 14000);
+    mapTimer = setTimeout(() => { if (mapDialog.open) $('#pickup-map-status').textContent = 'Если карта не загрузилась, закройте её и попробуйте снова.'; }, 14000);
   }
   window.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.data?.requestId !== requestId) return;
     if (event.data.type === 'teplo:pickup-ready') {
       clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Найдите удобный пункт и подтвердите выбор на карте.';
     } else if (event.data.type === 'teplo:pickup-error') {
-      clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Карта сейчас недоступна. Укажите адрес ПВЗ вручную.';
+      clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Карта сейчас недоступна. Попробуйте открыть её ещё раз.';
     } else if (event.data.type === 'teplo:pickup-selected') {
       const selected = R.point(event.data.point); if (!selected) return;
-      pickup = selected; manual = false;
-      $('#recipient-pickup-address').value = '';
+      pickup = selected;
       drawPickup(); changed(); mapDialog.close(); notice('Пункт выдачи добавлен к заказу.');
     }
   });
   mapDialog.addEventListener('close', () => { clearTimeout(mapTimer); frame = null; requestId = null; $('#pickup-frame-slot').replaceChildren(); });
   $('#close-pickup').addEventListener('click', () => mapDialog.close());
-  $('#pickup-map-manual').addEventListener('click', useManual);
   $('#choose-pickup').addEventListener('click', openMap);
-  $('#manual-pickup-toggle').addEventListener('click', () => {
-    if (!manual) useManual(); else { manual = false; drawPickup(); changed(); }
-  });
-  ['#recipient-name', '#recipient-phone', '#recipient-pickup-address'].forEach(selector => $(selector).addEventListener('input', changed));
+  $('#delivery-method').addEventListener('change', () => { drawPickup(); changed(); });
+  ['#recipient-name', '#recipient-phone', '#door-address'].forEach(selector => $(selector).addEventListener('input', changed));
   $('#recipient-phone').addEventListener('blur', () => { const value = R.phone($('#recipient-phone').value); if (value) $('#recipient-phone').value = value; changed(); });
   $('#remember-recipient').addEventListener('change', () => { touched = true; clearTimeout(saveTimer); writeRemembered(snapshot()); });
   function clear() {
-    clearTimeout(saveTimer); touched = true; attempted = false; pickup = null; manual = false;
-    ['#recipient-name', '#recipient-phone', '#recipient-pickup-address'].forEach(selector => { $(selector).value = ''; });
+    clearTimeout(saveTimer); touched = true; attempted = false; pickup = null;
+    ['#recipient-name', '#recipient-phone', '#door-address'].forEach(selector => { $(selector).value = ''; });
     $('#remember-recipient').checked = false; drawPickup(); showErrors({}, false);
     return writeRemembered(snapshot());
   }
@@ -146,8 +142,8 @@
       if (!touched && saved?.version === 1 && saved.remember && saved.fields) {
         const fields = saved.fields;
         $('#recipient-name').value = R.text(fields.name, 80); $('#recipient-phone').value = R.text(fields.phone, 50);
-        $('#recipient-pickup-address').value = R.fullManualAddress(fields.manualAddress, fields.city);
-        pickup = R.point(fields.pickup); manual = !!saved.manual && !pickup;
+        $('#door-address').value = R.text(fields.doorAddress, 500);
+        pickup = R.point(fields.pickup);
         $('#remember-recipient').checked = true;
         $('#recipient-storage-note').textContent = 'Данные сохранены только в этом браузере. Их можно очистить в любой момент.';
         drawPickup();

@@ -260,3 +260,14 @@ input[type=text],select{font-size:16px}
 @media (max-width: 680px) {
   .delivery-copy p { flex-direction: column; gap: 6px; }
 }
+
+.hero-art .occasion-seal{width:clamp(9rem,13vw,11rem);height:auto;aspect-ratio:1;padding:.7rem;transform:rotate(5deg);text-align:center;box-shadow:inset 0 0 0 4px #fbefdd,inset 0 0 0 5px #d6b98e,1px 4px 12px #73572b20}
+.occasion-seal>span{text-transform:uppercase;font-weight:600;letter-spacing:.1em}
+.hero-art .occasion-seal b{font:italic clamp(1rem,1.6vw,1.3rem)/1.06 Georgia,serif;margin:.3rem 0}
+.occasion-seal em{font:italic .83rem/1.25 Georgia,serif}
+.premium{font:inherit;font-size:.83em;display:block}
+.promo-field,#delivery-choice,#door-field{margin:12px 0}
+.promo-field label,#delivery-choice label,#door-field label{display:block;font-weight:600;margin-bottom:4px}
+#cart-promo,#delivery-method,#door-address{box-sizing:border-box;width:100%;padding:.65rem .8rem;border:1px solid #cbb195;border-radius:6px;color:#563722;background:#fffaf2;font:inherit}
+#promo-status{margin:.35rem 0;color:#71482c}
+#promo-chip{margin-top:.5rem}#remove-promo{border:0;background:transparent;text-decoration:underline;margin-left:.45em}

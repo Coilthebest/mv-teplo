@@ -1,5 +1,5 @@
 'use strict';
-window.startTestCheckout = function(getCart) {
+window.startTestCheckout = function(getCart, enablePromo) {
   const button=document.querySelector('#test-payment');
   const status=document.querySelector('#test-payment-status');
   const key='teplo-test-checkout-v1';
@@ -37,6 +37,7 @@ window.startTestCheckout = function(getCart) {
     try {
       if (attempt?.order) {await check();return}
       const cart=getCart();
+      if (cart.promoDraft) throw Error('Дождитесь проверки промокода или очистите поле, чтобы продолжить.');
       if (!cart.canOrder) throw Error('Проверьте минимальное количество товаров.');
       await window.TeploCheckout.ready;
       const recipient=window.TeploCheckout.validate();
@@ -45,7 +46,7 @@ window.startTestCheckout = function(getCart) {
       if (needsPlacement && !supportsPlacement) throw Error('Приём заказов с индивидуальным расположением принта скоро откроется. Ваш макет сохранён в корзине.');
       const items=cart.rows.map(r=>({product:r.product,qty:r.qty,printLayout:r.printLayout,format:!supportsPlacement && r.product==='tshirt'?r.format+' · '+window.TeploCart.printSpec(r):r.format,shirtColor:r.shirtColor,
         material:r.material,objectId:r.sealedArtwork?.objectId,caption:r.caption,year:r.year,yearLines:r.yearLines,photoHash:r.photoHash}));
-      const order={items,pack:cart.pack,total:cart.total,recipient:recipient.data};
+      const order={items,pack:cart.pack,total:cart.total,promoCode:cart.promoCode,recipient:recipient.data};
       const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(order)));
       const fingerprint=Array.from(new Uint8Array(digest)).join('-');
       if (!attempt || attempt.fingerprint!==fingerprint || Date.now()-attempt.started>12*3600000) {
@@ -65,6 +66,7 @@ window.startTestCheckout = function(getCart) {
   request('payment-config').then(async config=>{
     if (!config.enabled) throw Error();
     supportsPlacement=config.printLayout===true;
+    if (config.promoCodes) enablePromo(code => request('promo-check', {code}));
     button.disabled=false;
     status.textContent='';
     if(config.mode==='live') {document.querySelector('.cart-checkout-note').textContent='Оплата через СБП. После оплаты вы получите HD-копии.';}

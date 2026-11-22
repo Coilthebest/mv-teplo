@@ -10,7 +10,7 @@
   const send = (type, payload = {}) => parent.postMessage({ type, requestId, ...payload }, '*');
   function fail() {
     message.hidden = false;
-    message.textContent = 'Не удалось открыть карту Яндекса. Вы можете указать адрес ПВЗ вручную.';
+    message.textContent = 'Не удалось открыть карту Яндекса. Закройте карту и попробуйте снова.';
     send('teplo:pickup-error');
   }
   if (!city || !requestId) { fail(); return; }

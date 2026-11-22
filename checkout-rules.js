@@ -18,18 +18,24 @@
     if (!id || city.length < 2 || address.length < 5) return null;
     return { id, city, address, source: 'yandex-widget' };
   }
-  function validate(input, physical = true) {
+  function validate(input, physical = true, allowDoor = false) {
     const data = {
       name: text(input.name, 80), phone: phone(input.phone), city: text(input.city, 120),
-      pickup: point(input.pickup), manualAddress: text(input.manualAddress, 500),
+      pickup: point(input.pickup), deliveryMethod: physical ? 'pickup' : 'digital', doorAddress: '',
     };
     const errors = {};
     if (data.name.length < 2 || !/\p{L}/u.test(data.name)) errors.name = 'Укажите ваше имя.';
     if (!data.phone) errors.phone = 'Укажите телефон с кодом страны, например +7 999 123-45-67.';
-    if (physical) {
+    if (physical && input.deliveryMethod === 'door') {
+      data.deliveryMethod = 'door';
+      data.pickup = null;
+      data.city = '';
+      data.doorAddress = text(input.doorAddress, 500);
+      if (!allowDoor || data.doorAddress.length < 5) errors.pickup = 'Укажите полный адрес доставки до двери.';
+    } else if (physical) {
       data.city = data.pickup?.city || '';
-      if (!data.pickup && data.manualAddress.length < 5) errors.pickup = 'Выберите пункт на карте или укажите адрес ПВЗ вручную.';
-    } else { data.city = ''; data.pickup = null; data.manualAddress = ''; }
+      if (!data.pickup) errors.pickup = 'Выберите пункт выдачи на карте.';
+    } else { data.city = ''; data.pickup = null; }
     return { ok: !Object.keys(errors).length, errors, data };
   }
   const api = Object.freeze({ text, phone, point, fullManualAddress, validate });
