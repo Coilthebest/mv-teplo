@@ -44,7 +44,7 @@
   }
   function spec(item) {
     if (item.product === 'garland') return item.format + ' иллюстраций в белых картонных рамках · шнур и прищепки';
-    const description = item.product === 'tshirt' ? `${item.colorName} · ${item.format}` : item.product === 'paper' ? `Наклейка · ${item.format}` : item.format;
+    const description = item.product === 'tshirt' ? `${item.colorName} · ${item.format}` : item.format;
     return description + ' · ' + printSpec(item);
   }
   function itemMarkup(row) {
@@ -97,7 +97,7 @@
   function validItem(item) {
     if (!P.unitPrice(item) || !(item.preview instanceof Blob)) return false;
     if (item.product === 'garland') return Array.isArray(item.artworks) && item.artworks.length === Number(item.format);
-    if (item.product === 'paper' && item.material !== 'sticker') return false;
+    if (item.product === 'paper' && !['sticker', 'matte'].includes(item.material)) return false;
     return item.sourceFile instanceof Blob;
   }
   async function add(item, editingId) {

@@ -2,10 +2,11 @@
 window.startTestCheckout = function(getCart, enablePromo) {
   const button=document.querySelector('#test-payment');
   const status=document.querySelector('#test-payment-status');
+  const note = document.querySelector('.cart-checkout-note');
   const key='teplo-test-checkout-v1';
   const endpoint='https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=';
 
-  let busy=false, attempt, supportsPlacement=false, supportsGarlands=false;
+  let busy=false, attempt, supportsPlacement=false, supportsGarlands=false, paymentMode='test';
   try { attempt=JSON.parse(localStorage.getItem(key)); } catch {}
   async function request(route,data) {
     const res=await fetch(endpoint+route,{method:data?'POST':'GET',cache:'no-store',
@@ -20,16 +21,16 @@ window.startTestCheckout = function(getCart, enablePromo) {
     if (result.status==='paid') { location.replace('/thanks.html#'+attempt.order); return; }
     const number=attempt.order.slice(0,12);
     if (result.status==='pending') {
-      status.textContent='Заказ '+number+' ожидает тестовой оплаты.';
+      status.textContent='Заказ '+number+' ожидает оплаты.';
       button.textContent='Проверить статус';
       if (attempt.url) {
-        const link=document.createElement('a');link.href=attempt.url;link.textContent='Продолжить тестовую оплату';
+        const link=document.createElement('a');link.href=attempt.url;link.textContent='Продолжить оформление';
         status.append(' ',link);
       }
       return;
     }
-    status.textContent=result.status==='paid'?'Тестовый заказ '+number+' оплачен. Деньги не списаны.':'Тестовый платёж отменён.';
-    localStorage.removeItem(key);attempt=null;button.textContent='Оплатить';
+    status.textContent='Платёж отменён.';
+    localStorage.removeItem(key);attempt=null;button.textContent=paymentMode==='live' ? 'Оплатить' : 'Проверить оформление';
   }
   async function run() {
     if (busy) return;
@@ -69,12 +70,17 @@ window.startTestCheckout = function(getCart, enablePromo) {
   button.disabled=true;
   request('payment-config').then(async config=>{
     if (!config.enabled) throw Error();
+    paymentMode=config.mode;
     supportsPlacement=config.printLayout===true;
     supportsGarlands=config.garlands===true;
     if (config.promoCodes) enablePromo(code => request('promo-check', {code}));
     button.disabled=false;
     status.textContent='';
-    if(config.mode==='live') {document.querySelector('.cart-checkout-note').textContent='Оплата через СБП. После оплаты вы получите HD-копии.';}
+    button.textContent=paymentMode==='live' ? 'Оплатить' : 'Проверить оформление';
+    note.hidden=false;
+    note.textContent=paymentMode==='live'
+      ? 'Оплата через СБП. После оплаты вы получите HD-копии.'
+      : 'Проверочный режим. Заказ не передаётся в производство. Используйте вымышленные данные.';
     if (attempt?.order) {window.TeploCart.open();await run();}
-  }).catch(()=>{status.textContent='Тестовая касса пока не подключена. Проверьте версию функции и тестовые ключи.';});
+  }).catch(()=>{status.textContent='Оплата временно недоступна. Попробуйте позже.';});
 };

@@ -260,10 +260,62 @@ input[type=text],select{font-size:16px}
   .delivery-copy p { flex-direction: column; gap: 6px; }
 }
 
-.hero-art .occasion-seal{width:clamp(9rem,13vw,11rem);height:auto;aspect-ratio:1;padding:.7rem;transform:rotate(5deg);text-align:center;box-shadow:inset 0 0 0 4px #fbefdd,inset 0 0 0 5px #d6b98e,1px 4px 12px #73572b20}
-.occasion-seal>span{text-transform:uppercase;font-weight:600;letter-spacing:.1em}
-.hero-art .occasion-seal b{font:italic clamp(1rem,1.6vw,1.3rem)/1.06 Georgia,serif;margin:.3rem 0}
-.occasion-seal em{font:italic .83rem/1.25 Georgia,serif}
+.hero-art .occasion-seal {
+  width: clamp(9.25rem, 13vw, 11rem);
+  height: auto;
+  aspect-ratio: 1;
+  padding: .75rem .65rem;
+  transform: none;
+  text-align: center;
+  background: #fff7e9;
+  border-color: #c4a16d;
+  color: #664529;
+  box-shadow: inset 0 0 0 4px #fff7e9, inset 0 0 0 5px #d3b789, 0 5px 16px #73572b20;
+}
+
+.occasion-seal > span {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+
+.hero-art .occasion-seal b {
+  font: 500 clamp(1rem, 1.5vw, 1.24rem)/1.16 var(--serif);
+  margin: .28rem 0;
+}
+
+.occasion-seal small {
+  font: 500 .72rem/1.25 var(--sans);
+}
+
+.bundle-offers .hd-offer-price em {
+  font: 600 .94rem/1.4 var(--sans);
+  color: #633e29;
+}
+
+.bundle-offers .hd-offer-price span {
+  display: inline;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.bundle-offers .hd-offer-price small {
+  margin-left: 0;
+  text-decoration: none;
+}
+
+.footer-legal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem 1rem;
+}
+
+.footer-legal a { color: var(--read-note); text-decoration: underline; text-underline-offset: .18em; }
+#legal-dialog { max-width: min(28rem, calc(100vw - 2rem)); }
+#legal-dialog h2 { font-size: clamp(1.4rem, 5vw, 2rem); margin: 0 1rem .75rem 0; }
 .premium{font:inherit;font-size:.83em;display:block}
 .promo-field,#delivery-choice,#door-field{margin:12px 0}
 .promo-field label,#delivery-choice label,#door-field label{display:block;font-weight:600;margin-bottom:4px}

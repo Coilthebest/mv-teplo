@@ -1,21 +1,23 @@
 /* All money is stored in kopeks. One source of truth for the catalogue and cart. */
 (function (root) {
   'use strict';
-  const prices = Object.freeze({ frame: 76000, paper: 35000, keychain: 65000, tshirt: 287000, digital: 49900 });
+  const prices = Object.freeze({ frame: 76000, paper: 35000, mattePaper: 28000, keychain: 65000, tshirt: 287000, digital: 49900 });
   const magnets = Object.freeze({
     '3 × 3 см': 60000, '5 × 5 см': 60000, '5 × 7 см': 60000, '5 × 9 см': 60000,
     '7 × 10 см': 65000, '8 × 8 см': 60000, '10 × 10 см': 60000,
     '7 × 5 см': 60000, '6 × 9 см (рекомендуем)': 60000, '10 × 7 см': 65000, '13 × 9 см': 70000, '15 × 10 см': 75000 });
-  const garlands = Object.freeze({ 5: 65000, 10: 98000 });
+  const garlands = Object.freeze({ 5: 89000, 10: 135000 });
   const packaging = Object.freeze({ ordinary: 0, gift: 37000 });
   const names = Object.freeze({ frame: 'Фото в рамке', magnet: 'Магнит акриловый (Premium)', keychain: 'Брелок', paper: 'Наклейка', garland: 'Арт-гирлянда воспоминаний', tshirt: 'Футболка', digital: 'Электронная версия в HD-качестве' });
   const quantity = value => Math.max(1, Math.min(99, Math.trunc(Number(value)) || 1));
   const money = value => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: value % 100 ? 2 : 0, maximumFractionDigits: 2 }).format(value / 100);
   function unitPrice(item) {
+    if (item.product === 'paper' && item.material === 'matte') return prices.mattePaper;
     if (item.product === 'garland') return Object.hasOwn(garlands, item.format) ? garlands[item.format] : 0;
     return item.product === 'magnet' ? magnets[item.format] ?? magnets['6 × 9 см (рекомендуем)'] : prices[item.product] ?? 0;
   }
   function productName(item) {
+    if (item.product === 'paper' && item.material === 'matte') return 'Матовое фото без рамки';
     return names[item.product] || 'Изделие';
   }
   function calculate(items, pack = 'ordinary', promo = null) {
