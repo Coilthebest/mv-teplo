@@ -54,7 +54,6 @@ input[type=text],select{font-size:16px}
 .quantity-field input{font-size:16px}
 .collection-title h3{font-size:23px;line-height:1.35}
 .collection-card>p{font-size:15px;line-height:1.65;color:var(--read-note)}
-.collection-number{font-size:12px}
 .collection-price{font-size:21px}
 .collection-price span{font-size:14px;line-height:1.6;color:var(--read-note)}
 .collection-note{font-size:13px;line-height:1.75;color:var(--read-note)}
