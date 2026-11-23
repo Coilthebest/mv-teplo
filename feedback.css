@@ -1,0 +1,69 @@
+.feedback-section {
+  border-top: 1px solid var(--line);
+  background: #fcf0dd;
+  padding: clamp(36px, 6vw, 66px) 0;
+}
+.feedback-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 6vw, 76px);
+}
+.feedback-layout h2 { margin-bottom: 16px; }
+.feedback-muted { color: #785c47; }
+.feedback-form {
+  padding: clamp(16px, 3vw, 26px);
+  border: 1px solid #e2cfb5;
+  border-radius: 6px;
+  background: #fffcf5;
+  display: grid;
+  gap: 12px;
+  align-self: start;
+}
+.feedback-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.feedback-form label { display: block; font-size: 13px; }
+.feedback-form input[type=text], .feedback-form select, .feedback-form textarea {
+  margin-top: 4px;
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+}
+.feedback-form textarea {
+  display: block;
+  padding: 8px 12px;
+  color: var(--ink);
+  background: #fffdf8;
+  border: 1px solid #e1cdb2;
+  border-radius: 3px;
+  resize: vertical;
+}
+.feedback-form textarea:focus-visible { outline: 2px solid var(--olive); outline-offset: 4px; }
+.feedback-form .feedback-consent { display: flex; align-items: flex-start; gap: 8px; color: #785c47; }
+.feedback-consent input { flex: none; margin: 4px 0 0; accent-color: var(--olive); }
+.feedback-form > .button { justify-self: start; }
+.feedback-status:empty { display: none; }
+.feedback-status[data-error] { color: #923e31; }
+.feedback-list { display: grid; gap: 10px; }
+.feedback-stories > .button { margin-top: 12px; }
+.feedback-entry {
+  border-top: 1px solid #ddc6a8;
+  padding: 12px 0 4px;
+  overflow-wrap: anywhere;
+}
+.feedback-entry h3 { font-family: var(--serif); font-size: 19px; font-weight: 400; }
+.feedback-entry time { color: #785c47; font-size: 12px; }
+.feedback-entry p { white-space: pre-wrap; margin-top: 6px; }
+.feedback-entry .feedback-reply {
+  border-inline-start: 2px solid #cba67c;
+  padding-inline-start: 12px;
+  margin: 12px 0 0;
+}
+.feedback-admin { max-width: 620px; padding-block: 32px; }
+.feedback-admin > a { display: inline-block; margin-bottom: 15px; }
+.feedback-admin .feedback-form { margin-top: 15px; }
+.feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 760px) {
+  .feedback-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .feedback-fields { grid-template-columns: 1fr; }
+}

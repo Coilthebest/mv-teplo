@@ -27,6 +27,8 @@
   <script src="print-placement.js?v=digital-paper4" defer></script>
   <link rel="stylesheet" href="garland.css?v=2">
   <script src="garland.js?v=1" defer></script>
+  <link rel="stylesheet" href="feedback.css?v=1">
+  <script src="feedback.js?v=1" defer></script>
   <script src="app.js?v=launch1" defer></script>
   <script src="memory-motion.js?v=swipe" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
@@ -256,11 +258,42 @@
       <details><summary>Как оформляется заказ?<span aria-hidden="true">+</span></summary><p>В корзине укажите данные получателя, выберите доставку и проверьте итоговую сумму перед переходом в ЮKassa.</p></details>
       <details><summary>Что происходит с загруженной фотографией?<span aria-hidden="true">+</span></summary><p>Фото, полученная иллюстрация и эскизы из корзины сохраняются в этом браузере. Для художественной обработки фото передаётся во внешний сервис. Контакты получателя передаются мастерской при оформлении заказа. Корзина восстанавливается после обновления страницы. Удаление товара удаляет его копию из корзины. В конструкторе сохраняются до десяти черновиков. Кнопка «Сначала» очищает выбранную ячейку. Очистка данных браузера удалит корзину.</p></details>
     </div></section>
+    <section class="feedback-section" id="feedback" aria-labelledby="feedback-heading">
+      <div class="container feedback-layout">
+        <div class="feedback-stories">
+          <h2 id="feedback-heading">Отзывы <em>и вопросы</em></h2>
+          <p id="feedback-empty" class="feedback-muted" role="status">Загружаем сообщения…</p>
+          <div id="feedback-list" class="feedback-list"></div>
+          <button class="button button-outline" id="feedback-more" type="button" hidden>Показать ещё</button>
+        </div>
+        <form class="feedback-form" id="feedback-form" aria-describedby="feedback-consent">
+          <div class="feedback-fields">
+            <label>Тип сообщения
+              <select name="type"><option value="review">Отзыв</option><option value="question">Вопрос</option></select>
+            </label>
+            <label>Имя <span class="feedback-muted">(необязательно)</span>
+              <input name="name" type="text" maxlength="50" placeholder="Имя или псевдоним">
+            </label>
+          </div>
+          <label>Сообщение
+            <textarea name="text" rows="3" minlength="5" maxlength="1000" required></textarea>
+          </label>
+          <div hidden><label>Веб-сайт<input name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
+          <label class="feedback-consent"><input type="checkbox" name="consent" required>
+            <span id="feedback-consent">Разрешаю отправить сообщение мастерской в Telegram и опубликовать после проверки. Пожалуйста, не указывайте контакты и данные заказа.</span>
+          </label>
+          <button class="button button-primary" id="feedback-send" type="submit" disabled>Отправить отзыв</button>
+          <p class="feedback-status" id="feedback-status" role="status"></p>
+          <noscript><p>Включите JavaScript, чтобы увидеть сообщения и отправить своё.</p></noscript>
+        </form>
+      </div>
+    </section>
   </main>
   <footer class="footer"><div class="container footer-top"><a class="brand" href="#" aria-label="Teplo — на главную"><svg class="brand-logo" viewBox="112 372 1030 740" role="img" aria-labelledby="teplo-footer-logo"><title id="teplo-footer-logo">Teplo — мастерская воспоминаний</title><image href="assets/teplo-photo-garland.png" width="1254" height="1254"/></svg></a><p>Маленькое искусство.<br>Очень личная история.</p><a class="text-link" href="#constructor">Сохранить мгновение <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a></div><div class="container footer-bottom">
       <span>© Teplo, 2026</span>
       <span class="seller-details">ИП [ФИО], ИНН [номер], ОГРНИП [номер]</span>
       <nav class="footer-legal" aria-label="Документы и фотографии">
+        <a href="#feedback">Отзывы и вопросы</a>
         <a href="#legal-dialog" data-legal-document>Договор оферты</a>
         <a href="#legal-dialog" data-legal-document>Политика конфиденциальности</a>
         <button type="button" class="footer-privacy" id="privacy-button">О ваших фотографиях</button>
