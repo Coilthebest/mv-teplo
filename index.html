@@ -18,10 +18,10 @@
   <link rel="stylesheet" href="readability.css?v=launch1">
   <script src="checkout-rules.js?v=offers1" defer></script>
   <script src="checkout.js?v=offers1" defer></script>
-  <script src="test-checkout.js?v=launch1" defer></script>
+  <script src="payment.js?v=1" defer></script>
   <script src="story-storage.js?v=1" defer></script>
-  <script src="cart.js?v=launch1" defer></script>
-  <link rel="stylesheet" href="illustration.css?v=drawing-ready">
+  <script src="cart.js?v=checkout2" defer></script>
+  <link rel="stylesheet" href="illustration.css?v=checkout2">
   <script src="illustration.js?v=digital-paper4" defer></script>
   <script src="preview-mark.js" defer></script>
   <script src="print-placement.js?v=digital-paper4" defer></script>
@@ -29,7 +29,7 @@
   <script src="garland.js?v=1" defer></script>
   <link rel="stylesheet" href="feedback.css?v=1">
   <script src="feedback.js?v=1" defer></script>
-  <script src="app.js?v=launch1" defer></script>
+  <script src="app.js?v=checkout2" defer></script>
   <script src="memory-motion.js?v=swipe" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -147,7 +147,7 @@
               <label class="upload-zone" id="drop-zone" for="photo-input"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4"/></svg><span id="upload-label">Загрузите своё фото</span><small>JPG, PNG, WebP · до 15 МБ</small><input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp"></label>
               <p id="upload-status" class="input-status" aria-live="polite"></p>
               <p class="ai-privacy">После подтверждения отправим фото для создания иллюстрации. Название и год добавим отдельно.</p>
-              <div id="ai-panel" class="ai-panel" aria-busy="false"><p id="ai-status" class="ai-status" role="status">Проверяем подключение обработки…</p><p id="ai-test-note" class="ai-test-note" hidden>Сейчас можно посмотреть пример результата. Обработка вашего фото недоступна.</p><button id="ai-retry" class="button button-primary ai-retry" type="button" hidden>Создать иллюстрацию</button></div>
+              <div id="ai-panel" class="ai-panel" aria-busy="false"><p id="ai-status" class="ai-status" role="status">Подключаем создание иллюстраций…</p><button id="ai-retry" class="button button-primary ai-retry" type="button" hidden>Создать иллюстрацию</button></div>
             </div>
             <div class="control-group">
               <div class="control-heading"><span>02</span><h3>Добавьте слова</h3></div>
@@ -317,7 +317,7 @@
       <button class="button button-outline" value="cancel" autofocus>Отмена</button>
     </form>
   </dialog>
-  <dialog id="selection-dialog" aria-labelledby="dialog-title"><button class="dialog-close" id="close-dialog" aria-label="Закрыть окно">×</button><p class="eyebrow">Ваша история сложилась</p><h2 id="dialog-title">Это <em>по-вашему.</em></h2><div class="dialog-summary"><img id="summary-image" alt="Собранный вами эскиз" width="180" height="240"><dl><div><dt>Воспоминание</dt><dd id="summary-caption"></dd></div><div><dt>Дата</dt><dd id="summary-year"></dd></div><div><dt>Ваш выбор</dt><dd id="summary-product"></dd></div><div><dt>Формат</dt><dd id="summary-format"></dd></div></dl></div><p class="dialog-note">Сохраните эскиз себе. Это демонстрация: заказ не отправляется, оплата пока недоступна.</p><button id="dialog-back" class="dialog-back">Ещё немного поэкспериментировать</button></dialog>
+  <dialog id="selection-dialog" aria-labelledby="dialog-title"><button class="dialog-close" id="close-dialog" aria-label="Закрыть окно">×</button><p class="eyebrow">Ваша история сложилась</p><h2 id="dialog-title">Это <em>по-вашему.</em></h2><div class="dialog-summary"><img id="summary-image" alt="Собранный вами эскиз" width="180" height="240"><dl><div><dt>Воспоминание</dt><dd id="summary-caption"></dd></div><div><dt>Дата</dt><dd id="summary-year"></dd></div><div><dt>Ваш выбор</dt><dd id="summary-product"></dd></div><div><dt>Формат</dt><dd id="summary-format"></dd></div></dl></div><p class="dialog-note">Проверьте, как выглядит эскиз. Затем можно изменить детали или добавить изделие в корзину.</p><button id="dialog-back" class="dialog-back">Вернуться к оформлению</button></dialog>
   <dialog id="legal-dialog" aria-labelledby="legal-title"><button type="button" class="dialog-close" id="close-legal" aria-label="Закрыть окно">×</button><h2 id="legal-title">Документы Teplo</h2><p>Документ будет добавлен после регистрации ИП и заполнения реквизитов продавца.</p></dialog>
   <dialog id="privacy-dialog" aria-labelledby="privacy-title"><button class="dialog-close" id="close-privacy" aria-label="Закрыть окно">×</button><p class="eyebrow">Личное остаётся личным</p><h2 id="privacy-title">О ваших <em>фотографиях.</em></h2><p class="privacy-copy">Фотографии, которые вы добавили в корзину, и настройки изделий хранятся в базе этого браузера на вашем устройстве. Для создания иллюстрации исходное фото передаётся через сервер Teplo во внешний сервис обработки. Готовые HD-иллюстрации сохраняются в закрытом хранилище Teplo. Условия хранения у сервиса обработки и его поставщика действуют отдельно. После обновления корзина сохранится; для изменения товара нажмите «Изменить» в корзине. На другом устройстве эта корзина не появится. При оплате состав заказа и данные получателя передаются на сервер Teplo. Если включить «Запомнить данные в этом браузере», они сохранятся локально вместе с корзиной. Уведомление об оплаченном заказе может поступить мастерской в Telegram.</p><p class="privacy-copy">Удалите товар или очистите корзину, чтобы убрать сохранённые снимки. Очистка данных сайта в браузере также удаляет корзину. Карта ПВЗ загружается по вашему нажатию и передаёт Яндексу город поиска. Имя, телефон и фотографии в карту не передаются. Контакты можно удалить кнопкой «Очистить данные получателя» или вместе со всей корзиной. До десяти черновиков сохраняются в этом браузере для восстановления после обновления. Кнопка «Сначала» очищает выбранную ячейку. Сервис обработки может хранить готовый результат до 24 часов для получения по номеру обработки.</p></dialog>
   <dialog id="garland-dialog" class="garland-dialog" aria-labelledby="garland-title">
@@ -374,7 +374,7 @@
             <img class="packaging-photo" src="assets/packaging-vip.webp" alt="Подарочная коробка в бордовой бумаге с атласным бантом" width="480" height="480" loading="lazy" decoding="async">
           </span>
         </label>
-      </fieldset><div id="cart-discounts" class="cart-discounts"></div><dl class="cart-totals"><div><dt>Товары</dt><dd id="cart-subtotal"></dd></div><div id="cart-discount-row"><dt>Скидки и подарки</dt><dd id="cart-discount"></dd></div><div id="cart-pack-row"><dt>Упаковка</dt><dd id="cart-pack-cost"></dd></div><div id="cart-delivery-row"><dt>Доставка <small class="cart-shipping-method">до ПВЗ Яндекс Маркета</small></dt><dd>0 ₽</dd></div><div class="cart-grand-total"><dt>Итого</dt><dd id="cart-total" aria-live="polite"></dd></div></dl><p id="cart-gifts" class="cart-gifts"></p><button type="button" class="button button-primary" id="test-payment" disabled>Оплатить</button><p class="cart-checkout-note" hidden></p><div id="test-payment-status" role="status"></div></aside>
+      </fieldset><div id="cart-discounts" class="cart-discounts"></div><dl class="cart-totals"><div><dt>Товары</dt><dd id="cart-subtotal"></dd></div><div id="cart-discount-row"><dt>Скидки и подарки</dt><dd id="cart-discount"></dd></div><div id="cart-pack-row"><dt>Упаковка</dt><dd id="cart-pack-cost"></dd></div><div id="cart-delivery-row"><dt>Доставка <small class="cart-shipping-method">до ПВЗ Яндекс Маркета</small></dt><dd>0 ₽</dd></div><div class="cart-grand-total"><dt>Итого</dt><dd id="cart-total" aria-live="polite"></dd></div></dl><p id="cart-gifts" class="cart-gifts"></p><button type="button" class="button button-primary" id="pay-order" disabled>Оплатить</button><p class="cart-checkout-note" hidden></p><div id="payment-status" role="status"></div></aside>
     </div><p id="cart-storage-note" class="cart-storage-note">Корзина и фотографии сохраняются только в этом браузере. Данные получателя запоминаются по вашему выбору.</p>
   </dialog>
   <dialog id="pickup-dialog" class="pickup-dialog" aria-labelledby="pickup-dialog-title"><div class="pickup-dialog-header"><div><p class="eyebrow">Ближе к вам</p><h2 id="pickup-dialog-title">Пункт выдачи Яндекс Маркета</h2><p id="pickup-city-label"></p></div><button type="button" id="close-pickup" class="cart-close" aria-label="Закрыть выбор пункта выдачи">×</button></div><p id="pickup-map-status" class="pickup-map-status" role="status">Загружаем карту…</p><div id="pickup-frame-slot" class="pickup-frame-slot"></div><div class="pickup-dialog-footer"><span>Выберите пункт на карте и подтвердите выбор в его карточке.</span></div></dialog>
