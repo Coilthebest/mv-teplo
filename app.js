@@ -21,13 +21,7 @@
     paper: { name: 'Наклейка с вашей историей', formats: ['10 × 15 см'] },
     tshirt: { name: 'Футболка с вашей историей', formats: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], defaultFormat: 'M' },
   };
-  const tshirtColors = {
-    white: { name: 'Белый', hex: '#fffdf8', ink: '#62351f' },
-    yellow: { name: 'Жёлтый', hex: '#f4d23b', ink: '#52361f' },
-    blue: { name: 'Синий', hex: '#283e9b', ink: '#fff9ed' },
-    red: { name: 'Красный', hex: '#bd3d38', ink: '#fff9ed' },
-    black: { name: 'Чёрный', hex: '#272b2e', ink: '#fff9ed' },
-  };
+  const tshirtColors = teploShirtColors;
   const state = { upload: null, product: 'frame', material: 'sticker', shirtColor: 'white', shirtSize: 'M', sourceFile: null, sourceHash: null, editingCartId: null, illustration: null, illustrationFile: null, shirtPrint: null, job: null, generating: false, legacy: false };
   const AI = window.TeploIllustration;
   function layout(value={}) {
@@ -413,42 +407,12 @@
   }
 
   function drawContain(image, x, y, width, height, context = ctx) {
-    const scale = Math.min(width / (image.naturalWidth || image.width), height / (image.naturalHeight || image.height));
-    const w = (image.naturalWidth || image.width) * scale;
-    const h = (image.naturalHeight || image.height) * scale;
-    context.drawImage(image, x + (width - w) / 2, y + (height - h) / 2, w, h);
+    paintTeploContainedImage(context, image, x, y, width, height);
   }
 
   function tint(hex, target, amount) {
     const n = parseInt(hex.slice(1), 16);
     return `rgb(${[16, 8, 0].map((shift) => Math.round(((n >> shift) & 255) * (1 - amount) + target * amount)).join(',')})`;
-  }
-
-  function drawTshirtLabel(ctx, title, year, ink) {
-    const line = (text, y, size, spacing, italic) => {
-      const letters = Array.from(text);
-      ctx.font = `${italic ? 'italic ' : ''}${size}px Georgia, serif`;
-      const width = letters.reduce((sum, letter) => sum + ctx.measureText(letter).width, 0) + Math.max(0, letters.length - 1) * spacing;
-      ctx.save();
-      ctx.translate(250, y);
-      const scale = Math.min(1, 210 / Math.max(width, 1));
-      ctx.scale(scale, scale);
-      ctx.fillStyle = ink;
-      ctx.textAlign = 'left';
-      let x = -width / 2;
-      letters.forEach((letter) => { ctx.fillText(letter, x, 0); x += ctx.measureText(letter).width + spacing; });
-      ctx.restore();
-    };
-    if (title) line(title.toLocaleUpperCase('ru-RU'), 400, 10.5, 3.8, false);
-    if (year) {
-      const y = title ? 420 : 404;
-      line(year, y, 8, 3.6, false);
-      if ($('#year-lines').checked) {
-        ctx.fillStyle = ink;
-        ctx.fillRect(216, y - 3, 12, .7);
-        ctx.fillRect(272, y - 3, 12, .7);
-      }
-    }
   }
 
   function drawCotton(ctx, hex) {
@@ -480,21 +444,13 @@
     ctx.translate(0, 12);
     ctx.scale(1.8, 1.8);
     drawCotton(ctx, color.hex);
-    const {scale,x,y}=placement('tshirt'), factor=scale/100;
-    // At large scales the print can cover the full torso. Keep slider directions consistent.
-    const width=image.naturalWidth || image.width || 210;
-    const height=image.naturalHeight || image.height || 185;
-    const halfPrint=Math.min(210,185*width/height)*factor/2;
-    const horizontalRoom=factor<=1.12?120-105*factor:Math.max(2.4,(120-halfPrint)*(factor-1.12)/0.38);
-    ctx.beginPath();ctx.rect(128,100,244,415);ctx.clip();
-    ctx.translate(250+x/100*horizontalRoom,305+y/100*(190-120*factor));
-    ctx.scale(factor,factor);
-    ctx.translate(-250,-305);
-    // Transparent PNGs keep their alpha; uploaded photos keep their original background.
-    if (image.naturalWidth || image.width) drawContain(image, 145, 190, 210, 185, ctx);
-    const title = state.upload ? $('#caption').value.trim() : 'MUSTANG';
-    const year = state.upload ? $('#year').value.trim() : '2025';
-    drawTshirtLabel(ctx, title, year, color.ink);
+    paintTeploShirtPrint(ctx, image, {
+      caption: state.upload ? $('#caption').value.trim() : 'MUSTANG',
+      year: state.upload ? $('#year').value.trim() : '2025',
+      yearLines: $('#year-lines').checked,
+      printLayout: placement('tshirt'),
+      shirtColor: state.shirtColor,
+    });
     ctx.restore();
   }
 
@@ -576,18 +532,19 @@
       g.stroke(new Path2D('M109 94v30c0 30-38 45-38 75v198'));
       g.fillStyle = horizontalGradient(g, 99, 141, [[0,'#674337'],[.4,'#ad7d59'],[1,'#603e31']]);
       g.fillRect(99,17,42,77);
-      placeTeploPrint(g,65,218,110,147,placement(view), () => g.drawImage(poster,65,218,110,147));
+      paintTeploSticker(g, poster, 65, 218, 110, 165, placement(view));
       g.fillStyle = horizontalGradient(g,65,175,[[0,'#40281030'],[.3,'#ffffff05'],[.75,'#ffffff00'],[1,'#40281026']]);
-      g.fillRect(65,218,110,147);
+      g.fillRect(65,218,110,165);
     } else if (view === 'keychain') {
       g.translate(450,550);
       const format = state.product === 'keychain' ? $('#product-format').value : '';
-      const bodyWidth = format.includes('40 × 56') ? 576 * 40 / 56 : 436;
+      const insert = teploKeychainSize(format);
+      const bodyWidth = insert.width + 26;
       g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-bodyWidth/2,-202,bodyWidth,576,21); g.fill();
-      const inner = bodyWidth - 26;
+      const inner = insert.width;
       g.fillStyle = '#f7e8d4';
       g.fillRect(-inner/2,-189,inner,547);
-      placeTeploPrint(g,-inner/2,-189,inner,547,placement(view), () => drawContain(poster,-inner/2,-189,inner,547,g));
+      paintTeploPaperPrint(g, poster, -inner/2, -189, inner, insert.height, placement(view));
       g.strokeStyle = '#93948c'; g.lineWidth = 15;
       g.beginPath(); g.arc(0,-345,97,0,2*Math.PI); g.stroke();
       g.strokeStyle = '#d4d4c9'; g.lineWidth = 4; g.stroke();
@@ -644,9 +601,7 @@
       return;
     }
     if (poster) {
-      placeTeploPrint(ctx,0,0,canvas.width,height,placement(), () => {
-        drawContain(poster,0,0,canvas.width,height);
-      });
+      paintTeploPaperPrint(ctx, poster, 0, 0, canvas.width, height, placement());
       return;
     }
     if (!state.upload) return;
