@@ -1,0 +1,5 @@
+{
+  "name": "teplo-telegram-relay",
+  "private": true,
+  "type": "module"
+}
