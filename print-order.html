@@ -10,7 +10,7 @@
   <script defer src="story-storage.js?v=1"></script>
   <script defer src="illustration.js?v=digital-paper4"></script>
   <script defer src="order-archive.js?v=fixedpaper3"></script>
-  <script defer src="print-order.js?v=product-preview1"></script>
+  <script defer src="print-order.js?v=download-previews1"></script>
   <style>
     * { box-sizing: border-box; }
     [hidden] { display: none; }
@@ -24,9 +24,10 @@
     button:disabled { opacity: .6; cursor: wait; }
     article img { display: block; width: 184px; max-width: 100%; height: auto; margin: 14px 0; }
     .product-preview { width: min(100%, 320px); margin: 14px 0; }
-    .product-preview canvas { display: block; width: 100%; height: auto; background: #fbf2e3; border-radius: 8px; }
+    .product-preview img { width: 100%; margin: 0; border-radius: 8px; }
     .product-preview figcaption { margin-top: 5px; color: #755842; font-size: 14px; }
-    .frame { border: 5px solid #bf976e; }
+    .download-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .download-actions .download-print { color: #673d28; background: transparent; box-shadow: inset 0 0 0 1px #cbb292; }
     .placement { color: #755842; }
     p[role="status"]:empty { display: none; }
     article p { margin: 0 0 12px; }
