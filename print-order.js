@@ -27,7 +27,7 @@
 
   let delivery;
   try {
-    const payment = await request('payment-status');
+    const payment = await request('payment-prints');
     if (payment.status !== 'paid') {
       status.textContent = 'Макеты доступны после подтверждения оплаты.';
       return;
@@ -38,66 +38,186 @@
     return;
   }
 
-  const frames = (delivery?.files || []).map((item, index) => ({item, index}))
-    .filter(({item}) => item.product === 'frame');
-  if (!frames.length) {
-    status.textContent = 'В этом заказе нет фото в рамках.';
+  const files = delivery?.files || [];
+  if (!files.length) {
+    status.textContent = 'В этом заказе нет макетов.';
     return;
   }
-  status.textContent = 'Подготовьте JPG и отправьте его в печать в формате 10 × 15 см.';
-  const list = document.querySelector('#prints');
-  for (const [position, {item, index}] of frames.entries()) {
-    const label = [item.caption, item.year].filter(Boolean).join(' · ') || 'Фото в рамке';
-    const card = document.createElement('article');
-    const title = document.createElement('h2');
-    title.textContent = label;
-    const spec = document.createElement('p');
-    const layout = item.printLayout || {scale: 100, x: 0, y: 0};
-    spec.textContent = '10 × 15 см · масштаб ' + layout.scale + '% · X ' + layout.x + '%, Y ' + layout.y + '%';
+  status.hidden = true;
+  const names = {
+    frame:'Рамка', magnet:'Магнит', keychain:'Брелок', tshirt:'Футболка',
+    garland:'Арт-гирлянда', digital:'HD-иллюстрация',
+  };
+  const fileNames = {
+    frame:'frame', magnet:'magnet', keychain:'keychain', tshirt:'shirt',
+    paper:'paper', garland:'garland', digital:'hd',
+  };
+  const productName = item => item.product === 'paper'
+    ? item.material === 'sticker' ? 'Наклейка' : 'Матовое фото'
+    : names[item.product] || 'Макет';
+  const colorFor = item => teploShirtColors[item.shirtColor] || teploShirtColors.white;
 
-    const button = document.createElement('button');
+  function surface(item) {
+    const mmAt300 = 300 / 25.4;
+    if (item.product === 'magnet') {
+      const [, w, h] = (item.format || '').match(/(\d+)\s*×\s*(\d+)/) || ['', 6, 9];
+      return {width:Math.round(Number(w) * 10 * mmAt300), height:Math.round(Number(h) * 10 * mmAt300)};
+    }
+    if (item.product === 'keychain') {
+      const insert = teploKeychainSize(item.format);
+      const bodyHeight = item.format?.includes('40 × 56') ? 56 : 40;
+      const density = 2 * mmAt300 * bodyHeight / 576;
+      return {width:Math.round(insert.width * density), height:Math.round(insert.height * density)};
+    }
+    if (item.product === 'frame' || item.product === 'paper') return {width:1182, height:1773};
+    return {width:1200, height:1600};
+  }
+
+  function render(picture, item, canvas) {
+    const ctx = canvas.getContext('2d');
+    if (item.product === 'tshirt') {
+      const {left, top, width, height} = teploShirtPrintArea;
+      const factor = 6;
+      canvas.width = factor * width;
+      canvas.height = factor * height;
+      ctx.setTransform(factor, 0, 0, factor, -factor * left, -factor * top);
+      paintTeploShirtPrint(ctx, TeploIllustration.printVignette(picture), item);
+      return;
+    }
+    const {width, height} = surface(item);
+    canvas.width = width;
+    canvas.height = height;
+    const poster = TeploIllustration.compose(picture, item.caption, item.year, item.yearLines);
+    let paint = paintTeploPaperPrint;
+    if (item.product === 'frame') paint = paintTeploFramePrint;
+    if (item.product === 'paper' && item.material === 'sticker') paint = paintTeploSticker;
+    paint(ctx, poster, 0, 0, width, height, item.printLayout);
+  }
+
+  let activeRefresh;
+  async function image(index) {
+    if (Date.now() + 60000 >= delivery.expires) {
+      activeRefresh ||= request('payment-prints').then(payment => {
+        if (!payment.delivery) throw Error('order_unavailable');
+        delivery = payment.delivery;
+      }).finally(() => { activeRefresh = null; });
+      await activeRefresh;
+    }
+    const {ticket, expires} = delivery;
+    const chunks = [];
+    for (let part = 0; ; part++) {
+      const result = await request('payment-file', {ticket, expires, index, part, scope:'print'});
+      chunks.push(Uint8Array.from(atob(result.data), character => character.charCodeAt(0)));
+      if (result.last) break;
+    }
+    return TeploIllustration.loadImage(new Blob(chunks, {type:'image/png'}));
+  }
+
+  const pending = new Map();
+  function prepare(index) {
+    if (pending.has(index)) return pending.get(index);
+    const task = (async () => {
+      const item = files[index];
+      const canvas = document.createElement('canvas');
+      render(await image(index), item, canvas);
+      const extension = item.product === 'tshirt' ? 'png' : 'jpg';
+      const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, 0.96));
+      canvas.width = canvas.height = 1;
+      if (blob?.type !== mimeType) throw Error('print_export_failed');
+      const line = String(item.line).padStart(2, '0');
+      const variant = item.artwork ? '-' + String(item.artwork).padStart(2, '0') : '';
+      const detail = item.product === 'tshirt' ? [item.format, item.shirtColor].filter(Boolean).join('-') : '';
+      const suffix = detail ? '-' + detail.replace(/[^a-z0-9-]/gi, '') : '';
+      return {blob, name:'Teplo-' + number + '-' + line + variant + '-' + fileNames[item.product] + suffix + '.' + extension};
+    })();
+    pending.set(index, task);
+    task.catch(() => pending.delete(index));
+    return task;
+  }
+
+  const create = (tag, value) => {
+    const element = document.createElement(tag);
+    element.textContent = value;
+    return element;
+  };
+  const urls = new Set();
+  function localUrl(blob) {
+    const url = URL.createObjectURL(blob);
+    urls.add(url);
+    return url;
+  }
+  addEventListener('pagehide', event => {
+    if (event.persisted) return;
+    for (const url of urls) URL.revokeObjectURL(url);
+  });
+
+  const list = document.querySelector('#prints');
+  for (const [index, item] of files.entries()) {
+    const card = document.createElement('article');
+    const line = item.artwork ? item.line + '.' + item.artwork : item.line;
+    const title = create('h2', line + '. ' + productName(item));
+    const label = [item.caption, item.year].filter(Boolean).join(' · ');
+    const layout = item.printLayout || {scale:100, x:0, y:0};
+    let format = item.format;
+    if (item.artwork) format = 'Иллюстрация ' + item.artwork + ' из ' + item.format;
+    if (item.product === 'tshirt') format = 'Размер ' + item.format + ' · ' + colorFor(item).name;
+    const detail = create('p', [format, 'Количество: ' + item.quantity].filter(Boolean).join(' · '));
+    const placement = create('p', 'Масштаб ' + layout.scale + '% · X ' + layout.x + '%, Y ' + layout.y + '%');
+    placement.className = 'placement';
+    const button = create('button', 'Подготовить макет');
     button.type = 'button';
-    button.textContent = 'Подготовить макет';
-    const feedback = document.createElement('p');
+    const feedback = create('p', '');
     feedback.setAttribute('role', 'status');
-    card.append(title, spec, button, feedback);
+    card.append(title);
+    if (label) card.append(create('p', label));
+    card.append(detail, placement, button, feedback);
     list.append(card);
 
     button.addEventListener('click', async () => {
       button.disabled = true;
-      feedback.textContent = 'Загружаем HD-иллюстрацию…';
-      let picture;
+      feedback.textContent = 'Собираем макет…';
       try {
-        if (Date.now() + 60000 >= delivery.expires) delivery = (await request('payment-status')).delivery;
-        const chunks = [];
-        for (let part = 0; ; part++) {
-          const result = await request('payment-file', {ticket: delivery.ticket, expires: delivery.expires, index, part});
-          chunks.push(Uint8Array.from(atob(result.data), character => character.charCodeAt(0)));
-          if (result.last) break;
-        }
-        picture = await createImageBitmap(new Blob(chunks, {type: 'image/png'}));
-        const poster = TeploIllustration.compose(picture, item.caption, item.year, item.yearLines);
-        const canvas = document.createElement('canvas');
-        canvas.width = 1182;
-        canvas.height = 1773;
-        paintTeploFramePrint(canvas.getContext('2d'), poster, 0, 0, canvas.width, canvas.height, layout);
-        canvas.setAttribute('role', 'img');
-        canvas.setAttribute('aria-label', 'Предпросмотр макета в рамке');
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.96));
-        if (!blob) throw Error('jpeg_export_failed');
-        const url = URL.createObjectURL(blob);
-        const download = document.createElement('a');
+        const {blob, name} = await prepare(index);
+        const url = localUrl(blob);
+        const preview = document.createElement('img');
+        preview.src = url;
+        preview.alt = 'Макет · ' + productName(item);
+        if (item.product === 'frame') preview.className = 'frame';
+        if (item.product === 'tshirt') preview.style.backgroundColor = colorFor(item).hex;
+        const download = create('a', item.product === 'tshirt' ? 'Скачать PNG для печати' : 'Скачать JPG для печати');
+        if (item.product === 'digital') download.textContent = 'Скачать HD JPG';
         download.href = url;
-        download.download = 'Teplo-' + number + '-10x15-' + (position + 1) + '.jpg';
-        download.textContent = 'Скачать JPG для печати';
-        button.replaceWith(canvas, download);
+        download.download = name;
+        button.replaceWith(preview, download);
         feedback.textContent = '';
       } catch {
         button.disabled = false;
         feedback.textContent = 'Не удалось собрать макет. Попробуйте ещё раз.';
-      } finally {
-        picture?.close();
       }
     });
   }
+
+  const archive = document.querySelector('#download-all');
+  const archiveStatus = document.querySelector('#archive-status');
+  archive.hidden = false;
+  archive.addEventListener('click', async () => {
+    archive.disabled = true;
+    try {
+      const entries = [];
+      for (let index = 0; index < files.length; index++) {
+        archiveStatus.textContent = 'Готовим макет ' + (index + 1) + ' из ' + files.length + '…';
+        const {blob, name} = await prepare(index);
+        entries.push({name, bytes:new Uint8Array(await blob.arrayBuffer())});
+      }
+      const download = create('a', 'Скачать ZIP с макетами');
+      download.href = localUrl(orderZip(entries));
+      download.download = 'Teplo-' + number + '-prints.zip';
+      archive.replaceWith(download);
+      archiveStatus.textContent = 'Архив готов.';
+    } catch {
+      archive.disabled = false;
+      archiveStatus.textContent = 'Не удалось собрать архив. Попробуйте ещё раз.';
+    }
+  });
 })();
