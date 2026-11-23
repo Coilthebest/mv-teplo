@@ -1,18 +1,18 @@
 'use strict';
-window.startTestCheckout = function(getCart, enablePromo) {
-  const button=document.querySelector('#test-payment');
-  const status=document.querySelector('#test-payment-status');
+window.startPayment = function(getCart, enablePromo) {
+  const button=document.querySelector('#pay-order');
+  const status=document.querySelector('#payment-status');
   const note = document.querySelector('.cart-checkout-note');
   const key='teplo-test-checkout-v1';
   const endpoint='https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=';
 
-  let busy=false, attempt, supportsPlacement=false, supportsGarlands=false, paymentMode='test';
+  let busy=false, attempt;
   try { attempt=JSON.parse(localStorage.getItem(key)); } catch {}
   async function request(route,data) {
     const res=await fetch(endpoint+route,{method:data?'POST':'GET',cache:'no-store',
       headers:data?{'Content-Type':'application/json'}:undefined,body:data?JSON.stringify(data):undefined,
       signal:AbortSignal.timeout(25000)});
-    const reply=await res.json();
+    const reply=await res.json().catch(() => ({}));
     if (!res.ok) throw Error(typeof reply.error==='string'?reply.error:'Платёжный модуль пока недоступен.');
     return reply;
   }
@@ -29,8 +29,10 @@ window.startTestCheckout = function(getCart, enablePromo) {
       }
       return;
     }
-    status.textContent='Платёж отменён.';
-    localStorage.removeItem(key);attempt=null;button.textContent=paymentMode==='live' ? 'Оплатить' : 'Проверить оформление';
+    status.textContent=result.status==='expired'
+      ? 'Эта попытка оплаты завершилась. Можно оформить заказ заново.'
+      : 'Платёж отменён.';
+    localStorage.removeItem(key);attempt=null;button.textContent='Оплатить';
   }
   async function run() {
     if (busy) return;
@@ -39,17 +41,31 @@ window.startTestCheckout = function(getCart, enablePromo) {
       if (attempt?.order) {await check();return}
       const cart=getCart();
       if (cart.promoDraft) throw Error('Дождитесь проверки промокода или очистите поле, чтобы продолжить.');
+      const outdated = cart.rows.find(row => row.product === 'garland'
+        ? row.artworks.some(art => !art.objectId)
+        : !row.sealedArtwork?.objectId || row.testArtwork);
+      if (outdated) {
+        const edit = [...document.querySelectorAll('[data-cart-action="edit"]')]
+          .find(button => button.dataset.id === outdated.id);
+        status.textContent = 'Обновите иллюстрацию для товара «' + window.TeploPricing.productName(outdated) + '».';
+        if (edit) {
+          const fix = document.createElement('button');
+          fix.type = 'button';
+          fix.className = 'button button-outline';
+          fix.textContent = 'Открыть товар';
+          fix.addEventListener('click', () => edit.click());
+          status.append(' ', fix);
+        }
+        return;
+      }
       if (!cart.canOrder) throw Error('Проверьте минимальное количество товаров.');
       await window.TeploCheckout.ready;
       const recipient=window.TeploCheckout.validate();
       if (!recipient.ok) throw Error('Заполните поля получателя.');
-      if (!supportsGarlands && cart.rows.some(row => row.product === 'garland')) throw Error('Обновите страницу: касса подключает оформление арт-гирлянды.');
-      const needsPlacement = cart.rows.some(r => r.product !== 'tshirt' && r.printLayout && (r.printLayout.scale !== 100 || r.printLayout.x || r.printLayout.y));
-      if (needsPlacement && !supportsPlacement) throw Error('Приём заказов с индивидуальным расположением принта скоро откроется. Ваш макет сохранён в корзине.');
       const items=cart.rows.map(r=>r.product === 'garland' ? {
         product: r.product, qty: r.qty, format: r.format,
         artworks: r.artworks.map(({objectId, caption, year, yearLines}) => ({objectId, caption, year, yearLines}))
-      } : {product:r.product,qty:r.qty,printLayout:r.printLayout,format:!supportsPlacement && r.product==='tshirt'?r.format+' · '+window.TeploCart.printSpec(r):r.format,shirtColor:r.shirtColor,
+      } : {product:r.product,qty:r.qty,printLayout:r.printLayout,format:r.format,shirtColor:r.shirtColor,
         material:r.material,objectId:r.sealedArtwork?.objectId,caption:r.caption,year:r.year,yearLines:r.yearLines,photoHash:r.photoHash});
       const order={items,pack:cart.pack,total:cart.total,promoCode:cart.promoCode,recipient:recipient.data};
       const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(order)));
@@ -70,17 +86,13 @@ window.startTestCheckout = function(getCart, enablePromo) {
   button.disabled=true;
   request('payment-config').then(async config=>{
     if (!config.enabled) throw Error();
-    paymentMode=config.mode;
-    supportsPlacement=config.printLayout===true;
-    supportsGarlands=config.garlands===true;
     if (config.promoCodes) enablePromo(code => request('promo-check', {code}));
     button.disabled=false;
     status.textContent='';
-    button.textContent=paymentMode==='live' ? 'Оплатить' : 'Проверить оформление';
     note.hidden=false;
-    note.textContent=paymentMode==='live'
+    note.textContent=config.mode==='live'
       ? 'Оплата через СБП. После оплаты вы получите HD-копии.'
-      : 'Проверочный режим. Заказ не передаётся в производство. Используйте вымышленные данные.';
+      : 'Сейчас ЮKassa принимает тестовые платежи без списания денег.';
     if (attempt?.order) {window.TeploCart.open();await run();}
   }).catch(()=>{status.textContent='Оплата временно недоступна. Попробуйте позже.';});
 };

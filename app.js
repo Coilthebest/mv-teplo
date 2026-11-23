@@ -42,6 +42,7 @@
   choiceExample.onload=()=>scheduleDraw();
   choiceExample.src='assets/couple-art.webp';
   let aiConfig = { ready: false };
+  const canOrderArtwork = () => Boolean(state.illustration && state.sealedArtwork?.objectId);
   let draftTimer;
   const slots = Array(10).fill(null);
   const slotImages = Array(10).fill(null);
@@ -110,7 +111,7 @@
     mode.replaceChildren();
     const dot = document.createElement('span');
     dot.className = 'dot';
-    mode.append(dot, document.createTextNode(state.illustration ? aiConfig.test ? 'Пример готовой иллюстрации' : 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : 'Пример изделия · загрузите своё фото'));
+    mode.append(dot, document.createTextNode(state.illustration ? 'Ваша иллюстрация · надпись добавляет Teplo' : hasPhoto ? state.generating ? 'Рисуем вашу иллюстрацию · обычно 1–2 минуты' : 'Исходное фото · обработка ещё не готова' : 'Пример изделия · загрузите своё фото'));
     $('#preview-stage').classList.remove('is-empty');
     $('#preview-empty').hidden = true;
     $('#stage-annotation').textContent = 'Ваш момент. Ваша история.';
@@ -118,7 +119,7 @@
       ? hasPhoto ? 'Здесь показана футболка с вашим исходным изображением. Фон исходного фото сохраняется; PNG с прозрачностью примеряется без подложки. Цвет и посадка готового изделия могут отличаться.' : 'Так может выглядеть футболка с готовой иллюстрацией без бумажной подложки. Загрузите своё фото, чтобы собрать личный эскиз. Цвет и посадка готового изделия могут отличаться.'
       : defaultDisclaimer;
     $('#view-selection').disabled = !hasArtwork;
-    $('#add-to-cart').disabled = !hasArtwork || savingCart || state.generating;
+    $('#add-to-cart').disabled = !canOrderArtwork() || savingCart || state.generating;
   }
 
   function selectedProductName() {
@@ -243,7 +244,7 @@
     const saved = { storyId, photoHash, sourceFile: state.sourceFile, generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
       job: state.job, legacy: state.legacy, caption: $('#caption').value, year: $('#year').value, yearLines: $('#year-lines').checked,
       product: state.product, material: state.material, format: $('#product-format').value,
-      shirtColor: state.shirtColor, shirtSize: state.shirtSize, layouts:structuredLayouts(), qty: $('#item-quantity').value, test: Boolean(aiConfig.test) };
+      shirtColor: state.shirtColor, shirtSize: state.shirtSize, layouts:structuredLayouts(), qty: $('#item-quantity').value };
     slots[activeSlot] = saved;
     renderSlots();
     return AI.draft('put', saved, activeSlot).then(result => {
@@ -284,7 +285,7 @@
     $('#caption').value = saved.caption || ''; $('#year').value = saved.year || ''; $('#year-lines').checked = saved.yearLines !== false;
     state.job = saved.job || null;
     state.legacy = Boolean(saved.legacy);
-    if (saved.generatedFile instanceof Blob) {
+    if (saved.generatedFile instanceof Blob && saved.sealedArtwork?.objectId && !saved.test) {
       await applyIllustration(saved.generatedFile, saved.previewMarked || saved.sealedArtwork?.previewMark); state.sealedArtwork = saved.sealedArtwork;
       aiStatus('Иллюстрация готова. Выберите подарок или измените надпись.');
     } else if (!state.job || !aiConfig.ready) {
@@ -354,7 +355,7 @@
     const waitNotice = setTimeout(() => { time.textContent = 'Рисунок занимает чуть больше времени. Ещё немного…'; }, 120000);
     try {
       aiConfig = await AI.config();
-      if (!aiConfig.ready) throw new Error('Не удалось подключиться к генерации. Попробуйте ещё раз.');
+      if (!aiConfig.ready || aiConfig.test) throw new Error('Не удалось подключиться к генерации. Попробуйте ещё раз.');
       if (state.job) aiStatus('Продолжаем обработку вашего фото. Обычно рисунок готов за 1–2 минуты.');
       let pollFailures = 0;
       let response = state.job ? { status: 'processing', job: state.job, retryAfter: 3 } : await AI.start(state.upload);
@@ -374,9 +375,10 @@
         }
       }
       if (version !== uploadVersion) return;
+      if (!response.sealedArtwork?.objectId) throw new Error('Не удалось сохранить HD-иллюстрацию. Повторите обработку.');
       try { await applyIllustration(AI.imageBlob(response.image), response.sealedArtwork?.previewMark, true); } catch (error) { error.keepJob = true; throw error; }
       state.sealedArtwork = response.sealedArtwork; state.job = null;
-      await persistDraft(); aiStatus(aiConfig.test ? 'Показан пример иллюстрации. Обработка вашего фото сейчас недоступна.' : 'Иллюстрация готова. Добавьте название и год — они меняются без новой обработки.');
+      await persistDraft(); aiStatus('Иллюстрация готова. Добавьте название и год — они меняются без новой обработки.');
       completed = true;
     } catch (error) {
       if (!error.network && !error.keepJob && error.code !== 'image_no_output') state.job = null;
@@ -771,13 +773,13 @@
     const quality = state.product === 'magnet' ? ' · ' + P.names.magnet : '';
     $('#add-to-cart').textContent = action + quality;
     $('#cancel-cart-edit').hidden = !state.editingCartId;
-    $('#add-to-cart').disabled = savingCart || state.generating || !(state.illustration || state.legacy);
+    $('#add-to-cart').disabled = savingCart || state.generating || !canOrderArtwork();
   }
 
   function endCartEdit() { state.editingCartId = null; updatePurchase(); }
 
   async function addToCart() {
-    if (!state.upload || !state.sourceFile || savingCart || state.generating || !(state.illustration || state.legacy)) return;
+    if (!state.upload || !state.sourceFile || savingCart || state.generating || !canOrderArtwork()) return;
     $('#cart-add-error').hidden = true;
     savingCart = true; renderSlots();
     const button = $('#add-to-cart');
@@ -795,7 +797,6 @@
         qty: state.product === 'digital' ? 1 : TeploPricing.quantity($('#item-quantity').value),
         sourceFile: file, storyId,
         generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
-        testArtwork: Boolean(aiConfig.test && state.illustration),
       };
       button.disabled = true;
       button.textContent = 'Сохраняем вашу историю…';
@@ -846,12 +847,13 @@
     try {
       if (!await loadUpload(item.sourceFile, { confirmGeneration: false })) return;
       storyId = item.storyId || storyId; photoHash = item.photoHash || null;
-      if (item.generatedFile instanceof Blob) { await applyIllustration(item.generatedFile, item.previewMarked || item.sealedArtwork?.previewMark); state.sealedArtwork = item.sealedArtwork; }
+      if (item.generatedFile instanceof Blob && item.sealedArtwork?.objectId && !item.testArtwork) { await applyIllustration(item.generatedFile, item.previewMarked || item.sealedArtwork?.previewMark); state.sealedArtwork = item.sealedArtwork; }
       else state.legacy = true;
     } catch { notify('Не удалось открыть эскиз из корзины.'); return; }
     finally { restoring = false; $('.builder').inert = false; renderSlots(); }
     aiStatus(state.illustration ? 'Этот рисунок уже создан. Название, год и товар можно менять без новой генерации.' : 'Сохранённый эскиз с исходным фото. Можно запустить создание иллюстрации.');
-    $('#ai-retry').hidden = Boolean(state.illustration);
+    $('#ai-retry').hidden = canOrderArtwork();
+    if (!canOrderArtwork()) $('#ai-retry').textContent = 'Создать иллюстрацию';
     state.editingCartId = copy ? null : item.id;
     $('#caption').value = item.caption;
     $('#year').value = item.year; $('#year-lines').checked = item.yearLines !== false;
@@ -865,7 +867,7 @@
     $('#item-quantity').value = copy ? 1 : item.qty;
     updateProductSpec(); updateCaption(); updatePurchase();
     $('#caption').focus({ preventScroll: true });
-    notify(copy ? 'Рисунок уже здесь. Выберите другую вещь для него.' : 'Измените товар и нажмите «Обновить в корзине».');
+    notify(!canOrderArtwork() ? 'Создайте иллюстрацию из сохранённого фото и обновите товар в корзине.' : copy ? 'Рисунок уже здесь. Выберите другую вещь для него.' : 'Измените товар и нажмите «Обновить в корзине».');
   });
   document.addEventListener('teplo:cart-removed', event => { if (state.editingCartId === event.detail) endCartEdit(); });
   document.addEventListener('teplo:cart-cleared', endCartEdit);
@@ -971,11 +973,10 @@
     updateCaption();
     aiConfig = await AI.config();
     $('#ai-badge').textContent = aiConfig.ready ? 'Иллюстрация из вашего фото' : 'Обработка фото временно недоступна';
-    $('#ai-test-note').hidden = !aiConfig.test;
     aiStatus(aiConfig.ready ? 'Загрузите фото — создадим одну иллюстрацию. Название и год меняются без новой обработки.' : 'Создание иллюстраций временно недоступно. Попробуйте позже.');
     const records = await Promise.all(slots.map((_, index) => AI.draft('get', null, index)));
     records.forEach((saved, index) => {
-      if (saved?.sourceFile instanceof Blob && Boolean(saved.test) === Boolean(aiConfig.test)) {
+      if (saved?.sourceFile instanceof Blob) {
         if (!saved.generatedFile && Date.now() - saved.savedAt >= 23 * 60 * 60 * 1000) saved.job = null;
         slots[index] = saved;
       }
