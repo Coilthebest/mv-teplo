@@ -73,6 +73,14 @@
     return {width:1200, height:1600};
   }
 
+  function productPreview(view, item) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 450;
+    canvas.height = 540;
+    paintTeploProductPreview(canvas, view, item);
+    return canvas;
+  }
+
   function render(picture, item, canvas) {
     const ctx = canvas.getContext('2d');
     if (item.product === 'tshirt') {
@@ -81,8 +89,9 @@
       canvas.width = factor * width;
       canvas.height = factor * height;
       ctx.setTransform(factor, 0, 0, factor, -factor * left, -factor * top);
-      paintTeploShirtPrint(ctx, TeploIllustration.printVignette(picture), item);
-      return;
+      const shirtPrint = TeploIllustration.printVignette(picture);
+      paintTeploShirtPrint(ctx, shirtPrint, item);
+      return productPreview('tshirt', {...item, shirtPrint});
     }
     const {width, height} = surface(item);
     canvas.width = width;
@@ -92,6 +101,8 @@
     if (item.product === 'frame') paint = paintTeploFramePrint;
     if (item.product === 'paper' && item.material === 'sticker') paint = paintTeploSticker;
     paint(ctx, poster, 0, 0, width, height, item.printLayout);
+    if (item.product === 'keychain') return productPreview('keychain', {...item, poster});
+    if (item.product === 'paper' && item.material === 'sticker') return productPreview('sticker', {...item, poster});
   }
 
   let activeRefresh;
@@ -119,7 +130,7 @@
     const task = (async () => {
       const item = files[index];
       const canvas = document.createElement('canvas');
-      render(await image(index), item, canvas);
+      const preview = render(await image(index), item, canvas);
       const extension = item.product === 'tshirt' ? 'png' : 'jpg';
       const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
       const blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, 0.96));
@@ -129,7 +140,7 @@
       const variant = item.artwork ? '-' + String(item.artwork).padStart(2, '0') : '';
       const detail = item.product === 'tshirt' ? [item.format, item.shirtColor].filter(Boolean).join('-') : '';
       const suffix = detail ? '-' + detail.replace(/[^a-z0-9-]/gi, '') : '';
-      return {blob, name:'Teplo-' + number + '-' + line + variant + '-' + fileNames[item.product] + suffix + '.' + extension};
+      return {blob, preview, name:'Teplo-' + number + '-' + line + variant + '-' + fileNames[item.product] + suffix + '.' + extension};
     })();
     pending.set(index, task);
     task.catch(() => pending.delete(index));
@@ -178,18 +189,26 @@
       button.disabled = true;
       feedback.textContent = 'Собираем макет…';
       try {
-        const {blob, name} = await prepare(index);
+        const {blob, name, preview} = await prepare(index);
         const url = localUrl(blob);
-        const preview = document.createElement('img');
-        preview.src = url;
-        preview.alt = 'Макет · ' + productName(item);
-        if (item.product === 'frame') preview.className = 'frame';
-        if (item.product === 'tshirt') preview.style.backgroundColor = colorFor(item).hex;
+        let display;
+        if (preview) {
+          display = document.createElement('figure');
+          display.className = 'product-preview';
+          preview.setAttribute('role', 'img');
+          preview.setAttribute('aria-label', 'Как выглядел макет · ' + productName(item));
+          display.append(preview, create('figcaption', 'Как видел клиент'));
+        } else {
+          display = document.createElement('img');
+          display.src = url;
+          display.alt = 'Макет · ' + productName(item);
+          if (item.product === 'frame') display.className = 'frame';
+        }
         const download = create('a', item.product === 'tshirt' ? 'Скачать PNG для печати' : 'Скачать JPG для печати');
         if (item.product === 'digital') download.textContent = 'Скачать HD JPG';
         download.href = url;
         download.download = name;
-        button.replaceWith(preview, download);
+        button.replaceWith(display, download);
         feedback.textContent = '';
       } catch {
         button.disabled = false;
