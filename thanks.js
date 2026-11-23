@@ -31,9 +31,9 @@
       if(result.status!=='paid') throw Error('unpaid');
       const delivery=result.delivery, files=[];
       const seen = new Set();
+      if (!delivery?.files?.length) throw Error('missing_files');
       // Prefer the explicitly chosen electronic layout when a physical item shares its art.
       const entries = Array.from(delivery.files.entries()).sort((a,b) => Number(b[1].product==='digital') - Number(a[1].product==='digital'));
-      if (!delivery?.files?.length) throw Error('missing_files');
         for(const [position,[index,item]] of entries.entries()){
           progress.textContent='Готовим иллюстрацию '+(position+1)+' из '+delivery.files.length+'…';
           const chunks=[];
@@ -70,11 +70,15 @@
           const count=r.delivery?.files?.length||0;
           let info='Файлы заказа пока недоступны. Сохраните эту страницу и откройте её после обновления сервиса.';
           if (count) info=r.delivery.preview?'Доступна предварительная версия иллюстрации.':'Вы можете скачать свои иллюстрации в HD-качестве';
-          show('Спасибо Вам большое.','Мы Вас не подведём! Теперь вы клиент ',info);
-          const brand = document.createElement('em');
-          brand.className = 'customer-brand';
-          brand.textContent = 'mv-teplo.ru';
-          $('#message').append(brand, '.');
+          if (r.test) {
+            show('Тестовая оплата прошла', 'Можно скачать HD-иллюстрации и проверить уведомление о заказе.', info);
+          } else {
+            show('Спасибо Вам большое.','Мы Вас не подведём! Теперь вы клиент ',info);
+            const brand = document.createElement('em');
+            brand.className = 'customer-brand';
+            brand.textContent = 'mv-teplo.ru';
+            $('#message').append(brand, '.');
+          }
           if(r.physical){const eta=$('#order-eta');eta.textContent=r.deliveryMethod === 'door' ? 'Бесплатная доставка до двери' : r.deliveryEstimate || 'Срок доставки до ПВЗ пока неизвестен.';eta.hidden=false;}
           if (count) control(count>1?'Скачать HD-иллюстрации':r.delivery.preview?'Скачать иллюстрацию · JPG':'Скачать HD-иллюстрацию · JPG',download);
           if(!matchMedia('(prefers-reduced-motion: reduce)').matches) for(let n=0;n<28;n++){
@@ -82,6 +86,7 @@
           }
           return;
         }
+        if (r.status==='expired') { clearAttempt(); show('Попытка оплаты завершилась', 'Вернитесь в корзину, чтобы оформить заказ заново.'); return; }
         if(r.status==='canceled'){clearAttempt();show('Платёж отменён','Можно вернуться в корзину и попробовать снова.');return;}
         show('Ждём подтверждения','Как только ЮKassa подтвердит оплату, здесь появится кнопка скачивания.');
         if(n<7) await new Promise(r=>setTimeout(r,2500));
