@@ -78,6 +78,10 @@
     canvas.width = 450;
     canvas.height = 540;
     paintTeploProductPreview(canvas, view, item);
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = '#fbf2e3';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     return canvas;
   }
 
@@ -101,6 +105,7 @@
     if (item.product === 'frame') paint = paintTeploFramePrint;
     if (item.product === 'paper' && item.material === 'sticker') paint = paintTeploSticker;
     paint(ctx, poster, 0, 0, width, height, item.printLayout);
+    if (item.product === 'frame') return productPreview('frame', {...item, poster});
     if (item.product === 'keychain') return productPreview('keychain', {...item, poster});
     if (item.product === 'paper' && item.material === 'sticker') return productPreview('sticker', {...item, poster});
   }
@@ -133,14 +138,20 @@
       const preview = render(await image(index), item, canvas);
       const extension = item.product === 'tshirt' ? 'png' : 'jpg';
       const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, 0.96));
+      const [blob, previewBlob] = await Promise.all([
+        new Promise(resolve => canvas.toBlob(resolve, mimeType, 0.96)),
+        preview ? new Promise(resolve => preview.toBlob(resolve, 'image/png')) : null,
+      ]);
       canvas.width = canvas.height = 1;
+      if (preview) preview.width = preview.height = 1;
       if (blob?.type !== mimeType) throw Error('print_export_failed');
+      if (preview && previewBlob?.type !== 'image/png') throw Error('preview_export_failed');
       const line = String(item.line).padStart(2, '0');
       const variant = item.artwork ? '-' + String(item.artwork).padStart(2, '0') : '';
       const detail = item.product === 'tshirt' ? [item.format, item.shirtColor].filter(Boolean).join('-') : '';
       const suffix = detail ? '-' + detail.replace(/[^a-z0-9-]/gi, '') : '';
-      return {blob, preview, name:'Teplo-' + number + '-' + line + variant + '-' + fileNames[item.product] + suffix + '.' + extension};
+      const stem = 'Teplo-' + number + '-' + line + variant + '-' + fileNames[item.product] + suffix;
+      return {blob, name:stem + '.' + extension, previewBlob, previewName:stem + '-preview.png'};
     })();
     pending.set(index, task);
     task.catch(() => pending.delete(index));
@@ -189,26 +200,30 @@
       button.disabled = true;
       feedback.textContent = 'Собираем макет…';
       try {
-        const {blob, name, preview} = await prepare(index);
+        const {blob, name, previewBlob, previewName} = await prepare(index);
         const url = localUrl(blob);
-        let display;
-        if (preview) {
-          display = document.createElement('figure');
-          display.className = 'product-preview';
-          preview.setAttribute('role', 'img');
-          preview.setAttribute('aria-label', 'Как выглядел макет · ' + productName(item));
-          display.append(preview, create('figcaption', 'Как видел клиент'));
-        } else {
-          display = document.createElement('img');
-          display.src = url;
-          display.alt = 'Макет · ' + productName(item);
-          if (item.product === 'frame') display.className = 'frame';
-        }
-        const download = create('a', item.product === 'tshirt' ? 'Скачать PNG для печати' : 'Скачать JPG для печати');
+        const image = document.createElement('img');
+        image.src = previewBlob ? localUrl(previewBlob) : url;
+        image.alt = 'Макет · ' + productName(item);
+        const download = create('a', previewBlob ? 'Файл для печати' : 'Скачать JPG для печати');
         if (item.product === 'digital') download.textContent = 'Скачать HD JPG';
         download.href = url;
         download.download = name;
-        button.replaceWith(display, download);
+        if (previewBlob) {
+          const figure = document.createElement('figure');
+          figure.className = 'product-preview';
+          figure.append(image, create('figcaption', 'Как видел клиент'));
+          const previewDownload = create('a', 'Скачать как на превью');
+          previewDownload.href = image.src;
+          previewDownload.download = previewName;
+          const actions = document.createElement('div');
+          actions.className = 'download-actions';
+          download.className = 'download-print';
+          actions.append(previewDownload, download);
+          button.replaceWith(figure, actions);
+        } else {
+          button.replaceWith(image, download);
+        }
         feedback.textContent = '';
       } catch {
         button.disabled = false;
@@ -226,8 +241,11 @@
       const entries = [];
       for (let index = 0; index < files.length; index++) {
         archiveStatus.textContent = 'Готовим макет ' + (index + 1) + ' из ' + files.length + '…';
-        const {blob, name} = await prepare(index);
-        entries.push({name, bytes:new Uint8Array(await blob.arrayBuffer())});
+        const {blob, name, previewBlob, previewName} = await prepare(index);
+        entries.push({name:'Для печати/' + name, bytes:new Uint8Array(await blob.arrayBuffer())});
+        if (previewBlob) {
+          entries.push({name:'Вид изделия/' + previewName, bytes:new Uint8Array(await previewBlob.arrayBuffer())});
+        }
       }
       const download = create('a', 'Скачать ZIP с макетами');
       download.href = localUrl(orderZip(entries));
