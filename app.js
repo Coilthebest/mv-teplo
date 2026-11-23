@@ -598,8 +598,7 @@
       g.fillStyle = horizontalGradient(g,-320,320,[[0,'#bc966d'],[.26,'#ddbf96'],[.72,'#b9946e'],[1,'#d7b78d']]);
       g.fillRect(-323,-478,646,956);
       // Fill the entire 10 × 15 opening with a centred print crop.
-      const width = poster.height * 2 / 3;
-      placeTeploPrint(g,-310,-465,620,930,placement(view), () => g.drawImage(poster,(poster.width-width)/2,0,width,poster.height,-310,-465,620,930));
+      paintTeploFramePrint(g, poster, -310, -465, 620, 930, placement(view));
     }
     g.restore();
   }
