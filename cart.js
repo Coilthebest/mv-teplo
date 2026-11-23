@@ -219,5 +219,5 @@
     try { input.value = sessionStorage.getItem('teplo-promo') || ''; } catch {}
     schedule(true);
   }
-  window.startTestCheckout(() => ({ ...calculation(), pack, promoCode: promo?.code, promoDraft: !!input.value.trim() }), enablePromo);
+  window.startPayment(() => ({ ...calculation(), pack, promoCode: promo?.code, promoDraft: !!input.value.trim() }), enablePromo);
 })();
