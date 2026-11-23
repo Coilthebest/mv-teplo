@@ -410,48 +410,15 @@
     paintTeploContainedImage(context, image, x, y, width, height);
   }
 
-  function tint(hex, target, amount) {
-    const n = parseInt(hex.slice(1), 16);
-    return `rgb(${[16, 8, 0].map((shift) => Math.round(((n >> shift) & 255) * (1 - amount) + target * amount)).join(',')})`;
-  }
-
-  function drawCotton(ctx, hex) {
-    const outline = new Path2D('M187 51 Q156 58 119 74 Q108 80 99 95 L38 175 Q34 181 40 185 L94 217 Q99 219 103 214 L128 181 Q132 237 128 328 L121 504 Q121 518 133 521 Q247 537 367 521 Q380 518 379 504 L372 328 Q368 236 372 181 L397 214 Q401 220 407 217 L460 185 Q467 181 461 175 L401 95 Q391 79 381 74 Q342 58 313 51 Q250 72 187 51 Z');
-    ctx.save();
-    const fabric = ctx.createLinearGradient(45, 98, 455, 162);
-    for (const [at, target, strength] of [[0,0,.11],[.15,255,.04],[.22,0,.07],[.34,255,.05],[.6,255,.02],[.77,0,.055],[.85,255,.035],[1,0,.12]]) {
-      fabric.addColorStop(at, tint(hex, target, strength));
-    }
-    ctx.shadowColor = 'rgba(72, 48, 30, .20)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 5;
-    ctx.fillStyle = fabric;
-    ctx.fill(outline);
-    ctx.restore();
-    const neck = new Path2D('M187 51 Q250 67 313 51 C306 75 284 94 250 95 C217 95 194 77 187 51Z');
-    const rib = ctx.createLinearGradient(250, 52, 250, 95);
-    rib.addColorStop(0, tint(hex, 0, .21));
-    rib.addColorStop(.72, tint(hex, 0, .09));
-    rib.addColorStop(1, hex);
-    ctx.fillStyle = rib;
-    ctx.fill(neck);
-  }
-
-  function drawTshirt(ctx) {
-    const color = tshirtColors[state.shirtColor];
-    const image = state.shirtPrint || state.upload || tshirtExample;
-    ctx.save();
-    ctx.translate(0, 12);
-    ctx.scale(1.8, 1.8);
-    drawCotton(ctx, color.hex);
-    paintTeploShirtPrint(ctx, image, {
+  function shirtPreviewOptions() {
+    return {
       caption: state.upload ? $('#caption').value.trim() : 'MUSTANG',
       year: state.upload ? $('#year').value.trim() : '2025',
       yearLines: $('#year-lines').checked,
       printLayout: placement('tshirt'),
       shirtColor: state.shirtColor,
-    });
-    ctx.restore();
+      shirtPrint: state.shirtPrint || state.upload || tshirtExample,
+    };
   }
 
   function drawUpload(image) {
@@ -505,59 +472,13 @@
     return state.product === 'paper' && state.material === 'sticker' ? 'sticker' : state.product;
   }
 
-  function horizontalGradient(context, left, right, colors) {
-    const gradient = context.createLinearGradient(left, 0, right, 0);
-    colors.forEach(([at, color]) => gradient.addColorStop(at, color));
-    return gradient;
-  }
-
-  function roundedBox(g,x,y,w,h,r){
-    g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);
-    g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();
-  }
   function renderGift(target, view, poster) {
-    const g = target.getContext('2d');
-    g.save();
-    g.scale(target.width / 900, target.height / 1080);
-    g.clearRect(0, 0, 900, 1080);
-    if (view === 'tshirt') {
-      drawTshirt(g);
-    } else if (view === 'sticker') {
-      // Same glass silhouette and label placement as the collection example.
-      g.translate(155, 6);
-      g.scale(2.45, 2.45);
-      g.fillStyle = horizontalGradient(g, 59, 181, [[0,'#192b23'],[.27,'#526143'],[.57,'#344831'],[1,'#172921']]);
-      g.fill(new Path2D('M101 20h38v101c0 26 42 40 42 76v209c0 13-15 17-61 17s-61-4-61-17V197c0-36 42-50 42-76Z'));
-      g.strokeStyle = '#ffffff29'; g.lineWidth = 4;
-      g.stroke(new Path2D('M109 94v30c0 30-38 45-38 75v198'));
-      g.fillStyle = horizontalGradient(g, 99, 141, [[0,'#674337'],[.4,'#ad7d59'],[1,'#603e31']]);
-      g.fillRect(99,17,42,77);
-      paintTeploSticker(g, poster, 65, 218, 110, 165, placement(view));
-      g.fillStyle = horizontalGradient(g,65,175,[[0,'#40281030'],[.3,'#ffffff05'],[.75,'#ffffff00'],[1,'#40281026']]);
-      g.fillRect(65,218,110,165);
-    } else if (view === 'keychain') {
-      g.translate(450,550);
-      const format = state.product === 'keychain' ? $('#product-format').value : '';
-      const insert = teploKeychainSize(format);
-      const bodyWidth = insert.width + 26;
-      g.fillStyle = '#bb976b'; g.beginPath(); roundedBox(g,-bodyWidth/2,-202,bodyWidth,576,21); g.fill();
-      const inner = insert.width;
-      g.fillStyle = '#f7e8d4';
-      g.fillRect(-inner/2,-189,inner,547);
-      paintTeploPaperPrint(g, poster, -inner/2, -189, inner, insert.height, placement(view));
-      g.strokeStyle = '#93948c'; g.lineWidth = 15;
-      g.beginPath(); g.arc(0,-345,97,0,2*Math.PI); g.stroke();
-      g.strokeStyle = '#d4d4c9'; g.lineWidth = 4; g.stroke();
-      g.fillStyle = '#705b45'; g.beginPath(); g.arc(0,-174,12,0,2*Math.PI); g.fill();
-      g.strokeStyle = '#a8a89e'; g.lineWidth = 9; g.beginPath(); roundedBox(g,-9,-251,18,80,9); g.stroke();
-    } else {
-      g.translate(450,540);
-      g.fillStyle = horizontalGradient(g,-320,320,[[0,'#bc966d'],[.26,'#ddbf96'],[.72,'#b9946e'],[1,'#d7b78d']]);
-      g.fillRect(-323,-478,646,956);
-      // Fill the entire 10 × 15 opening with a centred print crop.
-      paintTeploFramePrint(g, poster, -310, -465, 620, 930, placement(view));
-    }
-    g.restore();
+    const item = view === 'tshirt' ? shirtPreviewOptions() : {
+      poster,
+      format: view === state.product ? $('#product-format').value : '',
+      printLayout: placement(view),
+    };
+    paintTeploProductPreview(target, view, item);
   }
 
   function draw() {
@@ -597,7 +518,7 @@
     ctx.clearRect(0, 0, 900, height);
     if (state.product === 'tshirt') {
       canvas.setAttribute('aria-label', `${state.upload ? 'Ваше фото на футболке' : 'Пример футболки MUSTANG 2025'} · ${currentSpec()}`);
-      drawTshirt(ctx);
+      renderGift(canvas, selected, null);
       return;
     }
     if (poster) {
