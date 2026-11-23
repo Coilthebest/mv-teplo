@@ -33,3 +33,10 @@ function placeTeploPrint(ctx, left, top, width, height, layout, paint) {
     paint();
   } finally { ctx.restore(); }
 }
+
+function paintTeploFramePrint(ctx, poster, left, top, width, height, layout) {
+  const crop = poster.height * 2 / 3;
+  placeTeploPrint(ctx, left, top, width, height, layout, () => {
+    ctx.drawImage(poster, (poster.width - crop) / 2, 0, crop, poster.height, left, top, width, height);
+  });
+}
