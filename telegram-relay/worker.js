@@ -33,8 +33,11 @@ async function readPayload(request, timestamp) {
 async function telegram(token, method, payload) {
   const response = await fetch('https://api.telegram.org/bot'+token+'/'+method, {
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),
-    signal:AbortSignal.timeout(method === 'sendMessage' ? 5000 : 3000),redirect:'error'
+    signal:AbortSignal.timeout(method === 'sendMessage' ? 5000 : 3000),redirect:'manual'
   });
+  if (response.status >= 300 && response.status < 400) {
+    throw Object.assign(Error('telegram_redirect'), {reason:'telegram_redirect'});
+  }
   const result = await response.json();
   if (!response.ok || !result.ok) {
     throw Object.assign(Error('telegram_rejected'), {
