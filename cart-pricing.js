@@ -1,7 +1,7 @@
 /* All money is stored in kopeks. One source of truth for the catalogue and cart. */
 (function (root) {
   'use strict';
-  const prices = Object.freeze({ frame: 76000, paper: 35000, mattePaper: 28000, keychain: 65000, tshirt: 287000, digital: 49900 });
+  const prices = Object.freeze({ frame: 76000, paper: 35000, mattePaper: 38000, keychain: 65000, tshirt: 287000, digital: 49900 });
   const magnets = Object.freeze({
     '3 × 3 см': 60000, '5 × 5 см': 60000, '5 × 7 см': 60000, '5 × 9 см': 60000,
     '7 × 10 см': 65000, '8 × 8 см': 60000, '10 × 10 см': 60000,
