@@ -4,7 +4,7 @@
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const phoneLayout = matchMedia('(max-width: 680px)');
-  const previewParts = ['.preview-top', '#preview-stage', '#print-controls', '#gift-views', '.stories'].map($);
+  const previewParts = ['.preview-top', '#preview-stage', '#print-controls', '#gift-views', '#garland-picker', '.stories'].map($);
   function placePreview() {
     const anchor = phoneLayout.matches ? $('#drop-zone') : $('.preview-bottom');
     anchor.before(...previewParts);
@@ -20,6 +20,7 @@
     keychain: { name: 'История, которая всегда с вами', formats: ['Прямоугольный · 3 × 4 см', 'Акриловый · 40 × 56 мм'] },
     paper: { name: 'Наклейка с вашей историей', formats: ['10 × 15 см'] },
     tshirt: { name: 'Футболка с вашей историей', formats: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], defaultFormat: 'M' },
+    garland: { name: 'Арт-гирлянда воспоминаний', formats: ['5', '10'], defaultFormat: '5' },
   };
   const tshirtColors = teploShirtColors;
   const state = { upload: null, product: 'frame', material: 'sticker', shirtColor: 'white', shirtSize: 'M', sourceFile: null, sourceHash: null, editingCartId: null, illustration: null, illustrationFile: null, shirtPrint: null, job: null, generating: false, legacy: false };
@@ -38,6 +39,7 @@
   choiceExample.src='assets/couple-art.webp';
   let aiConfig = { ready: false };
   const canOrderArtwork = () => Boolean(state.illustration && state.sealedArtwork?.objectId);
+  const canOrderProduct = () => state.product === 'garland' ? garland.ready : canOrderArtwork();
   let draftTimer;
   const slots = Array(10).fill(null);
   const slotImages = Array(10).fill(null);
@@ -113,8 +115,14 @@
     $('.preview-disclaimer').textContent = state.illustration ? isTshirt ? 'Принт без внешней бумажной подложки. Проверьте светлые детали на эскизе: цвет и посадка готовой футболки могут отличаться. HD-файл иллюстрации сохраняется отдельно.' : defaultDisclaimer : isTshirt
       ? hasPhoto ? 'Здесь показана футболка с вашим исходным изображением. Фон исходного фото сохраняется; PNG с прозрачностью примеряется без подложки. Цвет и посадка готового изделия могут отличаться.' : 'Так может выглядеть футболка с готовой иллюстрацией без бумажной подложки. Загрузите своё фото, чтобы собрать личный эскиз. Цвет и посадка готового изделия могут отличаться.'
       : defaultDisclaimer;
-    $('#view-selection').disabled = !hasArtwork;
-    $('#add-to-cart').disabled = !canOrderArtwork() || savingCart || state.generating;
+    if (state.product === 'garland') {
+      mode.replaceChildren(dot, document.createTextNode(garland.count ? `Ваша гирлянда · ${garland.count} из ${garland.format} иллюстраций` : 'Пример гирлянды · выберите свои иллюстрации'));
+      $('.preview-disclaimer').textContent = 'Каждая иллюстрация в белой картонной рамке с деревянной прищепкой. Выберите 5 или 10 готовых рисунков.';
+      $('#garland-picker-status').textContent = `Выбрано ${garland.count} из ${garland.format} иллюстраций`;
+      $('#garland-pick').textContent = garland.count ? 'Изменить иллюстрации' : 'Выбрать иллюстрации';
+    }
+    $('#view-selection').disabled = state.product === 'garland' ? !garland.ready : !hasArtwork;
+    $('#add-to-cart').disabled = !canOrderProduct() || savingCart || state.generating;
   }
 
   function selectedProductName() {
@@ -132,18 +140,19 @@
     $('#preview-stage').dataset.material = state.material;
     $('#product-name').textContent = selectedProductName();
     $('#tshirt-options').hidden = key !== 'tshirt';
-    $('#print-controls').hidden=false;
+    $('#print-controls').hidden = key === 'garland';
+    $('#garland-picker').hidden = key !== 'garland';
     $('#art-object').classList.remove('aligning');
-    $('.format-label').textContent = key === 'tshirt' ? 'Размер футболки' : 'Формат';
+    $('.format-label').textContent = key === 'tshirt' ? 'Размер футболки' : key === 'garland' ? 'Размер гирлянды' : 'Формат';
     updateTshirtControls();
     const formats = products[key].formats;
     $('#product-format').replaceChildren(...formats.map((text) => {
       const option = document.createElement('option');
       option.value = text;
-      option.textContent = key === 'magnet' ? `${text} — ${TeploPricing.money(TeploPricing.unitPrice({ product: key, format: text }))}` : text;
+      option.textContent = key === 'magnet' || key === 'garland' ? `${key === 'garland' ? text + ' иллюстраций' : text} — ${TeploPricing.money(TeploPricing.unitPrice({ product: key, format: text }))}` : text;
       return option;
     }));
-    $('#product-format').value = key === 'tshirt' ? state.shirtSize : products[key].defaultFormat || formats[0];
+    $('#product-format').value = key === 'tshirt' ? state.shirtSize : key === 'garland' ? garland.format : products[key].defaultFormat || formats[0];
     updateProductSpec();
     updatePreviewMode();
   }
@@ -174,10 +183,12 @@
   function currentSpec() {
     const format = $('#product-format').value;
     if (state.product === 'tshirt') return `${tshirtColors[state.shirtColor].name} · размер ${format}`;
+    if (state.product === 'garland') return `${format} иллюстраций`;
     return state.product === 'paper' ? `${TeploPricing.productName(state)} · ${format}` : format;
   }
 
   function currentCanvasHeight() {
+    if (state.product === 'garland') return garland.format === '10' ? 770 : 400;
     if (state.product === 'digital') return 1200;
     if (state.product === 'tshirt') return 1080;
     if (state.product === 'magnet') {
@@ -189,6 +200,11 @@
 
   function updateProductSpec() {
     if (state.product === 'tshirt') state.shirtSize = $('#product-format').value;
+    if (state.product === 'garland') {
+      garland.setFormat($('#product-format').value);
+      $('#preview-stage').dataset.garlandCount = garland.format;
+      updatePreviewMode();
+    }
     queueDraft();
     $('#product-spec').textContent = currentSpec();
     $('#preview-stage').dataset.orientation = currentCanvasHeight() < 900 ? 'landscape' : 'portrait';
@@ -238,7 +254,7 @@
     if (!state.sourceFile || restoring || activeSlot < 0) return;
     const saved = { storyId, photoHash, sourceFile: state.sourceFile, generatedFile: state.illustrationFile, previewMarked: state.previewMarked, sealedArtwork: state.sealedArtwork,
       job: state.job, legacy: state.legacy, caption: $('#caption').value, year: $('#year').value, yearLines: $('#year-lines').checked,
-      product: state.product, material: state.material, format: $('#product-format').value,
+      product: state.product === 'garland' ? 'frame' : state.product, material: state.material, format: state.product === 'garland' ? '10 × 15 см' : $('#product-format').value,
       shirtColor: state.shirtColor, shirtSize: state.shirtSize, layouts:structuredLayouts(), qty: $('#item-quantity').value };
     slots[activeSlot] = saved;
     renderSlots();
@@ -302,11 +318,21 @@
   async function selectSlot(index, pick = false) {
     if (state.generating || restoring || savingCart) return;
     if (index === activeSlot && slots[index] && state.upload) return;
+    const keepGarland = state.product === 'garland';
+    const garlandEditId = keepGarland ? state.editingCartId : null;
+    const garlandQty = $('#item-quantity').value;
+    const showGarland = () => {
+      if (!keepGarland) return;
+      state.editingCartId = garlandEditId;
+      $('#item-quantity').value = garlandQty;
+      setProduct('garland');
+    };
     persistDraft();
     setActiveSlot(index);
     clearEditor();
     const saved = slots[index];
     if (!saved) {
+      showGarland();
       renderSlots();
       if (pick) $('#photo-input').click();
       return;
@@ -314,7 +340,7 @@
     restoring = true; $('.builder').inert = true;
     try { await restoreRecord(saved); }
     catch { aiStatus('Не удалось открыть сохранённую иллюстрацию.', true); }
-    finally { restoring = false; $('.builder').inert = false; renderSlots(); }
+    finally { restoring = false; $('.builder').inert = false; showGarland(); renderSlots(); }
     if (state.job && aiConfig.ready) runGeneration();
   }
   async function applyIllustration(blob, marked, fresh = false) {
@@ -480,7 +506,7 @@
       printLayout: placement(view),
     };
     if (view === 'garland') {
-      TeploMockups.paintGarland(target, [poster, ...TeploMockups.examples().slice(0, 4)], 5);
+      garland.paint(target, target !== canvas);
     } else TeploMockups.paint(target, view, item);
   }
 
@@ -496,21 +522,28 @@
   function drawArtwork() {
     const gallery = $('#gift-views');
     const selected = giftView();
+    const isGarland = selected === 'garland';
     const buttons = $$('[data-gift-view]');
-    const example = !state.upload && choiceExample.naturalWidth ? choiceExample : null;
-    gallery.hidden = !state.illustration && !example;
-    const showMockup = Boolean((state.illustration || example) && (buttons.some(button => button.dataset.giftView === selected) || selected === 'paper' || selected === 'digital'));
+    const example = (!state.upload || isGarland) && choiceExample.naturalWidth ? choiceExample : null;
+    gallery.hidden = !state.illustration && !example && !isGarland;
+    const showMockup = isGarland || Boolean((state.illustration || example) && (buttons.some(button => button.dataset.giftView === selected) || selected === 'paper' || selected === 'digital'));
     $('#preview-stage').classList.toggle('gift-mockup', showMockup);
     let poster = example ? AI.printInk(example) : null;
     if (state.illustration) {
       poster = AI.compose(state.illustration, $('#caption').value, $('#year').value, $('#year-lines').checked);
     }
-    if (poster) {
-      for (const button of buttons) {
-        renderGift(button.querySelector('canvas'), button.dataset.giftView, poster);
-        if (button.dataset.giftView !== 'garland') button.setAttribute('aria-pressed', String(button.dataset.giftView === selected));
-      }
+    for (const button of buttons) {
+      if (poster || button.dataset.giftView === 'garland') renderGift(button.querySelector('canvas'), button.dataset.giftView, poster);
+      button.setAttribute('aria-pressed', String(button.dataset.giftView === selected));
     }
+    if (isGarland) {
+      if (canvas.width !== 1000) canvas.width = 1000;
+      if (canvas.height !== currentCanvasHeight()) canvas.height = currentCanvasHeight();
+      garland.paint(canvas);
+      canvas.setAttribute('aria-label', selectedProductName() + ' · ' + currentSpec());
+      return;
+    }
+    if (canvas.width !== 900) canvas.width = 900;
     if (showMockup) {
         if (canvas.height !== 1080) canvas.height = 1080;
         renderGift(canvas, selected, poster);
@@ -628,11 +661,11 @@
   }
 
   function openSelection() {
-    if (!state.upload) return;
+    if (state.product === 'garland' ? !garland.ready : !state.upload) return;
     draw();
     $('#summary-image').src = TeploMockups.withBackground(canvas).toDataURL('image/png');
-    $('#summary-caption').textContent = $('#caption').value.trim() || 'Без надписи';
-    $('#summary-year').textContent = $('#year').value.trim() || 'Без даты';
+    $('#summary-caption').textContent = state.product === 'garland' ? 'Ваши выбранные иллюстрации' : $('#caption').value.trim() || 'Без надписи';
+    $('#summary-year').textContent = state.product === 'garland' ? 'Сохранены на каждой карточке' : $('#year').value.trim() || 'Без даты';
     $('#summary-product').textContent = selectedProductName();
     $('#summary-format').textContent = currentSpec();
     $('#summary-format').previousElementSibling.textContent = state.product === 'tshirt' ? 'Цвет и размер' : 'Формат';
@@ -653,19 +686,32 @@
     const quality = state.product === 'magnet' ? ' · ' + P.names.magnet : '';
     $('#add-to-cart').textContent = action + quality;
     $('#cancel-cart-edit').hidden = !state.editingCartId;
-    $('#add-to-cart').disabled = savingCart || state.generating || !canOrderArtwork();
+    $('#add-to-cart').disabled = savingCart || state.generating || !canOrderProduct();
   }
 
   function endCartEdit() { state.editingCartId = null; updatePurchase(); }
 
   async function addToCart() {
-    if (!state.upload || !state.sourceFile || savingCart || state.generating || !canOrderArtwork()) return;
+    if (savingCart || state.generating || !canOrderProduct() || (state.product !== 'garland' && (!state.upload || !state.sourceFile))) return;
     $('#cart-add-error').hidden = true;
     savingCart = true; renderSlots();
     const button = $('#add-to-cart');
     const file = state.sourceFile;
     const editId = state.editingCartId;
     try {
+      if (state.product === 'garland') {
+        button.disabled = true;
+        button.textContent = 'Сохраняем вашу гирлянду…';
+        const item = garland.item(TeploPricing.quantity($('#item-quantity').value), null);
+        draw();
+        item.preview = await new Promise((resolve,reject) => TeploMockups.withBackground(canvas).toBlob(blob => blob ? resolve(blob) : reject(Error('preview_failed')), 'image/jpeg', .88));
+        await TeploCart.add(item, editId);
+        endCartEdit();
+        $('#item-quantity').value = 1;
+        notify(editId ? 'Гирлянда обновлена в корзине.' : 'Гирлянда добавлена в корзину.');
+        TeploCart.open();
+        return;
+      }
       const item = {
         product: state.product,
         material: state.product === 'paper' ? state.material : '',
@@ -715,8 +761,15 @@
   document.addEventListener('teplo:notice', event => notify(event.detail));
   document.addEventListener('teplo:edit-cart', async event => {
     const { item, copy } = event.detail;
-    if (item.product === 'garland') return;
     if (restoring || state.generating || savingCart) { notify('Дождитесь окончания обработки.'); return; }
+    if (item.product === 'garland') {
+      state.editingCartId = copy ? null : item.id;
+      $('#item-quantity').value = copy ? 1 : item.qty;
+      setProduct('garland');
+      await garland.edit(item);
+      notify(copy ? 'Гирлянда выбрана. Можно изменить набор иллюстраций.' : 'Измените гирлянду и нажмите «Обновить в корзине».');
+      return;
+    }
     persistDraft();
     const matching = item.storyId ? slots.findIndex(record => record?.storyId === item.storyId) : -1;
     // If all slots are occupied, an older cart item can be edited outside the gallery.
@@ -757,7 +810,6 @@
 
   $$('[data-gift-view]').forEach(button => button.addEventListener('click', () => {
     const view = button.dataset.giftView;
-    if (view === 'garland') return;
     if (view === 'sticker') setProduct('paper');
     else setProduct(view);
   }));
@@ -811,6 +863,11 @@
   document.addEventListener('drop', (event) => { if (event.dataTransfer.types.includes('Files')) event.preventDefault(); });
   $('#reset-button').addEventListener('click', () => {
     if (restoring || state.generating || savingCart) return;
+    if (state.product === 'garland') {
+      garland.clear(); endCartEdit(); setProduct('garland');
+      notify('Выбор гирлянды сброшен. Ваши иллюстрации сохранены.');
+      return;
+    }
     if (activeSlot >= 0) {
       slots[activeSlot] = null;
       AI.draft('delete', null, activeSlot);
@@ -867,7 +924,7 @@
     restoring = false; $('.builder').inert = false;
     await selectSlot(Number.isInteger(index) && index >= 0 && index < slots.length ? index : 0);
   }
-  window.setupGarland({
+  const garland = window.setupGarland({
     stories() {
       persistDraft();
       return slots;
@@ -879,8 +936,10 @@
         notify('Все ячейки заняты. Выберите фото в конструкторе или освободите ячейку кнопкой «Сначала».');
       } else selectSlot(empty, true);
     },
-    busy: () => restoring || state.generating || savingCart
+    busy: () => restoring || state.generating || savingCart,
+    onChange() { if (state.product === 'garland') setProduct('garland'); }
   });
+  $('#garland-pick').addEventListener('click', garland.open);
   $('.builder').inert = true;
   initialize();
 })();

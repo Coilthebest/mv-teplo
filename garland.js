@@ -1,6 +1,6 @@
 'use strict';
 
-window.setupGarland = ({ stories, upload, busy }) => {
+window.setupGarland = ({ stories, upload, busy, onChange }) => {
   const $ = id => document.getElementById(id);
   const dialog = $('garland-dialog');
   const list = $('garland-stories');
@@ -14,11 +14,34 @@ window.setupGarland = ({ stories, upload, busy }) => {
   let format = '5';
   let saving = false;
   let returningFromUpload = false;
+  let applied = [];
+  let appliedPosters = [];
+  let mainFormat = '5';
+  let loadingMain = false;
+  let mainVersion = 0;
   let previewVersion = 0;
   const previewUrls = [];
 
   function clearPreviews() {
     for (const url of previewUrls.splice(0)) URL.revokeObjectURL(url);
+  }
+
+  async function composePosters(chosen) {
+    await TeploMockups.ready;
+    return Promise.all(chosen.map(async art => {
+      try {
+        const image = await TeploIllustration.loadImage(art.preview);
+        const composed = TeploIllustration.compose(image, art.caption, art.year, art.yearLines);
+        const copy = document.createElement('canvas'); copy.width = 360; copy.height = 480;
+        copy.getContext('2d').drawImage(composed, 0, 0, copy.width, copy.height);
+        return copy;
+      } catch { return null; }
+    }));
+  }
+
+  function examples(count) {
+    const examples = TeploMockups.examples();
+    return Array.from({length:count}, (_,i) => examples[i % examples.length]);
   }
 
   async function drawGarlandPreview() {
@@ -29,15 +52,7 @@ window.setupGarland = ({ stories, upload, busy }) => {
     target.height = count === 10 ? 770 : 400;
     $('garland-preview-label').textContent = chosen.length ? `Предпросмотр: ${chosen.length} из ${count} ваших иллюстраций` : 'Пример оформления гирлянды';
     await TeploMockups.ready;
-    const posters = chosen.length ? await Promise.all(chosen.map(async art => {
-      try {
-        const image = await TeploIllustration.loadImage(art.preview);
-        const composed = TeploIllustration.compose(image, art.caption, art.year, art.yearLines);
-        const copy = document.createElement('canvas'); copy.width = 360; copy.height = 480;
-        copy.getContext('2d').drawImage(composed, 0, 0, copy.width, copy.height);
-        return copy;
-      } catch { return null; }
-    })) : Array.from({length:count}, (_,i) => TeploMockups.examples()[i % TeploMockups.examples().length]);
+    const posters = chosen.length ? await composePosters(chosen) : examples(count);
     if (version === previewVersion) TeploMockups.paintGarland(target, posters, count);
   }
 
@@ -79,17 +94,16 @@ window.setupGarland = ({ stories, upload, busy }) => {
     $('garland-upload').disabled = saving;
     $('garland-close').disabled = saving;
     submit.disabled = saving || selected.length !== Number(format);
-    submit.textContent = editItem ? 'Обновить в корзине' : 'Добавить в корзину';
+    submit.textContent = 'Применить выбор';
     status.textContent = available.size ? 'Выбрано ' + selected.length + ' из ' + format : 'Загрузите фото и дождитесь готовых иллюстраций.';
     void drawGarlandPreview();
   }
 
-  function open(item = null) {
+  function open() {
     if (busy() || dialog.open) return;
-    if (item || !returningFromUpload) {
-      editItem = item;
-      format = item?.format || '5';
-      selected = item?.artworks.map(art => art.objectId) || [];
+    if (!returningFromUpload) {
+      format = mainFormat;
+      selected = applied.map(art => art.objectId);
     }
     returningFromUpload = false;
     available = new Map();
@@ -99,7 +113,8 @@ window.setupGarland = ({ stories, upload, busy }) => {
       available.set(objectId, { objectId, caption, year, yearLines, slot: index + 1, preview: story.generatedFile });
     });
     // Preserve an edited set's original files and captions even if its drafts were removed.
-    (editItem?.artworks || []).forEach(art => available.set(art.objectId, art));
+    (editItem?.artworks || []).forEach(art => { if (!available.has(art.objectId)) available.set(art.objectId, art); });
+    applied.forEach(art => { if (!available.has(art.objectId)) available.set(art.objectId, art); });
     selected = selected.filter(id => available.has(id));
     draw();
     dialog.showModal();
@@ -119,13 +134,6 @@ window.setupGarland = ({ stories, upload, busy }) => {
     document.getElementById('constructor').scrollIntoView({ block: 'start' });
     upload();
   });
-  document.querySelectorAll('[data-open-garland]').forEach(button => button.addEventListener('click', event => {
-    event.preventDefault();
-    open();
-  }));
-  document.addEventListener('teplo:edit-cart', event => {
-    if (event.detail.item.product === 'garland') open(event.detail.item);
-  });
   submit.addEventListener('click', async () => {
     if (saving || selected.length !== Number(format)) return;
     saving = true;
@@ -135,14 +143,19 @@ window.setupGarland = ({ stories, upload, busy }) => {
         const art = available.get(id);
         return { ...art, artworkKey: JSON.stringify([id, art.caption || '', art.year || '', art.yearLines !== false]) };
       });
-      const artworkKey = JSON.stringify(artworks.map(art => art.artworkKey));
-      await TeploCart.add({ product: 'garland', format, qty: editItem?.qty || 1, artworks, artworkKey, preview: artworks[0].preview }, editItem?.id);
+      const posters = await composePosters(artworks);
+      if (posters.some(poster => !poster)) throw Error('preview_failed');
+      mainVersion++;
+      mainFormat = format;
+      applied = artworks;
+      appliedPosters = posters;
+      loadingMain = false;
       dialog.close();
-      TeploCart.open();
+      onChange();
     } catch {
       saving = false;
       draw();
-      status.textContent = 'Не удалось сохранить гирлянду. Проверьте корзину и попробуйте ещё раз.';
+      status.textContent = 'Не удалось подготовить гирлянду. Попробуйте ещё раз.';
     } finally {
       saving = false;
       formats.forEach(input => { input.disabled = false; });
@@ -151,4 +164,43 @@ window.setupGarland = ({ stories, upload, busy }) => {
       $('garland-close').disabled = false;
     }
   });
+  return {
+    open,
+    get format() { return mainFormat; },
+    get count() { return applied.length; },
+    get ready() { return !loadingMain && applied.length === Number(mainFormat) && appliedPosters.length === Number(mainFormat) && appliedPosters.every(Boolean); },
+    setFormat(value) {
+      if (!['5', '10'].includes(value) || value === mainFormat) return;
+      mainFormat = value;
+      applied = applied.slice(0, Number(value));
+      appliedPosters = appliedPosters.slice(0, Number(value));
+      returningFromUpload = false;
+    },
+    paint(target, thumbnail = false) {
+      const count = thumbnail ? 5 : Number(mainFormat);
+      TeploMockups.paintGarland(target, applied.length ? appliedPosters.slice(0,count) : examples(count), count);
+    },
+    item(qty, preview) {
+      if (!this.ready) throw Error('invalid_item');
+      return { product: 'garland', format: mainFormat, qty, artworks: [...applied], artworkKey: JSON.stringify(applied.map(art => art.artworkKey)), preview };
+    },
+    async edit(item) {
+      const version = ++mainVersion;
+      returningFromUpload = false;
+      editItem = item;
+      mainFormat = item.format;
+      applied = [...item.artworks];
+      appliedPosters = [];
+      loadingMain = true;
+      onChange();
+      const posters = await composePosters(applied);
+      if (version !== mainVersion) return;
+      appliedPosters = posters.slice(0, applied.length);
+      loadingMain = false;
+      onChange();
+    },
+    clear() {
+      mainVersion++; mainFormat = '5'; editItem = null; applied = []; appliedPosters = []; loadingMain = false; returningFromUpload = false;
+    }
+  };
 };
