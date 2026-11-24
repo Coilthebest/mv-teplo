@@ -88,8 +88,7 @@
 .memory-toolbar .memory-controls { grid-area: controls; justify-self: end; }
 
 .memory-garland-heading {
-  margin-top: 1rem;
-  height: clamp(44px, 5vw, 64px);
+  margin-top: 1.8rem;
   position: relative;
   z-index: 2;
   text-align: center;
@@ -100,7 +99,6 @@
   margin-inline: auto;
   padding: 0;
   position: relative;
-  top: 24px;
   text-decoration: none;
 }
 .memory-garland-lettering {
@@ -111,6 +109,24 @@
   overflow: hidden;
 }
 .memory-garland-link:focus-visible { outline: 2px solid #8d612f; outline-offset: 3px; }
+.memory-garland-stacked, .memory-pagination { display: none; }
+.memory-garland-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: 10px;
+  padding: 9px 20px;
+  border: 1px solid #c5a47a;
+  border-radius: 24px;
+  background: #fffbf3;
+  color: #71462c;
+  font: 500 14px/1.4 var(--sans);
+  box-shadow: 0 2px 5px #6a441c08;
+  cursor: pointer;
+}
+.memory-garland-order:hover { background: #f0dfc7; border-color: #976c45; }
+.memory-garland-order:focus-visible { outline: 2px solid #8d612f; outline-offset: 3px; }
 
 @media (max-width: 620px) {
   .memory-toolbar {
@@ -118,6 +134,31 @@
     grid-template-areas: "status" "controls";
   }
   .memory-toolbar .memory-controls { width: 100%; }
-  .memory-garland-heading { margin-top: .8rem; }
-  .memory-garland-link { top: 20px; }
+  .memory-garland-heading { margin-top: 1.5rem; }
+}
+
+/* On phones one large print leads, with its neighbours peeking into view. */
+@media (max-width: 680px) {
+  .memory-garland-wide { display: none; }
+  .memory-garland-stacked { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .memory-garland-stacked svg { display: block; width: min(78%, 260px); height: auto; aspect-ratio: 1115 / 280; overflow: hidden; }
+  .memory-garland-stacked svg + svg { width: min(70%, 232px); aspect-ratio: 995 / 280; margin-top: -10px; }
+  .memory-garland-order { min-height: 44px; margin-top: 8px; }
+  .memory-theatre { margin-top: 12px; touch-action: pan-y; mask-image: none; }
+  .memory-theatre.is-carousel .memory-cards { width: 100%; margin: 0; }
+  .memory-theatre .memory-paper { padding: 9px 9px 0; border-radius: 3px; }
+  .memory-theatre .memory-image { aspect-ratio: 4 / 5; }
+  .memory-theatre .memory-paper figcaption { align-items: center; text-align: center; padding: 12px 3px 14px; gap: 7px; }
+  .memory-theatre .memory-caption-title { font-size: clamp(17px, 4.8vw, 21px); line-height: 1.2; overflow-wrap: normal; text-wrap: balance; }
+  .memory-theatre .memory-caption-year { font-size: 12px; line-height: 1.2; letter-spacing: 1px; }
+  .memory-theatre .memory-peg { width: 12px; height: 32px; top: -17px; left: calc(50% - 6px); }
+  .memory-theatre .memory-peg:after { top: 17px; }
+  .memory-section .memory-bottom { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 0; }
+  .memory-bottom .memory-arrows { order: -1; gap: 18px; }
+  .memory-bottom .memory-arrows button { width: 46px; height: 46px; }
+  .memory-pagination { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .memory-pagination span { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: #d9bd99; }
+  .memory-pagination .is-current { background: #815132; transform: scale(1.25); }
+  .memory-bottom > p { text-align: center; }
+  .memory-bottom .text-link { align-self: center; }
 }

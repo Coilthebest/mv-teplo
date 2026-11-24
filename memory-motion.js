@@ -16,12 +16,15 @@
   const modeButtons = [...document.querySelectorAll('[data-memory-mode]')];
   const wire = stage.querySelector('.garland-wire');
   const wirePath = wire.querySelector('path');
+  const pagination = document.querySelector('.memory-pagination');
+  const pageDots = stories.map(() => document.createElement('span'));
+  pagination?.replaceChildren(...pageDots);
   const imageCache = new Map();
   const duration = 14000;
   const slideDuration = 1150;
   const tilts = [-5, 3, -2, 4, -3, 2, -4, 3, -2, 4];
   let cards = [];
-  let offset = 0;
+  let offset = phone.matches ? 1 : 0;
   let layout;
   let elapsed = media.matches ? 6000 : 0;
   let cycle = 0;
@@ -73,6 +76,9 @@
     stage.classList.toggle('is-paused', userPaused);
     previous.disabled = next.disabled = loading || Boolean(movement);
     stage.setAttribute('aria-busy', String(loading || Boolean(movement)));
+    const current = wrap(offset + (layout?.phone ? 1 : 0));
+    pagination?.setAttribute('aria-label', `Воспоминание ${current + 1} из ${stories.length}`);
+    pageDots.forEach((dot, index) => dot.classList.toggle('is-current', index === current));
   }
 
   function decodeImage(src) {
@@ -114,7 +120,8 @@
       const center = layout.start + left + layout.cardWidth / 2;
       const seed = Number(card.dataset.storyIndex);
       const idle = !movement && !userPaused && !media.matches ? Math.sin(time / 1500 + seed * 0.9) * 0.6 : 0;
-      const angle = tilts[seed % tilts.length] + swing * (0.84 + (seed % 3) * 0.08) + idle;
+      const tilt = tilts[seed % tilts.length] * (layout.phone ? 0.12 + 0.53 * Math.min(1, Math.abs(slot - 1)) : 1);
+      const angle = tilt + swing * (0.84 + (seed % 3) * 0.08) + idle * (layout.phone ? 0.3 : 1);
       card.style.left = `${left}px`;
       card.style.top = `${wireY(center) + 6}px`;
       card.style.transform = `rotate(${angle}deg)`;
@@ -127,9 +134,12 @@
     const width = stage.clientWidth;
     const count = smallScreen.matches ? 3 : 4;
     const trackWidth = track.clientWidth;
-    const gap = parseFloat(getComputedStyle(track).columnGap) || 14;
-    const cardWidth = (trackWidth - gap * (count - 1)) / count;
-    layout = { width, count, cardWidth, step: cardWidth + gap, start: (width - trackWidth) / 2, edgeY: phone.matches ? 19 : 25, sag: phone.matches ? 17 : 32 };
+    const gap = phone.matches ? 20 : parseFloat(getComputedStyle(track).columnGap) || 14;
+    const cardWidth = phone.matches ? Math.min(width * 0.76, 360) : (trackWidth - gap * (count - 1)) / count;
+    const step = cardWidth + gap;
+    const start = phone.matches ? (width - cardWidth) / 2 - step : (width - trackWidth) / 2;
+    layout = { width, count, cardWidth, step, start, phone: phone.matches, edgeY: phone.matches ? 22 : 25, sag: phone.matches ? 17 : 32 };
+    track.style.left = phone.matches ? `${start}px` : '';
     cards.forEach((card) => { card.style.width = `${cardWidth}px`; });
     const cardHeight = Math.max(...cards.map((card) => card.offsetHeight));
     const height = Math.ceil(cardHeight + layout.edgeY + layout.sag + 6 + (phone.matches ? 30 : 45));
@@ -138,6 +148,7 @@
     wirePath.setAttribute('d', `M -40 ${layout.edgeY} Q ${width / 2} ${layout.edgeY + 2 * layout.sag} ${width + 40} ${layout.edgeY}`);
     placeCards();
     paint(elapsed);
+    syncControls();
   }
 
   function rebuild() {
@@ -278,7 +289,7 @@
   document.addEventListener('visibilitychange', reconcile);
   new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; reconcile(); }, { threshold: 0.08 }).observe(stage);
   new ResizeObserver(() => {
-    if (!layout || (stage.clientWidth === layout.width && layout.count === (smallScreen.matches ? 3 : 4))) return;
+    if (!layout || (stage.clientWidth === layout.width && layout.count === (smallScreen.matches ? 3 : 4) && layout.phone === phone.matches)) return;
     if (movement) finishMove();
     rebuild();
     reconcile();
