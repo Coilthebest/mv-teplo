@@ -14,10 +14,31 @@ window.setupGarland = ({ stories, upload, busy }) => {
   let format = '5';
   let saving = false;
   let returningFromUpload = false;
+  let previewVersion = 0;
   const previewUrls = [];
 
   function clearPreviews() {
     for (const url of previewUrls.splice(0)) URL.revokeObjectURL(url);
+  }
+
+  async function drawGarlandPreview() {
+    const version = ++previewVersion;
+    const target = $('garland-preview-canvas');
+    const count = Number(format);
+    const chosen = selected.map(id => available.get(id)).filter(Boolean);
+    target.height = count === 10 ? 770 : 400;
+    $('garland-preview-label').textContent = chosen.length ? `Предпросмотр: ${chosen.length} из ${count} ваших иллюстраций` : 'Пример оформления гирлянды';
+    await TeploMockups.ready;
+    const posters = chosen.length ? await Promise.all(chosen.map(async art => {
+      try {
+        const image = await TeploIllustration.loadImage(art.preview);
+        const composed = TeploIllustration.compose(image, art.caption, art.year, art.yearLines);
+        const copy = document.createElement('canvas'); copy.width = 360; copy.height = 480;
+        copy.getContext('2d').drawImage(composed, 0, 0, copy.width, copy.height);
+        return copy;
+      } catch { return null; }
+    })) : Array.from({length:count}, (_,i) => TeploMockups.examples()[i % TeploMockups.examples().length]);
+    if (version === previewVersion) TeploMockups.paintGarland(target, posters, count);
   }
 
   function draw(focusId) {
@@ -60,6 +81,7 @@ window.setupGarland = ({ stories, upload, busy }) => {
     submit.disabled = saving || selected.length !== Number(format);
     submit.textContent = editItem ? 'Обновить в корзине' : 'Добавить в корзину';
     status.textContent = available.size ? 'Выбрано ' + selected.length + ' из ' + format : 'Загрузите фото и дождитесь готовых иллюстраций.';
+    void drawGarlandPreview();
   }
 
   function open(item = null) {
@@ -89,7 +111,7 @@ window.setupGarland = ({ stories, upload, busy }) => {
     draw();
   }));
   $('garland-close').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', clearPreviews);
+  dialog.addEventListener('close', () => { previewVersion++; clearPreviews(); });
   dialog.addEventListener('cancel', event => { if (saving) event.preventDefault(); });
   $('garland-upload').addEventListener('click', () => {
     returningFromUpload = true;

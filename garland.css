@@ -17,6 +17,9 @@
 }
 
 .garland-formats legend { font-weight: 700; }
+.garland-live-preview { margin: .5rem 0 .8rem; }
+.garland-live-preview canvas { width: 100%; height: auto; display: block; border-radius: 7px; }
+.garland-live-preview figcaption { font-size: 13px; color: #775a42; text-align: center; margin-top: 5px; }
 .garland-dialog input { accent-color: #83532e; }
 
 .garland-stories {

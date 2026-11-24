@@ -21,15 +21,16 @@
   <script src="payment.js?v=1" defer></script>
   <script src="story-storage.js?v=1" defer></script>
   <script src="cart.js?v=checkout2" defer></script>
-  <link rel="stylesheet" href="illustration.css?v=checkout2">
+  <link rel="stylesheet" href="illustration.css?v=travertine1">
   <script src="illustration.js?v=digital-paper4" defer></script>
   <script src="preview-mark.js" defer></script>
   <script src="print-placement.js?v=product-preview1" defer></script>
-  <link rel="stylesheet" href="garland.css?v=2">
-  <script src="garland.js?v=1" defer></script>
+  <script src="realistic-mockups.js?v=1" defer></script>
+  <link rel="stylesheet" href="garland.css?v=travertine1">
+  <script src="garland.js?v=travertine1" defer></script>
   <link rel="stylesheet" href="feedback.css?v=1">
   <script src="feedback.js?v=1" defer></script>
-  <script src="app.js?v=product-preview1" defer></script>
+  <script src="app.js?v=travertine1" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -206,9 +207,11 @@
             <div id="print-controls" class="print-controls" hidden><label>Размер принта<output for="print-scale">100%</output><input type="range" id="print-scale" min="65" max="150" value="100"></label><label>Левее / правее<output for="print-x">0%</output><input type="range" id="print-x" min="-100" max="100" value="0"></label><label>Выше / ниже<output for="print-y">0%</output><input type="range" id="print-y" min="-100" max="100" value="0"></label><button id="print-reset" type="button">По центру, 100%</button></div>
             <div class="gift-views" id="gift-views" role="group" aria-label="Посмотреть иллюстрацию на подарке" hidden>
               <button type="button" data-gift-view="frame" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>В рамке</span></button>
+              <button type="button" data-gift-view="magnet" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>Магнит</span></button>
               <button type="button" data-gift-view="keychain" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>Брелок</span></button>
               <button type="button" data-gift-view="sticker" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>На бутылке</span></button>
               <button type="button" data-gift-view="tshirt" aria-pressed="false"><canvas width="225" height="270" aria-hidden="true"></canvas><span>Футболка</span></button>
+              <button type="button" data-gift-view="garland" data-open-garland aria-haspopup="dialog" aria-controls="garland-dialog"><canvas width="330" height="132" aria-hidden="true"></canvas><span>Арт-гирлянда</span></button>
             </div>
             <section class="stories" aria-labelledby="stories-title">
               <div class="stories-heading"><h3 id="stories-title">Ваши иллюстрации</h3><span id="stories-count"></span></div>
@@ -337,6 +340,7 @@
       <label><input type="radio" name="garland-format" value="5" checked> 5 иллюстраций · 890 ₽</label>
       <label><input type="radio" name="garland-format" value="10"> 10 иллюстраций · 1 350 ₽</label>
     </fieldset>
+    <figure class="garland-live-preview"><canvas id="garland-preview-canvas" width="1000" height="400" role="img" aria-label="Предпросмотр арт-гирлянды"></canvas><figcaption id="garland-preview-label">Пример оформления гирлянды</figcaption></figure>
     <p>Отметьте готовые иллюстрации в нужном порядке. Каждая иллюстрация будет в белой картонной рамке. Номера показывают порядок на гирлянде.</p>
     <div id="garland-stories" class="garland-stories"></div>
     <p id="garland-status" role="status"></p>

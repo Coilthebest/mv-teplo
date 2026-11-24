@@ -77,12 +77,8 @@
     const canvas = document.createElement('canvas');
     canvas.width = 450;
     canvas.height = 540;
-    paintTeploProductPreview(canvas, view, item);
-    const ctx = canvas.getContext('2d');
-    ctx.globalCompositeOperation = 'destination-over';
-    ctx.fillStyle = '#fbf2e3';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return canvas;
+    TeploMockups.paint(canvas, view, item);
+    return TeploMockups.withBackground(canvas);
   }
 
   function render(picture, item, canvas) {
@@ -106,8 +102,10 @@
     if (item.product === 'paper' && item.material === 'sticker') paint = paintTeploSticker;
     paint(ctx, poster, 0, 0, width, height, item.printLayout);
     if (item.product === 'frame') return productPreview('frame', {...item, poster});
+    if (item.product === 'magnet') return productPreview('magnet', {...item, poster});
     if (item.product === 'keychain') return productPreview('keychain', {...item, poster});
     if (item.product === 'paper' && item.material === 'sticker') return productPreview('sticker', {...item, poster});
+    if (item.product === 'paper' && item.material === 'matte') return productPreview('paper', {...item, poster});
   }
 
   let activeRefresh;
@@ -135,6 +133,7 @@
     const task = (async () => {
       const item = files[index];
       const canvas = document.createElement('canvas');
+      await TeploMockups.ready;
       const preview = render(await image(index), item, canvas);
       const extension = item.product === 'tshirt' ? 'png' : 'jpg';
       const mimeType = extension === 'png' ? 'image/png' : 'image/jpeg';

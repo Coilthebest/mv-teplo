@@ -32,8 +32,9 @@
   function placement(view = giftView()) {
     return state.layouts[view] || (state.layouts[view] = layout());
   }
+  let exampleShirtPrint = null;
   const choiceExample=new Image();
-  choiceExample.onload=()=>scheduleDraw();
+  choiceExample.onload=()=>{ exampleShirtPrint = AI.printVignette(choiceExample); scheduleDraw(); };
   choiceExample.src='assets/couple-art.webp';
   let aiConfig = { ready: false };
   const canOrderArtwork = () => Boolean(state.illustration && state.sealedArtwork?.objectId);
@@ -412,12 +413,12 @@
 
   function shirtPreviewOptions() {
     return {
-      caption: state.upload ? $('#caption').value.trim() : 'MUSTANG',
-      year: state.upload ? $('#year').value.trim() : '2025',
+      caption: state.upload ? $('#caption').value.trim() : '',
+      year: state.upload ? $('#year').value.trim() : '',
       yearLines: $('#year-lines').checked,
       printLayout: placement('tshirt'),
       shirtColor: state.shirtColor,
-      shirtPrint: state.shirtPrint || state.upload || tshirtExample,
+      shirtPrint: state.shirtPrint || state.upload || exampleShirtPrint || tshirtExample,
     };
   }
 
@@ -478,7 +479,9 @@
       format: view === state.product ? $('#product-format').value : '',
       printLayout: placement(view),
     };
-    paintTeploProductPreview(target, view, item);
+    if (view === 'garland') {
+      TeploMockups.paintGarland(target, [poster, ...TeploMockups.examples().slice(0, 4)], 5);
+    } else TeploMockups.paint(target, view, item);
   }
 
   function draw() {
@@ -492,18 +495,20 @@
   }
   function drawArtwork() {
     const gallery = $('#gift-views');
-    gallery.hidden = !state.illustration;
     const selected = giftView();
     const buttons = $$('[data-gift-view]');
     const example = !state.upload && choiceExample.naturalWidth ? choiceExample : null;
-    const showMockup = Boolean((state.illustration || example) && buttons.some(button => button.dataset.giftView === selected));
+    gallery.hidden = !state.illustration && !example;
+    const showMockup = Boolean((state.illustration || example) && (buttons.some(button => button.dataset.giftView === selected) || selected === 'paper' || selected === 'digital'));
     $('#preview-stage').classList.toggle('gift-mockup', showMockup);
     let poster = example ? AI.printInk(example) : null;
     if (state.illustration) {
       poster = AI.compose(state.illustration, $('#caption').value, $('#year').value, $('#year-lines').checked);
+    }
+    if (poster) {
       for (const button of buttons) {
         renderGift(button.querySelector('canvas'), button.dataset.giftView, poster);
-        button.setAttribute('aria-pressed', String(button.dataset.giftView === selected));
+        if (button.dataset.giftView !== 'garland') button.setAttribute('aria-pressed', String(button.dataset.giftView === selected));
       }
     }
     if (showMockup) {
@@ -517,7 +522,7 @@
     if (canvas.height !== height) canvas.height = height;
     ctx.clearRect(0, 0, 900, height);
     if (state.product === 'tshirt') {
-      canvas.setAttribute('aria-label', `${state.upload ? 'Ваше фото на футболке' : 'Пример футболки MUSTANG 2025'} · ${currentSpec()}`);
+      canvas.setAttribute('aria-label', `${state.upload ? 'Ваше фото на футболке' : 'Пример футболки'} · ${currentSpec()}`);
       renderGift(canvas, selected, null);
       return;
     }
@@ -625,7 +630,7 @@
   function openSelection() {
     if (!state.upload) return;
     draw();
-    $('#summary-image').src = canvas.toDataURL('image/png');
+    $('#summary-image').src = TeploMockups.withBackground(canvas).toDataURL('image/png');
     $('#summary-caption').textContent = $('#caption').value.trim() || 'Без надписи';
     $('#summary-year').textContent = $('#year').value.trim() || 'Без даты';
     $('#summary-product').textContent = selectedProductName();
@@ -679,8 +684,7 @@
       const thumbnail=document.createElement('canvas');
       thumbnail.width=360;thumbnail.height=Math.round(360*canvas.height/canvas.width);
       const thumb=thumbnail.getContext('2d');
-      thumb.fillStyle='#fbf1e1';thumb.fillRect(0,0,thumbnail.width,thumbnail.height);
-      thumb.drawImage(canvas,0,0,thumbnail.width,thumbnail.height);
+      thumb.drawImage(TeploMockups.withBackground(canvas),0,0,thumbnail.width,thumbnail.height);
       item.preview=await new Promise((resolve,reject)=>thumbnail.toBlob(blob=>blob?resolve(blob):reject(Error('preview_failed')),'image/jpeg',.88));
       thumbnail.width=thumbnail.height=1;
       const artwork = state.illustrationFile || file;
@@ -753,6 +757,7 @@
 
   $$('[data-gift-view]').forEach(button => button.addEventListener('click', () => {
     const view = button.dataset.giftView;
+    if (view === 'garland') return;
     if (view === 'sticker') setProduct('paper');
     else setProduct(view);
   }));
@@ -843,6 +848,7 @@
     tshirtExample.decoding = 'async';
     tshirtExample.addEventListener('load', () => { if (state.product === 'tshirt') scheduleDraw(); });
     tshirtExample.src = 'assets/mustang-tshirt-print.png';
+    TeploMockups.ready.then(scheduleDraw);
     setProduct('frame');
     updatePreviewMode();
     updateCaption();
