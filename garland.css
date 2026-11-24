@@ -66,6 +66,12 @@
 .garland-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .8rem; }
 
 .collection-grid .collection-image { height: auto; aspect-ratio: 1; }
+#garland-example { grid-column: 1 / -1 !important; }
+#garland-example .collection-image { aspect-ratio: 5 / 2; }
+#garland-example .work-photo { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+@media (max-width: 680px) {
+  #garland-example .collection-image { aspect-ratio: 2 / 1; }
+}
 
 .cart-item ol.cart-artwork-title {
   padding-left: 1.25rem;

@@ -21,9 +21,17 @@
       try {
         const r=await fetch('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=delivery-estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point}),signal:AbortSignal.timeout(8500)});
         const q=r.ok?await r.json():null;
-        if(point===etaPoint && q?.point===point && q.signature){quote=q;el.textContent=q.label;return;}
+        if(point===etaPoint && q?.point===point && q.signature){quote=q;el.textContent=q.label+' по расчёту перевозчика. Добавьте 1 день на изготовление.';return;}
       } catch {}
-      if(point===etaPoint) el.textContent='Срок доставки до этого ПВЗ пока неизвестен.';
+      if(point===etaPoint) {
+        const calculator=document.createElement('a');
+        calculator.href='https://dostavka.yandex.ru/order/ndd_self_pickup/';
+        calculator.target='_blank';
+        calculator.rel='noopener noreferrer';
+        calculator.textContent='Посмотреть срок в Яндексе';
+        el.replaceChildren('Изготовление — 1 день. Срок перевозки уточняется. ', calculator,
+          '. Пункт отправки — Москва, ул. Бехтерева, 25 к2. К сроку Яндекса прибавьте 1 день.');
+      }
     })():Promise.resolve();
     return etaTask;
   }
