@@ -1,3 +1,4 @@
+.feedback-section [hidden],.feedback-admin [hidden],.feedback-confirm [hidden]{display:none!important}
 .feedback-section {
   border-top: 1px solid var(--line);
   background: #fcf0dd;
@@ -27,6 +28,42 @@
   font: inherit;
   font-size: 16px;
 }
+.feedback-form input[type=email]{width:100%;padding:11px 12px;margin-top:4px;border:1px solid #d8c1a2;border-radius:5px;background:#fffdf8;color:var(--ink);font:inherit;font-size:16px}
+.feedback-rating{display:flex;align-items:center;gap:20px;padding:18px 22px;background:#fffaf2;border:1px solid #e2cfb5;border-radius:12px;margin-bottom:24px}
+.feedback-rating>strong{font:normal 64px/1 var(--serif);color:#62351f}
+.feedback-rating p{margin:5px 0 0;font-size:14px;color:#795c43}
+.rating-stars{color:#b78036;letter-spacing:3px;font-size:23px;line-height:1.2}
+.feedback-rating .rating-stars{background:linear-gradient(to right,#b78036 var(--rating-percent,0%),#c9bdac var(--rating-percent,0%));background-clip:text;-webkit-background-clip:text;color:transparent}
+.feedback-entry{padding:20px;background:#fffaf3;border:1px solid #e3cfb3;border-radius:10px}
+.feedback-entry h3{margin:0 0 7px}
+.feedback-entry .rating-stars{margin:9px 0}
+.feedback-entry .feedback-author-email{font-size:14px;color:#795c43;margin:0 0 6px}
+.feedback-email-note{font-size:13px;line-height:1.6;color:#795c43;margin:0}
+.feedback-stars{border:0;padding:0;margin:0}
+.feedback-stars legend{font-size:14px;margin-bottom:4px}
+.star-options{display:flex;gap:4px}
+.star-options label{position:relative;cursor:pointer;display:grid;place-items:center;width:40px;height:44px}
+.star-options input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.star-options label>span[aria-hidden]{font-size:34px;color:#c5b9a7}
+.star-options label.filled>span[aria-hidden]{color:#b78036}
+.star-options label:has(input:focus-visible){outline:2px solid #825a36;border-radius:5px}
+.rating-choice{font-size:13px;color:#795c43}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.feedback-questions{border:1px solid #dfc6a5;border-radius:12px;margin-top:32px;background:#fffaf2}
+.feedback-questions>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 24px;cursor:pointer;font:normal 24px/1.3 var(--serif);list-style:none}
+.feedback-questions>summary::-webkit-details-marker{display:none}
+.question-summary-action{font:normal 14px/1.4 var(--sans);border:1px solid #c2a17a;border-radius:24px;padding:9px 15px;white-space:nowrap}
+.feedback-questions[open] .question-summary-action{background:#f1dfc5}
+.question-layout{padding:0 24px 24px}
+.question-layout h3{font:normal 26px/1.3 var(--serif);margin:0 0 16px}
+.feedback-admin{max-width:1000px}
+.feedback-admin h1,.feedback-confirm h1{font:normal 38px/1.2 var(--serif);margin:20px 0}
+.feedback-admin .feedback-entry{margin:18px 0}
+.feedback-admin textarea{display:block;width:100%;font:inherit;padding:10px;margin:7px 0 14px;border:1px solid #d8c1a2;background:#fffdf8;border-radius:5px}
+.moderation-state{font-weight:600;color:#795c43}
+.feedback-confirm{max-width:600px;padding:45px 20px}
+.feedback-confirm a{display:block;margin-top:20px}
+@media(max-width:600px){.feedback-questions>summary{padding:18px 15px;align-items:flex-start;flex-direction:column}.question-layout{padding:0 15px 18px}.feedback-rating>strong{font-size:54px}.feedback-entry{padding:16px}}
 .feedback-form textarea {
   display: block;
   padding: 8px 12px;
@@ -45,8 +82,7 @@
 .feedback-list { display: grid; gap: 10px; }
 .feedback-stories > .button { margin-top: 12px; }
 .feedback-entry {
-  border-top: 1px solid #ddc6a8;
-  padding: 12px 0 4px;
+  padding: 20px;
   overflow-wrap: anywhere;
 }
 .feedback-entry h3 { font-family: var(--serif); font-size: 19px; font-weight: 400; }
@@ -57,7 +93,7 @@
   padding-inline-start: 12px;
   margin: 12px 0 0;
 }
-.feedback-admin { max-width: 620px; padding-block: 32px; }
+.feedback-admin { max-width: 1000px; padding-block: 32px; }
 .feedback-admin > a { display: inline-block; margin-bottom: 15px; }
 .feedback-admin .feedback-form { margin-top: 15px; }
 .feedback-actions { display: flex; flex-wrap: wrap; gap: 8px; }

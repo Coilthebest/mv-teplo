@@ -1,0 +1,83 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs/promises');
+const {randomUUID,createHmac}=require('node:crypto');
+const Module=require('node:module');
+const path=require('node:path');
+
+test('verified feedback: mail gate, replay, moderation, privacy and legacy replies',async()=>{
+  const mount=await fs.mkdtemp('/tmp/teplo-verified-');
+  const env={TELEGRAM_BOT_TOKEN:'123:unit-test',FEEDBACK_EMAIL_API_KEY:'unit-test',FEEDBACK_EMAIL_FROM:'Teplo <noreply@mail.mv-teplo.ru>'};
+  const emails=[],messages=[];let mailFails=false,telegramFails=false;
+  const originalFetch=global.fetch;
+  const telegram={ready:async()=>true,sendMessage:async(text,env,markup)=>{if(telegramFails)throw Error('delivery failed');messages.push({text,markup});return messages.length;}};
+  const filename=path.join(__dirname,'feedback.js');
+  const loaded=new Module(filename,module);loaded.filename=filename;loaded.paths=module.paths;
+  loaded.require=id=>id==='./telegram'?telegram:require(id);
+  loaded._compile(await fs.readFile(filename,'utf8'),filename);
+  const feedback=loaded.exports;
+  global.fetch=async(url,options)=>{assert.equal(url,'https://api.resend.com/emails');emails.push(JSON.parse(options.body));return {ok:!mailFails};};
+  const sign=value=>createHmac('sha256',env.TELEGRAM_BOT_TOKEN).update(value).digest('base64url');
+  const adminToken=sign('teplo-feedback-admin-v2');
+  const base={type:'review',name:'Анна',text:'Очень понравилось!',email:'annatest@example.ru',rating:5,consent:true,website:''};
+  const submit=async(overrides={})=>{
+    const body={...base,id:randomUUID(),...overrides};
+    await feedback.submit(body,mount,env,randomUUID());
+    const url=new URL(emails.at(-1).text.match(/https:\/\/mv-teplo\.ru\/feedback-confirm\.html#[^\s]+/)[0]);
+    const [id,token]=url.hash.slice(1).split('.');return {body,id,token};
+  };
+  const moderate=(id,action,reply='')=>feedback.admin({adminToken,id,action,reply},mount,env);
+  try{
+    assert.equal((await feedback.list(mount,{})).available,false);
+    await assert.rejects(feedback.submit({...base,id:randomUUID()},mount,{},'1'),{status:503});
+    for(const change of [{email:'invalid'},{rating:0},{rating:6},{rating:1.5},{consent:false},{website:'spam'},{type:'invalid'}]){
+      await assert.rejects(feedback.submit({...base,id:randomUUID(),...change},mount,env,'1'),{status:400});
+    }
+    const first=await submit();
+    assert.equal(messages.length,0,'submission must not notify Telegram');
+    assert.equal((await feedback.list(mount,env)).items.length,0);
+    await assert.rejects(moderate(first.id,'publish'),{status:409});
+    await feedback.submit(first.body,mount,env,'1');assert.equal(emails.length,1,'idempotent submit');
+    await assert.rejects(feedback.verify({id:first.id,token:'я'.repeat(43)},mount,env),{status:403});
+    telegramFails=true;await assert.rejects(feedback.verify(first,mount,env),/delivery failed/);telegramFails=false;
+    await feedback.verify(first,mount,env);await feedback.verify(first,mount,env);assert.equal(messages.length,1);
+    assert.match(messages[0].text,/Почта подтверждена: annatest@example.ru/);
+    await moderate(first.id,'publish','Спасибо!');
+    let result=await feedback.list(mount,env);
+    assert.deepEqual(result.rating,{count:1,average:5});
+    assert.equal(result.items[0].email,'an***est@example.ru');
+    assert.ok(!JSON.stringify(result).includes('annatest@example.ru'));
+    assert.ok(!JSON.stringify(result).includes('expires'));
+    await moderate(first.id,'hide');assert.equal((await feedback.list(mount,env)).rating.count,0);
+    let rows=(await feedback.admin({adminToken,action:'list'},mount,env)).items;
+    assert.equal(rows[0].reply,'Спасибо!');assert.equal(rows[0].published,false);
+    await moderate(first.id,'publish',rows[0].reply);
+    const second=await submit({email:'second@example.ru',rating:2});await feedback.verify(second,mount,env);await moderate(second.id,'publish');
+    const suggestion=await submit({type:'suggestion',email:'idea@example.ru',rating:null});await feedback.verify(suggestion,mount,env);await moderate(suggestion.id,'publish');
+    const question=await submit({type:'question',email:'question@example.ru',rating:null});await feedback.verify(question,mount,env);await moderate(question.id,'publish');
+    assert.deepEqual((await feedback.list(mount,env)).rating,{count:2,average:3.5});
+    await assert.rejects(feedback.admin({adminToken:'bad',action:'list'},mount,env),{status:403});
+    await assert.rejects(feedback.moderate({id:first.id,signature:'wrong',action:'read'},mount,env),{status:403});
+    const legacyId=randomUUID(),legacy={type:'review',name:'Старый отзыв',text:'Сохранённый отзыв',date:'2026-11-23T10:00:00Z'};
+    await fs.writeFile(path.join(mount,'feedback/received',legacyId+'.json'),JSON.stringify(legacy));
+    await fs.writeFile(path.join(mount,'feedback/published',legacyId+'.json'),JSON.stringify({...legacy,reply:'Старый ответ'}));
+    const legacyAuth={id:legacyId,signature:sign('teplo-feedback-v1:'+legacyId)};
+    assert.equal((await feedback.moderate({...legacyAuth,action:'read'},mount,env)).reply,'Старый ответ');
+    await feedback.moderate({...legacyAuth,action:'hide'},mount,env);
+    assert.equal((await feedback.moderate({...legacyAuth,action:'read'},mount,env)).reply,'Старый ответ');
+    assert.deepEqual((await feedback.list(mount,env)).rating,{count:2,average:3.5});
+    mailFails=true;const retry={...base,id:randomUUID(),email:'retry@example.ru'};
+    await assert.rejects(feedback.submit(retry,mount,env,'retry'),{status:503});mailFails=false;
+    await feedback.submit(retry,mount,env,'retry');
+    const expired=await submit({email:'expired@example.ru'});
+    const target=path.join(mount,'feedback/received',expired.id+'.json');
+    const saved=JSON.parse(await fs.readFile(target));saved.expires=Date.now()-1;await fs.writeFile(target,JSON.stringify(saved));
+    expired.token=sign('feedback-email-v2:'+expired.id+':'+saved.email+':'+saved.expires);
+    await assert.rejects(feedback.verify(expired,mount,env),{status:410});
+    for(let n=0;n<4;n++)await feedback.submit({...base,id:randomUUID(),email:`rate${n}@example.ru`},mount,env,'same-ip');
+    await assert.rejects(feedback.submit({...base,id:randomUUID(),email:'limited@example.ru'},mount,env,'same-ip'),{status:429});
+    assert.equal(feedback.maskedEmail('abc@example.ru'),'***@example.ru');
+    assert.equal(feedback.maskedEmail('a@example.ru'),'***@example.ru');
+  }finally{global.fetch=originalFetch;await fs.rm(mount,{recursive:true,force:true});}
+});
