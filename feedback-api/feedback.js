@@ -37,9 +37,9 @@ function emailReady(env,iamToken) {return Boolean(env.FEEDBACK_EMAIL_FROM&&iamTo
 function maskedEmail(email) {
   if(!email)return '';
   const [local,domain]=email.split('@');
-  if(local.length<=3)return '***@'+domain;
-  const start=Math.floor((local.length-3)/2);
-  return local.slice(0,start)+'***'+local.slice(start+3)+'@'+domain;
+  if(local.length<=5)return '*****@'+domain;
+  const start=Math.floor((local.length-5)/2);
+  return local.slice(0,start)+'*****'+local.slice(start+5)+'@'+domain;
 }
 function publicEntry(entry,reply='') {
   return {type:entry.type,name:entry.name,text:entry.text,date:entry.date,reply,email:maskedEmail(entry.email),

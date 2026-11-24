@@ -56,7 +56,7 @@ test('verified feedback: mail gate, replay, moderation, privacy and legacy repli
     await moderate(first.id,'publish','Спасибо!');
     let result=await feedback.list(mount,env);
     assert.deepEqual(result.rating,{count:1,average:5});
-    assert.equal(result.items[0].email,'an***est@example.ru');
+    assert.equal(result.items[0].email,'a*****st@example.ru');
     assert.ok(!JSON.stringify(result).includes('annatest@example.ru'));
     assert.ok(!JSON.stringify(result).includes('expires'));
     await moderate(first.id,'hide');assert.equal((await feedback.list(mount,env)).rating.count,0);
@@ -87,7 +87,7 @@ test('verified feedback: mail gate, replay, moderation, privacy and legacy repli
     await assert.rejects(feedback.verify(expired,mount,env),{status:410});
     for(let n=0;n<4;n++)await feedback.submit({...base,id:randomUUID(),email:`rate${n}@example.ru`},mount,env,'same-ip');
     await assert.rejects(feedback.submit({...base,id:randomUUID(),email:'limited@example.ru'},mount,env,'same-ip'),{status:429});
-    assert.equal(feedback.maskedEmail('abc@example.ru'),'***@example.ru');
-    assert.equal(feedback.maskedEmail('a@example.ru'),'***@example.ru');
+    assert.equal(feedback.maskedEmail('abc@example.ru'),'*****@example.ru');
+    assert.equal(feedback.maskedEmail('a@example.ru'),'*****@example.ru');
   }finally{global.fetch=originalFetch;await fs.rm(mount,{recursive:true,force:true});}
 });
