@@ -34,8 +34,9 @@
 .memory-image .memory-art{object-fit:contain;clip-path:inset(0 calc(100% - var(--reveal)*100%) 0 0);z-index:1}
 .memory-wipe{position:absolute;top:0;bottom:0;left:calc(var(--reveal)*100% - 10px);width:20px;background:linear-gradient(90deg,transparent,#fff3cdcc,transparent);filter:blur(4px);opacity:0;z-index:2;pointer-events:none}
 .is-revealing .memory-wipe{opacity:.85}
-.memory-peg{position:absolute;top:-18px;left:calc(50% - 7px);height:36px;width:14px;transform:rotate(-3deg);z-index:3;background:linear-gradient(90deg,#b7935e,#e3c795 40%,#c6a36b 72%,#b08951);border:1px solid #b38d54;border-radius:2px;box-shadow:2px 3px 3px #5b3e261f}
-.memory-peg:after{content:'';position:absolute;left:1px;right:1px;top:19px;border-top:1px solid #9d783e}
+.memory-peg{position:absolute;top:-28px;left:calc(50% - 7px);height:44px;width:14px;transform:rotate(-2deg);z-index:3;background:repeating-linear-gradient(88deg,transparent 0 3px,#815e2e12 3px 3.6px,transparent 3.6px 6px),linear-gradient(90deg,#ad8753 0%,#d4b17b 15%,#e5c895 43%,#d6b27b 69%,#b48b55 100%);border:1px solid #b59565;border-radius:3px 3px 2px 2px;box-shadow:inset 1px 0 1px #fff0ca99,inset -1px 0 1px #805c302e,2px 3px 4px #5b3e2633}
+.memory-peg:before{content:'';position:absolute;inset:3px 45% 3px 45%;background:linear-gradient(90deg,#805c3038,#ffedc759);border-radius:1px;box-shadow:1px 0 #f4d7a338}
+.memory-peg:after{content:'';position:absolute;left:-1px;right:-1px;top:22px;height:3px;background:linear-gradient(180deg,#f0dfba 0%,#8e826d 32%,#c5baa3 62%,#766954 100%);border:1px solid #88785b;border-radius:1px;box-shadow:0 1px 1px #6b543b38}
 .memory-paper figcaption{padding:13px 3px 15px;display:flex;align-items:baseline;justify-content:space-between;gap:6px;line-height:1.2}
 .memory-caption-title{font-family:var(--serif);font-size:15px;color:#88623e;font-style:italic;min-width:0}
 .memory-caption-year{font-size:9px;letter-spacing:1px;color:#b1916e;flex-shrink:0}
@@ -88,7 +89,8 @@
 .memory-toolbar .memory-controls { grid-area: controls; justify-self: end; }
 
 .memory-garland-heading {
-  margin-top: 1.8rem;
+  margin-top: 1rem;
+  height: clamp(44px, 5vw, 64px);
   position: relative;
   z-index: 2;
   text-align: center;
@@ -99,6 +101,7 @@
   margin-inline: auto;
   padding: 0;
   position: relative;
+  top: 24px;
   text-decoration: none;
 }
 .memory-garland-lettering {
@@ -110,24 +113,6 @@
 }
 .memory-garland-link:focus-visible { outline: 2px solid #8d612f; outline-offset: 3px; }
 .memory-garland-stacked, .memory-pagination { display: none; }
-.memory-garland-order {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 42px;
-  margin-top: 10px;
-  padding: 9px 20px;
-  border: 1px solid #c5a47a;
-  border-radius: 24px;
-  background: #fffbf3;
-  color: #71462c;
-  font: 500 14px/1.4 var(--sans);
-  box-shadow: 0 2px 5px #6a441c08;
-  cursor: pointer;
-}
-.memory-garland-order:hover { background: #f0dfc7; border-color: #976c45; }
-.memory-garland-order:focus-visible { outline: 2px solid #8d612f; outline-offset: 3px; }
-
 @media (max-width: 620px) {
   .memory-toolbar {
     grid-template-columns: 1fr;
@@ -137,28 +122,34 @@
   .memory-garland-heading { margin-top: 1.5rem; }
 }
 
-/* On phones one large print leads, with its neighbours peeking into view. */
+/* A compact mobile garland: the centre print hangs below smaller tilted neighbours. */
 @media (max-width: 680px) {
+  .memory-toolbar { grid-template-columns: 1fr; grid-template-areas: "controls"; }
+  .memory-toolbar .motion-status { display: none; }
+  .memory-garland-heading { height: auto; }
+  .memory-garland-link { top: 0; }
   .memory-garland-wide { display: none; }
   .memory-garland-stacked { display: flex; flex-direction: column; align-items: center; gap: 0; }
   .memory-garland-stacked svg { display: block; width: min(78%, 260px); height: auto; aspect-ratio: 1115 / 280; overflow: hidden; }
   .memory-garland-stacked svg + svg { width: min(70%, 232px); aspect-ratio: 995 / 280; margin-top: -10px; }
-  .memory-garland-order { min-height: 44px; margin-top: 8px; }
-  .memory-theatre { margin-top: 12px; touch-action: pan-y; mask-image: none; }
+  .memory-theatre { margin-top: 0; touch-action: pan-y; mask-image: none; }
   .memory-theatre.is-carousel .memory-cards { width: 100%; margin: 0; }
   .memory-theatre .memory-paper { padding: 9px 9px 0; border-radius: 3px; }
-  .memory-theatre .memory-image { aspect-ratio: 4 / 5; }
-  .memory-theatre .memory-paper figcaption { align-items: center; text-align: center; padding: 12px 3px 14px; gap: 7px; }
-  .memory-theatre .memory-caption-title { font-size: clamp(17px, 4.8vw, 21px); line-height: 1.2; overflow-wrap: normal; text-wrap: balance; }
+  .memory-theatre .memory-image { aspect-ratio: 1 / 1; background: #fffcf4; }
+  .memory-theatre .memory-photo { object-position: var(--memory-photo-position, 50% 50%); }
+  .memory-theatre .memory-paper figcaption { align-items: center; text-align: center; padding: 10px 2px 12px; gap: 5px; }
+  .memory-theatre .memory-caption-title { font-size: clamp(15px, 4.2vw, 18px); line-height: 1.2; overflow-wrap: normal; text-wrap: balance; }
   .memory-theatre .memory-caption-year { font-size: 12px; line-height: 1.2; letter-spacing: 1px; }
-  .memory-theatre .memory-peg { width: 12px; height: 32px; top: -17px; left: calc(50% - 6px); }
-  .memory-theatre .memory-peg:after { top: 17px; }
+  .memory-theatre .memory-peg { width: 13px; height: 43px; top: -28px; left: calc(50% - 6.5px); }
+  .memory-theatre .memory-peg:after { top: 22px; }
   .memory-section .memory-bottom { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 0; }
-  .memory-bottom .memory-arrows { order: -1; gap: 18px; }
+  .memory-bottom .memory-arrows { order: -1; gap: 24px; }
   .memory-bottom .memory-arrows button { width: 46px; height: 46px; }
-  .memory-pagination { display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .memory-pagination span { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: #d9bd99; }
+  .memory-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .memory-pagination span { display: none; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #d9bd99; }
+  .memory-pagination .is-near { display: block; }
   .memory-pagination .is-current { background: #815132; transform: scale(1.25); }
   .memory-bottom > p { text-align: center; }
+  .memory-bottom > p > br, .memory-bottom > p > span { display: none; }
   .memory-bottom .text-link { align-self: center; }
 }

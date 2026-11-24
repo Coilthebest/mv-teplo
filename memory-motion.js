@@ -24,7 +24,7 @@
   const slideDuration = 1150;
   const tilts = [-5, 3, -2, 4, -3, 2, -4, 3, -2, 4];
   let cards = [];
-  let offset = phone.matches ? 1 : 0;
+  let offset = phone.matches ? 2 : 0;
   let layout;
   let elapsed = media.matches ? 6000 : 0;
   let cycle = 0;
@@ -78,7 +78,11 @@
     stage.setAttribute('aria-busy', String(loading || Boolean(movement)));
     const current = wrap(offset + (layout?.phone ? 1 : 0));
     pagination?.setAttribute('aria-label', `Воспоминание ${current + 1} из ${stories.length}`);
-    pageDots.forEach((dot, index) => dot.classList.toggle('is-current', index === current));
+    pageDots.forEach((dot, index) => {
+      dot.classList.toggle('is-current', index === current);
+      dot.classList.toggle('is-near', index === current || index === wrap(current - 1) || index === wrap(current + 1));
+      dot.style.order = String(index === current ? 1 : index === wrap(current - 1) ? 0 : 2);
+    });
   }
 
   function decodeImage(src) {
@@ -104,6 +108,7 @@
     card.querySelector('.memory-art').alt = `Иллюстрация Teplo: ${memory.description}`;
     card.querySelector('.memory-caption-title').textContent = memory.label;
     card.querySelector('.memory-caption-year').textContent = memory.year;
+    card.style.setProperty('--memory-photo-position', memory.key === 'balloon' ? '50% 72%' : memory.key === 'disneyland' ? '50% 35%' : '50% 50%');
     return card;
   }
 
@@ -120,11 +125,14 @@
       const center = layout.start + left + layout.cardWidth / 2;
       const seed = Number(card.dataset.storyIndex);
       const idle = !movement && !userPaused && !media.matches ? Math.sin(time / 1500 + seed * 0.9) * 0.6 : 0;
-      const tilt = tilts[seed % tilts.length] * (layout.phone ? 0.12 + 0.53 * Math.min(1, Math.abs(slot - 1)) : 1);
-      const angle = tilt + swing * (0.84 + (seed % 3) * 0.08) + idle * (layout.phone ? 0.3 : 1);
+      const distance = Math.min(1, Math.abs(slot - 1));
+      const tilt = layout.phone ? -Math.max(-1, Math.min(1, slot - 1)) * 12 + tilts[seed % tilts.length] * 0.08 : tilts[seed % tilts.length];
+      const scale = layout.phone ? 1 - distance * 0.18 : 1;
+      const angle = tilt + swing * (layout.phone ? 0.55 : 0.84 + (seed % 3) * 0.08) + idle * (layout.phone ? 0.3 : 1);
       card.style.left = `${left}px`;
       card.style.top = `${wireY(center) + 6}px`;
-      card.style.transform = `rotate(${angle}deg)`;
+      card.style.transform = `rotate(${angle}deg) scale(${scale})`;
+      card.style.zIndex = layout.phone ? String(10 - Math.round(distance * 3)) : '';
       card.dataset.anchorX = String(center);
       card.dataset.anchorY = String(wireY(center));
     });
@@ -135,14 +143,14 @@
     const count = smallScreen.matches ? 3 : 4;
     const trackWidth = track.clientWidth;
     const gap = phone.matches ? 20 : parseFloat(getComputedStyle(track).columnGap) || 14;
-    const cardWidth = phone.matches ? Math.min(width * 0.76, 360) : (trackWidth - gap * (count - 1)) / count;
-    const step = cardWidth + gap;
+    const cardWidth = phone.matches ? Math.min(width * 0.54, 280) : (trackWidth - gap * (count - 1)) / count;
+    const step = phone.matches ? width * 0.4 : cardWidth + gap;
     const start = phone.matches ? (width - cardWidth) / 2 - step : (width - trackWidth) / 2;
-    layout = { width, count, cardWidth, step, start, phone: phone.matches, edgeY: phone.matches ? 22 : 25, sag: phone.matches ? 17 : 32 };
+    layout = { width, count, cardWidth, step, start, phone: phone.matches, edgeY: phone.matches ? 8 : 25, sag: phone.matches ? Math.min(width * 0.105, 62) : 32 };
     track.style.left = phone.matches ? `${start}px` : '';
     cards.forEach((card) => { card.style.width = `${cardWidth}px`; });
     const cardHeight = Math.max(...cards.map((card) => card.offsetHeight));
-    const height = Math.ceil(cardHeight + layout.edgeY + layout.sag + 6 + (phone.matches ? 30 : 45));
+    const height = Math.ceil(cardHeight + layout.edgeY + layout.sag + 6 + (phone.matches ? 22 : 45));
     stage.style.height = `${height}px`;
     wire.setAttribute('viewBox', `0 0 ${width} ${height}`);
     wirePath.setAttribute('d', `M -40 ${layout.edgeY} Q ${width / 2} ${layout.edgeY + 2 * layout.sag} ${width + 40} ${layout.edgeY}`);
