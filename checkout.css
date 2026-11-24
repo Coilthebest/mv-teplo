@@ -61,3 +61,4 @@
 @media(min-width:801px) and (min-height:850px){.cart-summary{position:sticky;top:140px}}
 
 .choose-pickup .pickup-arrow{width:16px;height:16px}
+#pickup-eta { font-size:14px; line-height:1.65; color:#465237; font-weight:600; }

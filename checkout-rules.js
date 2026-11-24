@@ -18,6 +18,15 @@
     if (!id || city.length < 2 || address.length < 5) return null;
     return { id, city, address, source: 'yandex-widget' };
   }
+  // The map returns the selected address and ID, but displays its ETA separately.
+  function widgetDate(value) {
+    const label = text(value, 80);
+    const month = '(?:января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)';
+    const day = '(?:[1-9]|[12]\\d|3[01])';
+    const calendar = `${day}(?:\\s*[-–—]\\s*${day})?\\s+${month}(?:\\s+20\\d{2})?`;
+    const date = `(?:сегодня|завтра|послезавтра|${calendar})`;
+    return new RegExp(`^(?:(?:с|до)\\s+)?${date}(?:\\s*(?:[-–—]|по)\\s*${date})?$`, 'iu').test(label) ? label : '';
+  }
   function validate(input, physical = true, allowDoor = false) {
     const data = {
       name: text(input.name, 80), phone: phone(input.phone), city: text(input.city, 120),
@@ -38,7 +47,7 @@
     } else { data.city = ''; data.pickup = null; }
     return { ok: !Object.keys(errors).length, errors, data };
   }
-  const api = Object.freeze({ text, phone, point, fullManualAddress, validate });
+  const api = Object.freeze({ text, phone, point, widgetDate, fullManualAddress, validate });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.TeploCheckoutRules = api;
 })(typeof window === 'undefined' ? globalThis : window);

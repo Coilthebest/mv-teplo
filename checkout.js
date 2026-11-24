@@ -10,26 +10,43 @@
     return { name: $('#recipient-name').value, phone: $('#recipient-phone').value, pickup: isDoor() ? null : pickup,
       deliveryMethod: isDoor() ? 'door' : 'pickup', doorAddress: isDoor() ? $('#door-address').value : '' };
   }
-  function snapshot() { return { version: 1, remember: $('#remember-recipient').checked, fields: raw() }; }
-  let etaPoint=null,quote=null,etaTask=Promise.resolve();
+  function snapshot() {
+    return { version: 1, remember: $('#remember-recipient').checked, fields: raw(),
+      widgetEstimate: currentWidgetDate(pickup?.id) ? widgetEstimate : null };
+  }
+  let etaPoint=null,quote=null,etaTask=Promise.resolve(),widgetEstimate=null,etaVersion=0,etaTimer;
+  function currentWidgetDate(point) {
+    return widgetEstimate?.point === point && widgetEstimate.expires > Date.now() ? widgetEstimate.date : '';
+  }
+  function showWidgetDate(el, date) {
+    el.textContent = `Ориентировочная доставка: ${date}. Учтён 1 день на изготовление (посылка до 2 кг).`;
+  }
   function updateEstimate(){
     const point=physical && !isDoor() && pickup?.id || null;
-    if(point===etaPoint && !(quote && quote.expires<=Date.now())) return etaTask;
+    const widgetDate = currentWidgetDate(point);
+    if(point===etaPoint && !(quote && quote.expires<=Date.now()) && !(widgetEstimate?.point === point && !widgetDate)) return etaTask;
+    if (widgetEstimate && widgetEstimate.expires<=Date.now()) widgetEstimate=null;
     etaPoint=point;quote=null;
+    const version=++etaVersion;
+    clearTimeout(etaTimer);
     const el=$('#pickup-eta');el.textContent=point?'Уточняем срок доставки…':'';
+    if (widgetDate) {
+      showWidgetDate(el,widgetDate);
+      etaTimer=setTimeout(updateEstimate,Math.max(0,widgetEstimate.expires-Date.now()));
+    }
     etaTask=point?(async()=>{
       try {
         const r=await fetch('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=delivery-estimate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point}),signal:AbortSignal.timeout(8500)});
         const q=r.ok?await r.json():null;
-        if(point===etaPoint && q?.point===point && q.signature){quote=q;el.textContent=q.label+' по расчёту перевозчика. Добавьте 1 день на изготовление.';return;}
+        if(version===etaVersion && q?.point===point && q.signature){quote=q;if(!currentWidgetDate(point))el.textContent=q.label+' по расчёту перевозчика. Добавьте 1 день на изготовление.';return;}
       } catch {}
-      if(point===etaPoint) {
+      if(version===etaVersion && !currentWidgetDate(point)) {
         const calculator=document.createElement('a');
         calculator.href='https://dostavka.yandex.ru/order/ndd_self_pickup/';
         calculator.target='_blank';
         calculator.rel='noopener noreferrer';
         calculator.textContent='Посмотреть срок в Яндексе';
-        el.replaceChildren('Изготовление — 1 день. Срок перевозки уточняется. ', calculator,
+        el.replaceChildren('Изготовление — 1 день. Если дата не рассчиталась, выберите ПВЗ повторно или ', calculator,
           '. Пункт отправки — Москва, ул. Бехтерева, 25 к2. К сроку Яндекса прибавьте 1 день.');
       }
     })():Promise.resolve();
@@ -102,7 +119,7 @@
     frame.setAttribute('sandbox', 'allow-scripts allow-forms');
     frame.setAttribute('allow', "geolocation 'none'");
     frame.referrerPolicy = 'no-referrer';
-    frame.src = `pickup.html?v=3#${new URLSearchParams({ city, requestId })}`;
+    frame.src = `pickup.html?v=4#${new URLSearchParams({ city, requestId })}`;
     $('#pickup-frame-slot').replaceChildren(frame);
     mapDialog.showModal();
     clearTimeout(mapTimer);
@@ -111,12 +128,15 @@
   window.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.data?.requestId !== requestId) return;
     if (event.data.type === 'teplo:pickup-ready') {
-      clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Найдите удобный пункт и подтвердите выбор на карте.';
+      clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Выберите удобный пункт. Срок Яндекса уже учитывает 1 день на изготовление (посылка до 2 кг).';
     } else if (event.data.type === 'teplo:pickup-error') {
       clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Карта сейчас недоступна. Попробуйте открыть её ещё раз.';
     } else if (event.data.type === 'teplo:pickup-selected') {
       const selected = R.point(event.data.point); if (!selected) return;
       pickup = selected;
+      const date = R.widgetDate(event.data.deliveryDate);
+      widgetEstimate = date ? {point: selected.id, date, expires: Date.now()+30*60*1000} : null;
+      etaPoint = null;
       drawPickup(); changed(); mapDialog.close(); notice('Пункт выдачи добавлен к заказу.');
     }
   });
@@ -128,7 +148,7 @@
   $('#recipient-phone').addEventListener('blur', () => { const value = R.phone($('#recipient-phone').value); if (value) $('#recipient-phone').value = value; changed(); });
   $('#remember-recipient').addEventListener('change', () => { touched = true; clearTimeout(saveTimer); writeRemembered(snapshot()); });
   function clear() {
-    clearTimeout(saveTimer); touched = true; attempted = false; pickup = null;
+    clearTimeout(saveTimer); touched = true; attempted = false; pickup = null; widgetEstimate = null;
     ['#recipient-name', '#recipient-phone', '#door-address'].forEach(selector => { $(selector).value = ''; });
     $('#remember-recipient').checked = false; drawPickup(); showErrors({}, false);
     return writeRemembered(snapshot());
@@ -152,6 +172,13 @@
         $('#recipient-name').value = R.text(fields.name, 80); $('#recipient-phone').value = R.text(fields.phone, 50);
         $('#door-address').value = R.text(fields.doorAddress, 500);
         pickup = R.point(fields.pickup);
+        const savedEstimate = saved.widgetEstimate;
+        const savedDate = R.widgetDate(savedEstimate?.date);
+        if (pickup && savedDate && savedEstimate.point === pickup.id &&
+            Number.isSafeInteger(savedEstimate.expires) && savedEstimate.expires > Date.now() &&
+            savedEstimate.expires <= Date.now()+30*60*1000) {
+          widgetEstimate = {point: pickup.id, date: savedDate, expires: savedEstimate.expires};
+        }
         $('#remember-recipient').checked = true;
         $('#recipient-storage-note').textContent = 'Данные сохранены только в этом браузере. Их можно очистить в любой момент.';
         drawPickup();

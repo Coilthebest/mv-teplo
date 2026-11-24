@@ -14,13 +14,38 @@
     send('teplo:pickup-error');
   }
   if (!city || !requestId) { fail(); return; }
+  const normalize = value => String(value || '').toLocaleLowerCase('ru-RU').replace(/[,\s]+/g, ' ').trim();
+  function visibleDetailRows() {
+    return [...document.querySelectorAll('#delivery-widget .widget__point-detail-text')]
+      .filter(row => row.getClientRects().length && getComputedStyle(row).visibility !== 'hidden')
+      .map(row => row.textContent.trim());
+  }
+  // Save the visible card before the widget's confirmation handler can change it.
+  let confirmedRows = [], confirmedAt = 0;
+  document.getElementById('delivery-widget').addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (button && /^(Отправить сюда|Продолжить|Выбрать)$/u.test(button.textContent.trim())) {
+      confirmedRows = visibleDetailRows();
+      confirmedAt = Date.now();
+    }
+  }, true);
+  function displayedDeliveryDate(address, rows) {
+    // Only use the visible date on the card of this exact selected PVZ.
+    if (!rows.some(row => normalize(row) === normalize(address))) return '';
+    const dates = rows.map(row => /^Доставка\s+(.+?)\s*•\s*/iu.exec(row)?.[1]?.trim()).filter(Boolean);
+    return dates.length === 1 ? dates[0] : '';
+  }
   document.addEventListener('YaNddWidgetPointSelected', event => {
     const detail = event.detail;
     if (!detail?.id || !detail.address) return;
+    const address = detail.address.full_address || [detail.address.locality, detail.address.street, detail.address.house].filter(Boolean).join(', ');
+    const deliveryDate = displayedDeliveryDate(address, visibleDetailRows()) ||
+      (Date.now() - confirmedAt < 5000 ? displayedDeliveryDate(address, confirmedRows) : '');
+    confirmedRows = [];
     send('teplo:pickup-selected', { point: {
       id: String(detail.id), city: detail.address.locality || city,
-      address: detail.address.full_address || [detail.address.locality, detail.address.street, detail.address.house].filter(Boolean).join(', '),
-    } });
+      address,
+    }, deliveryDate });
   });
   function start() {
     if (started || !window.YaDelivery?.createWidget) return;
@@ -28,6 +53,10 @@
     try {
       window.YaDelivery.createWidget({ containerId: 'delivery-widget', params: {
         city, size: { height: `${Math.max(300, innerHeight)}px`, width: '100%' },
+        source_platform_station: '019f46fa88c57301bc0086cb90388ac2',
+        physical_dims_weight_gross: 2000,
+        delivery_term: 1,
+        delivery_price: () => 'По условиям Teplo',
         show_select_button: true,
         filter: { type: ['pickup_point'], operator_ids: ['market_l4g'], payment_methods: ['already_paid'] },
       } });
