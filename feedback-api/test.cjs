@@ -9,12 +9,12 @@ const path=require('node:path');
 test('verified feedback: mail gate, replay, moderation, privacy and legacy replies',async()=>{
   const mount=await fs.mkdtemp('/tmp/teplo-verified-');
   const env={TELEGRAM_BOT_TOKEN:'123:unit-test',FEEDBACK_EMAIL_FROM:'Teplo <noreply@mail.mv-teplo.ru>'};
-  const emails=[],messages=[];let mailFails=false,telegramFails=false;
+  const emails=[],messages=[];let mailFails=false,telegramFails=false,allowDelete=false;
   const originalFetch=global.fetch;
   const telegram={ready:async()=>true,sendMessage:async(text,env,markup)=>{if(telegramFails)throw Error('delivery failed');messages.push({text,markup});return messages.length;}};
   const filename=path.join(__dirname,'feedback.js');
   const loaded=new Module(filename,module);loaded.filename=filename;loaded.paths=module.paths;
-  const mountedFs={...fs,rename:async()=>{throw Error('Object Storage rename forbidden');},unlink:async()=>{throw Error('storage.uploader cannot delete');}};
+  const mountedFs={...fs,rename:async()=>{throw Error('Object Storage rename forbidden');},unlink:async(file)=>{if(!allowDelete)throw Error('storage.uploader cannot delete');return fs.unlink(file);}};
   loaded.require=id=>id==='./telegram'?telegram:id==='node:fs/promises'?mountedFs:require(id);
   loaded._compile(await fs.readFile(filename,'utf8'),filename);
   const raw=loaded.exports,iamToken='test-runtime-iam-token';
@@ -89,5 +89,12 @@ test('verified feedback: mail gate, replay, moderation, privacy and legacy repli
     await assert.rejects(feedback.submit({...base,id:randomUUID(),email:'limited@example.ru'},mount,env,'same-ip'),{status:429});
     assert.equal(feedback.maskedEmail('abc@example.ru'),'*****@example.ru');
     assert.equal(feedback.maskedEmail('a@example.ru'),'*****@example.ru');
+    await assert.rejects(feedback.moderate({...legacyAuth,action:'delete'},mount,env),{status:403});
+    await assert.rejects(moderate(first.id,'delete'),/storage.uploader cannot delete/);
+    assert.equal((await feedback.list(mount,env)).items.some(e=>e.text===first.body.text&&e.rating===5),false);
+    allowDelete=true;assert.equal((await moderate(first.id,'delete')).deleted,true);
+    for(const folder of ['received','published','delivered'])await assert.rejects(fs.access(path.join(mount,'feedback',folder,first.id+'.json')),{code:'ENOENT'});
+    assert.equal((await feedback.admin({adminToken,action:'list'},mount,env)).items.some(x=>x.id===first.id),false);
+    await assert.rejects(feedback.verify(first,mount,env),{status:403});
   }finally{global.fetch=originalFetch;await fs.rm(mount,{recursive:true,force:true});}
 });

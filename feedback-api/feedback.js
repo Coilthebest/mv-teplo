@@ -130,6 +130,15 @@ async function moderate(body,mount,env) {
   return locked(mount,id,async()=>{
     const target=file(mount,'received',id),entry=await read(target);if(!entry)error(404,'Сообщение не найдено.');
     const publishedFile=file(mount,'published',id);
+    if(action==='delete'){
+      if(!globalAccess)error(403,'Для полного удаления откройте кабинет всех сообщений.');
+      const previous=await read(publishedFile);
+      if(previous&&!previous.hidden)await write(publishedFile,{...previous,hidden:true});
+      for(const targetFile of [publishedFile,file(mount,'delivered',id),target]){
+        await fs.unlink(targetFile).catch(e=>{if(e.code!=='ENOENT')throw e;});
+      }
+      return {deleted:true};
+    }
     if(action==='publish'){
       if(entry.email&&!entry.verifiedAt)error(409,'Автор ещё не подтвердил почту.');
       entry.reply=clean(body.reply||'',1000);await write(target,entry);

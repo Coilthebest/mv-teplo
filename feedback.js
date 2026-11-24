@@ -110,14 +110,16 @@
         item.append(element('p',row.published?'Опубликовано':row.entry.email&&!row.entry.verifiedAt?'Ожидает подтверждения почты':'Скрыто с сайта','moderation-state'));
         const label=element('label','Ответ Teplo');const reply=document.createElement('textarea');reply.value=row.reply;reply.maxLength=1000;reply.rows=3;label.append(reply);item.append(label);
         const actions=element('div','','feedback-actions');
-        for(const [action,title] of [['publish',row.published?'Сохранить ответ':'Опубликовать'],['hide','Скрыть с сайта']]){
+        for(const [action,title] of [['publish',row.published?'Сохранить ответ':'Опубликовать'],['hide','Скрыть с сайта'],...(token?[['delete','Удалить навсегда']]:[])]){
           const button=element('button',title,'button '+(action==='publish'?'button-primary':'button-outline'));button.type='button';
           button.disabled=(action==='hide'&&!row.published)||(action==='publish'&&row.entry.email&&!row.entry.verifiedAt);
           button.addEventListener('click',async()=>{
+            if(action==='delete'&&!window.confirm('Удалить это сообщение навсегда? Восстановить его в кабинете будет невозможно.'))return;
             actions.querySelectorAll('button').forEach(b=>b.disabled=true);
             try{
               const result=await request(token?'feedback-admin':'feedback-moderation',{id:row.id,adminToken:token,signature,action,reply:reply.value});
-              row.published=result.published;row.reply=result.reply;status.textContent=action==='hide'?'Сообщение скрыто. Его можно опубликовать снова.':'Публикация сохранена.';draw();
+              if(action==='delete'){if(!result.deleted)throw Error('Не удалось удалить сообщение.');rows=rows.filter(item=>item.id!==row.id);status.textContent='Сообщение удалено.';}
+              else{row.published=result.published;row.reply=result.reply;status.textContent=action==='hide'?'Сообщение скрыто. Его можно опубликовать снова.':'Публикация сохранена.';}draw();
             }catch(e){status.textContent=e.message;draw();}
           });actions.append(button);
         }item.append(actions);list.append(item);
