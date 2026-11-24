@@ -992,6 +992,18 @@
     try { index = Number(localStorage.getItem('teplo-active-story')) || 0; } catch {}
     restoring = false; $('.builder').inert = false;
     await selectSlot(Number.isInteger(index) && index >= 0 && index < slots.length ? index : 0);
+    // Public product pages open the existing builder after restoring saved photos.
+    const entry = new URLSearchParams(location.search);
+    const requestedProduct = entry.get('product');
+    if (Object.hasOwn(products, requestedProduct)) {
+      const material = entry.get('material') === 'matte' ? 'matte' : 'sticker';
+      setProduct(requestedProduct, material);
+      const format = entry.get('format');
+      if (products[requestedProduct].formats.includes(format)) {
+        $('#product-format').value = format;
+        updateProductSpec();
+      }
+    }
   }
   const garland = window.setupGarland({
     stories() {

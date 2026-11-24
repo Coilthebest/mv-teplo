@@ -1,15 +1,31 @@
 <!doctype html>
 <html lang="ru">
 <head>
+  <meta charset="UTF-8">
 <link rel="icon" href="/favicon.png?v=teplo2" sizes="120x120" type="image/png">
 <link rel="icon" href="/favicon.ico?v=teplo2" sizes="16x16 32x32 48x48" type="image/x-icon">
 
   <script>if(location.hash==='#payment-return') location.replace('/thanks.html');</script>
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff8ec">
-  <meta name="description" content="Превратите любимую фотографию в тёплую рисованную историю. Персональные постеры в рамке, арт-гирлянды, магниты, брелоки, наклейки и футболки с вашим принтом.">
-  <title>Teplo — мастерская воспоминаний</title>
+  <meta name="description" content="Подарки из ваших фотографий: иллюстрации в рамке, магниты, брелоки, футболки и арт-гирлянды. Добавьте свою надпись и соберите подарок в конструкторе Teplo.">
+  <title>Подарки по фото — магниты, постеры и арт-гирлянды | Teplo</title>
+  <link rel="canonical" href="https://mv-teplo.ru/">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="google-site-verification" content="EVGldO9WG6f9l_uR9NXLJiDBxjlLM4RtjmAAOgp5i-0">
+  <meta name="yandex-verification" content="dedc9883324c0afd">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Teplo">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:title" content="Teplo — подарки из ваших фотографий">
+  <meta property="og:description" content="Ваше фото станет иллюстрацией, а иллюстрация — личным подарком: магнитом, постером, брелоком, футболкой или арт-гирляндой.">
+  <meta property="og:url" content="https://mv-teplo.ru/">
+  <meta property="og:image" content="https://mv-teplo.ru/assets/catalog-garland.webp">
+  <meta property="og:image:width" content="1050">
+  <meta property="og:image:height" content="700">
+  <meta property="og:image:alt" content="Арт-гирлянда Teplo с персональными иллюстрациями на прищепках">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://mv-teplo.ru/#website","url":"https://mv-teplo.ru/","name":"Teplo","alternateName":"Teplo — мастерская воспоминаний","inLanguage":"ru-RU","publisher":{"@id":"https://mv-teplo.ru/#organization"}},{"@type":"Organization","@id":"https://mv-teplo.ru/#organization","name":"Teplo","url":"https://mv-teplo.ru/","description":"Мастерская персональных подарков с иллюстрациями по фотографиям."}]}</script>
 
   <link rel="stylesheet" href="styles.css?v=upright2">
   <link rel="stylesheet" href="memories.css?v=portrait-garland1">
@@ -33,7 +49,7 @@
   <script src="garland.js?v=story-delete1" defer></script>
   <link rel="stylesheet" href="feedback.css?v=verified2">
   <script src="feedback.js?v=verified3" defer></script>
-  <script src="app.js?v=story-delete1" defer></script>
+  <script src="app.js?v=seo-products1" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -41,6 +57,10 @@
     .examples-jump{display:inline-flex;align-items:center;gap:.8rem;min-height:44px;padding:5px 15px;margin:0 0 15px;border:1px solid #b68d63;border-radius:5px;background:#fff8eb;color:#62351f;font-size:14px;text-decoration:none}
     .examples-jump:hover,.examples-jump:focus-visible{background:#f4e3c9}
     .collection-image .work-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .product-details-nav{margin-top:26px;padding-top:22px;border-top:1px solid var(--line);font-size:14px;color:#765a43}
+    .product-details-nav p{margin-bottom:12px;font-size:16px;color:#62351f}
+    .product-details-links{display:flex;flex-wrap:wrap;gap:12px 24px}
+    .product-details-links a{text-decoration:underline;text-underline-offset:4px;min-height:30px;display:inline-flex;align-items:center}
   </style>
 </head>
 <body>
@@ -67,7 +87,7 @@
       <div class="hero-copy">
         <p class="eyebrow"><svg class="little-star" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg> Из фотографии — в маленькое искусство</p>
         <h1 id="hero-title">Мгновения,<br>которые хочется<br><em>оставить рядом.</em></h1>
-        <p class="hero-description">Любимое фото станет тёплой иллюстрацией.<br class="desktop-break"> А иллюстрация — подарком, в котором есть вы.</p>
+        <p class="hero-description">Подарки по вашим фотографиям: любимое фото станет тёплой иллюстрацией.<br class="desktop-break"> А иллюстрация — подарком, в котором есть вы.</p>
         <a class="button button-primary" href="#constructor">Создать свою историю <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a>
         <div class="hero-footnote"><span class="tiny-picture" aria-hidden="true">▧</span> Ваше фото. Ваша надпись. Ваш особенный момент.</div>
       </div>
@@ -261,6 +281,19 @@
       </div>
       <a class="digital-offer" href="#constructor" data-choose-product="digital"><span class="digital-symbol" aria-hidden="true">↧</span><div><h3>История в электронном виде в HD-качестве</h3><p>При любом заказе электронная копия в HD-качестве — в подарок.</p></div><svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a>
       <p class="collection-note">Макеты показывают пример оформления. Доставка бесплатно до пункта выдачи Яндекс Маркета, заказ — от 3 изделий в любом сочетании или одна арт-гирлянда.</p>
+      <nav class="product-details-nav" aria-label="Подробнее о подарках">
+        <p>Выберите подарок и узнайте о нём больше</p>
+        <div class="product-details-links">
+          <a href="/podarki/poster-v-ramke/">Постер в рамке</a>
+          <a href="/podarki/magnit-s-foto/">Магнит с фото</a>
+          <a href="/podarki/brelok-s-foto/">Брелок с фото</a>
+          <a href="/podarki/nakleyka-s-foto/">Наклейка на бутылку</a>
+          <a href="/podarki/futbolka-s-foto/">Футболка с принтом</a>
+          <a href="/podarki/foto-bez-ramki/">Матовое фото без рамки</a>
+          <a href="/podarki/art-girlyanda/">Арт-гирлянда воспоминаний</a>
+          <a href="/podarki/illyustratsiya-po-foto/">Электронная иллюстрация HD</a>
+        </div>
+      </nav>
     </section>
 
     <section class="personal-note"><div class="container note-inner"><svg class="note-star" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg><p>У каждого есть фотография,<br>в которой <em>чуть больше, чем просто фото.</em></p><a class="button button-primary" href="#constructor">У меня есть такая <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></a></div></section>
