@@ -8,7 +8,7 @@ const path=require('node:path');
 
 test('verified feedback: mail gate, replay, moderation, privacy and legacy replies',async()=>{
   const mount=await fs.mkdtemp('/tmp/teplo-verified-');
-  const env={TELEGRAM_BOT_TOKEN:'123:unit-test',FEEDBACK_EMAIL_API_KEY:'unit-test',FEEDBACK_EMAIL_FROM:'Teplo <noreply@mail.mv-teplo.ru>'};
+  const env={TELEGRAM_BOT_TOKEN:'123:unit-test',FEEDBACK_EMAIL_FROM:'Teplo <noreply@mail.mv-teplo.ru>'};
   const emails=[],messages=[];let mailFails=false,telegramFails=false;
   const originalFetch=global.fetch;
   const telegram={ready:async()=>true,sendMessage:async(text,env,markup)=>{if(telegramFails)throw Error('delivery failed');messages.push({text,markup});return messages.length;}};
@@ -16,8 +16,15 @@ test('verified feedback: mail gate, replay, moderation, privacy and legacy repli
   const loaded=new Module(filename,module);loaded.filename=filename;loaded.paths=module.paths;
   loaded.require=id=>id==='./telegram'?telegram:require(id);
   loaded._compile(await fs.readFile(filename,'utf8'),filename);
-  const feedback=loaded.exports;
-  global.fetch=async(url,options)=>{assert.equal(url,'https://api.resend.com/emails');emails.push(JSON.parse(options.body));return {ok:!mailFails};};
+  const raw=loaded.exports,iamToken='test-runtime-iam-token';
+  const feedback={...raw,list:(mount,env)=>raw.list(mount,env,iamToken),submit:(body,mount,env,ip)=>raw.submit(body,mount,env,ip,iamToken)};
+  global.fetch=async(url,options)=>{
+    assert.equal(url,'https://postbox.cloud.yandex.net/v2/email/outbound-emails');
+    assert.equal(options.headers['X-YaCloud-SubjectToken'],iamToken);assert.equal(options.headers.Authorization,undefined);
+    const payload=JSON.parse(options.body);assert.equal(payload.FromEmailAddress,env.FEEDBACK_EMAIL_FROM);
+    assert.equal(payload.Content.Simple.Subject.Charset,'UTF-8');
+    emails.push({text:payload.Content.Simple.Body.Text.Data,to:payload.Destination.ToAddresses});return {ok:!mailFails,json:async()=>({MessageId:'test-message-'+emails.length})};
+  };
   const sign=value=>createHmac('sha256',env.TELEGRAM_BOT_TOKEN).update(value).digest('base64url');
   const adminToken=sign('teplo-feedback-admin-v2');
   const base={type:'review',name:'Анна',text:'Очень понравилось!',email:'annatest@example.ru',rating:5,consent:true,website:''};
@@ -30,6 +37,8 @@ test('verified feedback: mail gate, replay, moderation, privacy and legacy repli
   const moderate=(id,action,reply='')=>feedback.admin({adminToken,id,action,reply},mount,env);
   try{
     assert.equal((await feedback.list(mount,{})).available,false);
+    assert.equal((await raw.list(mount,env)).available,false);
+    await assert.rejects(raw.submit({...base,id:randomUUID()},mount,env,'1'),{status:503});
     await assert.rejects(feedback.submit({...base,id:randomUUID()},mount,{},'1'),{status:503});
     for(const change of [{email:'invalid'},{rating:0},{rating:6},{rating:1.5},{consent:false},{website:'spam'},{type:'invalid'}]){
       await assert.rejects(feedback.submit({...base,id:randomUUID(),...change},mount,env,'1'),{status:400});

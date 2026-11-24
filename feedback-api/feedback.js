@@ -37,7 +37,7 @@ function sign(value,env) {
 }
 function same(a,b) {return typeof a==='string'&&typeof b==='string'&&/^[A-Za-z0-9_-]{43}$/.test(a)&&/^[A-Za-z0-9_-]{43}$/.test(b)&&crypto.timingSafeEqual(Buffer.from(a),Buffer.from(b));}
 function adminToken(env) {return sign('teplo-feedback-admin-v2',env);}
-function emailReady(env) {return Boolean(env.FEEDBACK_EMAIL_API_KEY&&env.FEEDBACK_EMAIL_FROM);}
+function emailReady(env,iamToken) {return Boolean(env.FEEDBACK_EMAIL_FROM&&iamToken);}
 function maskedEmail(email) {
   if(!email)return '';
   const [local,domain]=email.split('@');
@@ -53,11 +53,11 @@ async function files(mount,folder) {
   const names=await fs.readdir(path.join(mount,'feedback',folder)).catch(e=>{if(e.code==='ENOENT')return [];throw e;});
   return names.filter(n=>n.endsWith('.json')&&uuid.test(n.slice(0,-5))).map(n=>n.slice(0,-5));
 }
-async function list(mount,env) {
+async function list(mount,env,iamToken) {
   const entries=await Promise.all((await files(mount,'published')).map(id=>read(file(mount,'published',id))));
   const items=entries.filter(Boolean).map(e=>publicEntry(e,e.reply||'')).sort((a,b)=>b.date.localeCompare(a.date));
   const rated=items.filter(e=>e.type==='review'&&e.verified&&e.rating>=1&&e.rating<=5);
-  return {version:2,verificationRequired:true,available:emailReady(env)&&await telegram.ready(env),items,
+  return {version:2,verificationRequired:true,available:emailReady(env,iamToken)&&await telegram.ready(env),items,
     rating:{count:rated.length,average:rated.length?rated.reduce((sum,e)=>sum+e.rating,0)/rated.length:null}};
 }
 async function rateLimit(mount,scope) {
@@ -70,7 +70,7 @@ async function rateLimit(mount,scope) {
   });
 }
 function confirmation(entry,id,env) {return sign('feedback-email-v2:'+id+':'+entry.email+':'+entry.expires,env);}
-async function submit(body,mount,env,ip) {
+async function submit(body,mount,env,ip,iamToken) {
   const {id,type}=body;
   if(!uuid.test(id||'')||!Object.hasOwn(types,type)||body.website!==''||body.consent!==true)error(400,'Заполните обязательные поля.');
   const name=clean(body.name,50),text=clean(body.text,1000),email=clean(body.email,254).toLowerCase();
@@ -78,7 +78,7 @@ async function submit(body,mount,env,ip) {
   if(text.length<5)error(400,'Напишите хотя бы пять символов.');
   const rating=type==='review'?Number(body.rating):null;
   if(type==='review'&&(!Number.isInteger(rating)||rating<1||rating>5))error(400,'Поставьте оценку от 1 до 5 звёзд.');
-  if(!emailReady(env))error(503,'Подтверждение почты пока недоступно. Попробуйте позже.');
+  if(!emailReady(env,iamToken))error(503,'Подтверждение почты пока недоступно. Попробуйте позже.');
   return locked(mount,id,async()=>{
     const target=file(mount,'received',id);let entry=await read(target);
     if(entry&&(entry.email!==email||entry.type!==type||entry.text!==text||entry.name!==name||entry.rating!==rating))error(409,'Сообщение изменилось. Отправьте его заново.');
@@ -89,9 +89,17 @@ async function submit(body,mount,env,ip) {
       entry={type,name,text,email,rating,date:new Date().toISOString(),expires:Date.now()+86400000};await write(target,entry);
     }
     const url=site+'/feedback-confirm.html#'+id+'.'+confirmation(entry,id,env);
-    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+env.FEEDBACK_EMAIL_API_KEY,'Content-Type':'application/json','Idempotency-Key':'teplo-feedback-'+id},body:JSON.stringify({from:env.FEEDBACK_EMAIL_FROM,to:[email],subject:'Подтвердите сообщение для Teplo',text:'Вы оставили '+types[type].toLowerCase()+' на mv-teplo.ru. Чтобы передать сообщение мастерской, откройте ссылку и нажмите «Подтвердить отправку»:\n\n'+url+'\n\nСсылка действует 24 часа. Если вы не отправляли сообщение, проигнорируйте письмо.'}),signal:AbortSignal.timeout(12000)});
+    const mailText='Вы оставили '+types[type].toLowerCase()+' на mv-teplo.ru. Чтобы передать сообщение мастерской, откройте ссылку и нажмите «Подтвердить отправку»:\n\n'+url+'\n\nСсылка действует 24 часа. Если вы не отправляли сообщение, проигнорируйте письмо.';
+    const response=await fetch('https://postbox.cloud.yandex.net/v2/email/outbound-emails',{
+      method:'POST',redirect:'error',headers:{'X-YaCloud-SubjectToken':iamToken,'Content-Type':'application/json'},
+      body:JSON.stringify({FromEmailAddress:env.FEEDBACK_EMAIL_FROM,Destination:{ToAddresses:[email]},
+        Content:{Simple:{Subject:{Data:'Подтвердите сообщение для Teplo',Charset:'UTF-8'},Body:{Text:{Data:mailText,Charset:'UTF-8'}}}}}),
+      signal:AbortSignal.timeout(12000)
+    });
     if(!response.ok)error(503,'Не удалось отправить письмо. Попробуйте позже.');
-    entry.emailSentAt=new Date().toISOString();await write(target,entry);return {confirmationRequired:true};
+    const receipt=await response.json();
+    if(typeof receipt.MessageId!=='string'||!receipt.MessageId)error(503,'Не удалось подтвердить отправку письма. Попробуйте позже.');
+    entry.emailMessageId=receipt.MessageId;entry.emailSentAt=new Date().toISOString();await write(target,entry);return {confirmationRequired:true};
   });
 }
 async function verify(body,mount,env) {
