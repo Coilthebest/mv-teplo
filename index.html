@@ -21,16 +21,16 @@
   <script src="payment.js?v=1" defer></script>
   <script src="story-storage.js?v=1" defer></script>
   <script src="cart.js?v=checkout2" defer></script>
-  <link rel="stylesheet" href="illustration.css?v=garland-flow1">
+  <link rel="stylesheet" href="illustration.css?v=story-delete1">
   <script src="illustration.js?v=digital-paper4" defer></script>
   <script src="preview-mark.js" defer></script>
   <script src="print-placement.js?v=product-preview1" defer></script>
   <script src="realistic-mockups.js?v=1" defer></script>
   <link rel="stylesheet" href="garland.css?v=wide-catalog1">
-  <script src="garland.js?v=garland-flow1" defer></script>
+  <script src="garland.js?v=story-delete1" defer></script>
   <link rel="stylesheet" href="feedback.css?v=1">
   <script src="feedback.js?v=1" defer></script>
-  <script src="app.js?v=garland-flow1" defer></script>
+  <script src="app.js?v=story-delete1" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -216,7 +216,7 @@
             <div id="garland-picker" class="garland-picker" hidden><span id="garland-picker-status" aria-live="polite">Выбрано 0 из 5 иллюстраций</span><button type="button" id="garland-pick" class="button button-outline" aria-haspopup="dialog" aria-controls="garland-dialog">Выбрать иллюстрации</button></div>
             <section class="stories" aria-labelledby="stories-title">
               <div class="stories-heading"><h3 id="stories-title">Ваши иллюстрации</h3><span id="stories-count"></span></div>
-              <p>Нажмите плюс, чтобы добавить фото, или выберите готовый рисунок.</p>
+              <p>Нажмите плюс, чтобы добавить фото, или выберите рисунок. Крестик удаляет фото.</p>
               <div class="story-grid" id="story-grid" role="group" aria-labelledby="stories-title"></div>
             </section>
             <div class="preview-bottom"><div><strong id="product-name">История в рамке</strong><span id="product-spec">10 × 15 см</span></div><strong class="preview-price" id="preview-price">760 ₽</strong></div>
@@ -321,6 +321,18 @@
                     <path class="draw-hills" pathLength="1" d="M16 48q13-11 25-4t24 2" stroke="#81916e"/>
                     <circle class="draw-sun" cx="48" cy="21" r="4" fill="#daa352"/>
                   </g><path d="M30 56h19" stroke="#c8a47b" stroke-linecap="round"/></g></svg><h2 id="drawing-title">Рисуем вашу иллюстрацию</h2><p id="drawing-time" role="status">Обычно это занимает 1–2 минуты.</p></dialog>
+  <dialog id="delete-story-dialog" aria-labelledby="delete-story-title" aria-describedby="delete-story-description">
+    <form method="dialog">
+      <h2 id="delete-story-title">Удалить фото?</h2>
+      <img id="delete-story-image" alt="Фото или иллюстрация, которую вы хотите удалить">
+      <p id="delete-story-description">Вы точно хотите удалить это фото и его иллюстрацию из списка без возможности восстановления?</p>
+      <p class="delete-story-note">Товары, уже добавленные в корзину, останутся.</p>
+      <div class="delete-story-actions">
+        <button class="button button-outline" value="cancel" autofocus>Отмена</button>
+        <button class="button button-primary" value="delete">Удалить фото</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="confirm-photo" aria-labelledby="confirm-photo-title">
     <form method="dialog">
       <h2 id="confirm-photo-title">Создать иллюстрацию из этого фото?</h2>

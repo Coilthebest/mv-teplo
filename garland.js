@@ -169,6 +169,17 @@ window.setupGarland = ({ stories, upload, busy, onChange }) => {
     get format() { return mainFormat; },
     get count() { return applied.length; },
     get ready() { return !loadingMain && applied.length === Number(mainFormat) && appliedPosters.length === Number(mainFormat) && appliedPosters.every(Boolean); },
+    forgetDraft(objectId) {
+      // Cart artwork remains available when editing an already saved product.
+      if (editItem?.artworks.some(art => art.objectId === objectId)) return;
+      available.delete(objectId);
+      selected = selected.filter(id => id !== objectId);
+      const keep = applied.map(art => art.objectId !== objectId);
+      if (keep.every(Boolean)) return;
+      applied = applied.filter((_, index) => keep[index]);
+      appliedPosters = appliedPosters.filter((_, index) => keep[index]);
+      onChange();
+    },
     setFormat(value) {
       if (!['5', '10'].includes(value) || value === mainFormat) return;
       mainFormat = value;

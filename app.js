@@ -48,12 +48,23 @@
   let warnedAboutStorage = false;
   let storyId = null;
   let photoHash = null;
+  const slotDeleteButtons = [];
   const slotButtons = slots.map((_, index) => {
+    const cell = document.createElement('div');
+    cell.className = 'story-cell';
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'story-slot';
     button.addEventListener('click', () => selectSlot(index, true));
-    $('#story-grid').append(button);
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'story-delete';
+    remove.textContent = '×';
+    remove.hidden = true;
+    remove.addEventListener('click', () => requestStoryDeletion(index));
+    slotDeleteButtons.push(remove);
+    cell.append(button, remove);
+    $('#story-grid').append(cell);
     return button;
   });
   const tshirtExample = new Image();
@@ -242,6 +253,11 @@
       button.setAttribute('aria-label', 'Ячейка ' + (i + 1) + '. ' + label);
       button.setAttribute('aria-pressed', String(activeSlot === i));
       button.disabled = state.generating || restoring || savingCart;
+      const remove = slotDeleteButtons[i];
+      remove.hidden = !record;
+      remove.disabled = button.disabled;
+      remove.title = 'Удалить фото';
+      remove.setAttribute('aria-label', `Удалить фото из ячейки ${i + 1}${record?.caption ? ': ' + record.caption : ''}`);
     });
     $('#stories-count').textContent = slots.filter(Boolean).length + ' из 10';
   }
@@ -275,6 +291,62 @@
     activeSlot = index;
     if (index >= 0) {
       try { localStorage.setItem('teplo-active-story', String(index)); } catch {}
+    }
+  }
+
+  async function requestStoryDeletion(index) {
+    const dialog = $('#delete-story-dialog');
+    const record = slots[index];
+    if (!record || dialog.open || restoring || state.generating || savingCart) return;
+    const preview = $('#delete-story-image');
+    const previewUrl = URL.createObjectURL(record.generatedFile || record.sourceFile);
+    preview.src = previewUrl;
+    dialog.returnValue = '';
+    const closed = new Promise(resolve => dialog.addEventListener('close', resolve, { once: true }));
+    dialog.showModal();
+    await closed;
+    preview.removeAttribute('src');
+    URL.revokeObjectURL(previewUrl);
+    if (dialog.returnValue !== 'delete' || restoring || state.generating || savingCart || slots[index]?.sourceFile !== record.sourceFile) return;
+
+    const deletingActive = index === activeSlot;
+    const keepGarland = deletingActive && state.product === 'garland';
+    const editId = state.editingCartId;
+    const quantity = $('#item-quantity').value;
+    clearTimeout(draftTimer);
+    if (!deletingActive) persistDraft();
+    restoring = true;
+    $('.builder').inert = true;
+    renderSlots();
+    let removed = false;
+    try {
+      if (!await AI.draft('delete', null, index)) {
+        notify('Не удалось удалить фото из памяти браузера. Попробуйте ещё раз.');
+        return;
+      }
+      const objectId = slots[index]?.sealedArtwork?.objectId;
+      slots[index] = null;
+      if (deletingActive) {
+        clearEditor();
+        if (keepGarland) {
+          state.editingCartId = editId;
+          $('#item-quantity').value = quantity;
+          setProduct('garland');
+        }
+      }
+      if (objectId && !slots.some(item => item?.sealedArtwork?.objectId === objectId)) {
+        garland.forgetDraft(objectId);
+      }
+      removed = true;
+      scheduleDraw();
+      notify('Фото удалено. Можно добавить новое в освободившуюся ячейку.');
+    } finally {
+      restoring = false;
+      $('.builder').inert = false;
+      renderSlots();
+      updatePurchase();
+      if (removed) slotButtons[index].focus({ preventScroll: true });
+      else queueDraft();
     }
   }
 
@@ -868,10 +940,7 @@
       notify('Выбор гирлянды сброшен. Ваши иллюстрации сохранены.');
       return;
     }
-    if (activeSlot >= 0) {
-      slots[activeSlot] = null;
-      AI.draft('delete', null, activeSlot);
-    }
+    if (activeSlot >= 0 && slots[activeSlot]) { void requestStoryDeletion(activeSlot); return; }
     clearEditor(); renderSlots();
     notify('Начнём новую историю. Загрузите свою фотографию.');
   });
@@ -879,7 +948,7 @@
     if (restoring || state.generating || savingCart) return;
     const empty = slots.findIndex(record => !record);
     if (empty >= 0) selectSlot(empty, true);
-    else { slotButtons[0].focus(); notify('Все 10 ячеек заняты. Выберите рисунок или освободите ячейку кнопкой «Сначала».'); }
+    else { slotButtons[0].focus(); notify('Все 10 ячеек заняты. Выберите рисунок или освободите ячейку крестиком.'); }
   });
   $('#view-selection').addEventListener('click', openSelection);
   $('#close-dialog').addEventListener('click', () => $('#selection-dialog').close());
@@ -933,7 +1002,7 @@
       const empty = slots.findIndex(record => !record);
       if (empty < 0) {
         $('#story-grid').scrollIntoView({ block: 'center' });
-        notify('Все ячейки заняты. Выберите фото в конструкторе или освободите ячейку кнопкой «Сначала».');
+        notify('Все ячейки заняты. Выберите фото в конструкторе или освободите ячейку крестиком.');
       } else selectSlot(empty, true);
     },
     busy: () => restoring || state.generating || savingCart,
