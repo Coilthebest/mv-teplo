@@ -15,11 +15,12 @@
       widgetEstimate: currentWidgetDate(pickup?.id) ? widgetEstimate : null };
   }
   let etaPoint=null,quote=null,etaTask=Promise.resolve(),widgetEstimate=null,etaVersion=0,etaTimer;
+  const widgetCalculationVersion = 2;
   function currentWidgetDate(point) {
     return widgetEstimate?.point === point && widgetEstimate.expires > Date.now() ? widgetEstimate.date : '';
   }
   function showWidgetDate(el, date) {
-    el.textContent = `Ориентировочная доставка: ${date}. Учтён 1 день на изготовление (посылка до 2 кг).`;
+    el.textContent = `Ориентировочная доставка: ${date}. Планируем отправку на следующий день (посылка до 2 кг).`;
   }
   function updateEstimate(){
     const point=physical && !isDoor() && pickup?.id || null;
@@ -119,7 +120,7 @@
     frame.setAttribute('sandbox', 'allow-scripts allow-forms');
     frame.setAttribute('allow', "geolocation 'none'");
     frame.referrerPolicy = 'no-referrer';
-    frame.src = `pickup.html?v=4#${new URLSearchParams({ city, requestId })}`;
+    frame.src = `pickup.html?v=5#${new URLSearchParams({ city, requestId })}`;
     $('#pickup-frame-slot').replaceChildren(frame);
     mapDialog.showModal();
     clearTimeout(mapTimer);
@@ -128,14 +129,14 @@
   window.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.data?.requestId !== requestId) return;
     if (event.data.type === 'teplo:pickup-ready') {
-      clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Выберите удобный пункт. Срок Яндекса уже учитывает 1 день на изготовление (посылка до 2 кг).';
+      clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Выберите удобный пункт. Яндекс покажет ориентировочную дату доставки (посылка до 2 кг). Планируем отправку на следующий день.';
     } else if (event.data.type === 'teplo:pickup-error') {
       clearTimeout(mapTimer); $('#pickup-map-status').textContent = 'Карта сейчас недоступна. Попробуйте открыть её ещё раз.';
     } else if (event.data.type === 'teplo:pickup-selected') {
       const selected = R.point(event.data.point); if (!selected) return;
       pickup = selected;
       const date = R.widgetDate(event.data.deliveryDate);
-      widgetEstimate = date ? {point: selected.id, date, expires: Date.now()+30*60*1000} : null;
+      widgetEstimate = date ? {version: widgetCalculationVersion, point: selected.id, date, expires: Date.now()+30*60*1000} : null;
       etaPoint = null;
       drawPickup(); changed(); mapDialog.close(); notice('Пункт выдачи добавлен к заказу.');
     }
@@ -174,10 +175,10 @@
         pickup = R.point(fields.pickup);
         const savedEstimate = saved.widgetEstimate;
         const savedDate = R.widgetDate(savedEstimate?.date);
-        if (pickup && savedDate && savedEstimate.point === pickup.id &&
+        if (pickup && savedDate && savedEstimate.version === widgetCalculationVersion && savedEstimate.point === pickup.id &&
             Number.isSafeInteger(savedEstimate.expires) && savedEstimate.expires > Date.now() &&
             savedEstimate.expires <= Date.now()+30*60*1000) {
-          widgetEstimate = {point: pickup.id, date: savedDate, expires: savedEstimate.expires};
+          widgetEstimate = {version: widgetCalculationVersion, point: pickup.id, date: savedDate, expires: savedEstimate.expires};
         }
         $('#remember-recipient').checked = true;
         $('#recipient-storage-note').textContent = 'Данные сохранены только в этом браузере. Их можно очистить в любой момент.';

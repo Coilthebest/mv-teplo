@@ -55,7 +55,9 @@
         city, size: { height: `${Math.max(300, innerHeight)}px`, width: '100%' },
         source_platform_station: '019f46fa88c57301bc0086cb90388ac2',
         physical_dims_weight_gross: 2000,
-        delivery_term: 1,
+        // The default calendar estimate matches our PVZ-to-PVZ schedule on the checked Moscow route.
+        // An extra delivery_term day would push that estimate one day too far out.
+        delivery_term: 0,
         delivery_price: () => 'По условиям Teplo',
         show_select_button: true,
         filter: { type: ['pickup_point'], operator_ids: ['market_l4g'], payment_methods: ['already_paid'] },
