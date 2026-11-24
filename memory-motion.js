@@ -13,6 +13,28 @@
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   const smallScreen = matchMedia('(max-width:900px)');
   const phone = matchMedia('(max-width:680px)');
+
+  // Bend the approved lettering along the rope-shaped arc without replacing its typeface.
+  const arc = document.querySelector('.memory-arc-segments');
+  if (arc) {
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const start = 25, width = 2125, sag = 175, segments = 40;
+    const dy = (x) => { const u = (x - start) / width; return 4 * sag * u * (1 - u); };
+    const pieces = Array.from({ length: segments }, (_, index) => {
+      const x = start + index * width / segments;
+      const right = start + (index + 1) * width / segments;
+      const slope = (dy(right) - dy(x)) / (right - x);
+      const sliceWidth = right - x + (index < segments - 1 ? 0.8 : 0);
+      const slice = document.createElementNS(svgNS, 'svg');
+      for (const [name, value] of Object.entries({ x, y: 225, width: sliceWidth, height: 280, viewBox: `${x} 225 ${sliceWidth} 280`, transform: `matrix(1 ${slope} 0 1 0 ${dy(x) - slope * x})` })) slice.setAttribute(name, value);
+      slice.style.overflow = 'hidden';
+      const use = document.createElementNS(svgNS, 'use');
+      use.setAttribute('href', '#memory-arc-source');
+      slice.append(use);
+      return slice;
+    });
+    arc.replaceChildren(...pieces);
+  }
   const modeButtons = [...document.querySelectorAll('[data-memory-mode]')];
   const wire = stage.querySelector('.garland-wire');
   const wirePath = wire.querySelector('path');
@@ -127,7 +149,7 @@
       const idle = !movement && !userPaused && !media.matches ? Math.sin(time / 1500 + seed * 0.9) * 0.6 : 0;
       const distance = Math.min(1, Math.abs(slot - 1));
       const tilt = layout.phone ? -Math.max(-1, Math.min(1, slot - 1)) * 12 + tilts[seed % tilts.length] * 0.08 : tilts[seed % tilts.length];
-      const scale = layout.phone ? 1 - distance * 0.18 : 1;
+      const scale = layout.phone ? 1 - distance * 0.34 : 1;
       const angle = tilt + swing * (layout.phone ? 0.55 : 0.84 + (seed % 3) * 0.08) + idle * (layout.phone ? 0.3 : 1);
       card.style.left = `${left}px`;
       card.style.top = `${wireY(center) + 6}px`;
@@ -144,7 +166,7 @@
     const trackWidth = track.clientWidth;
     const gap = phone.matches ? 20 : parseFloat(getComputedStyle(track).columnGap) || 14;
     const cardWidth = phone.matches ? Math.min(width * 0.54, 280) : (trackWidth - gap * (count - 1)) / count;
-    const step = phone.matches ? width * 0.4 : cardWidth + gap;
+    const step = phone.matches ? Math.min(width * 0.355, 210) : cardWidth + gap;
     const start = phone.matches ? (width - cardWidth) / 2 - step : (width - trackWidth) / 2;
     layout = { width, count, cardWidth, step, start, phone: phone.matches, edgeY: phone.matches ? 8 : 25, sag: phone.matches ? Math.min(width * 0.105, 62) : 32 };
     track.style.left = phone.matches ? `${start}px` : '';

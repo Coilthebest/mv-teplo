@@ -112,7 +112,7 @@
   overflow: hidden;
 }
 .memory-garland-link:focus-visible { outline: 2px solid #8d612f; outline-offset: 3px; }
-.memory-garland-stacked, .memory-pagination { display: none; }
+.memory-garland-arc, .memory-pagination { display: none; }
 @media (max-width: 620px) {
   .memory-toolbar {
     grid-template-columns: 1fr;
@@ -126,16 +126,25 @@
 @media (max-width: 680px) {
   .memory-toolbar { grid-template-columns: 1fr; grid-template-areas: "controls"; }
   .memory-toolbar .motion-status { display: none; }
-  .memory-garland-heading { height: auto; }
-  .memory-garland-link { top: 0; }
+  .memory-garland-heading { height: auto; margin-top: 14px; }
+  .memory-garland-link { top: 0; width: min(94%, 300px); }
   .memory-garland-wide { display: none; }
-  .memory-garland-stacked { display: flex; flex-direction: column; align-items: center; gap: 0; }
-  .memory-garland-stacked svg { display: block; width: min(78%, 260px); height: auto; aspect-ratio: 1115 / 280; overflow: hidden; }
-  .memory-garland-stacked svg + svg { width: min(70%, 232px); aspect-ratio: 995 / 280; margin-top: -10px; }
+  .memory-garland-arc { display: block; width: 100%; height: auto; aspect-ratio: 2125 / 480; overflow: hidden; }
   .memory-theatre { margin-top: 0; touch-action: pan-y; mask-image: none; }
   .memory-theatre.is-carousel .memory-cards { width: 100%; margin: 0; }
   .memory-theatre .memory-paper { padding: 9px 9px 0; border-radius: 3px; }
-  .memory-theatre .memory-image { aspect-ratio: 1 / 1; background: #fffcf4; }
+  .memory-theatre .memory-image { aspect-ratio: 5 / 4; background: #fffcf4; }
+  .memory-theatre .memory-art { object-fit: contain; background: linear-gradient(90deg, var(--paper-left, #f3e1cc), var(--paper-right, #f3e1cc)); }
+  .memory-theatre [data-memory="couple"] { --paper-left: #f6e2ca; --paper-right: #f7e3cb; }
+  .memory-theatre [data-memory="lia"] { --paper-left: #f5e2cc; --paper-right: #f6e2cb; }
+  .memory-theatre [data-memory="disneyland"] { --paper-left: #f7e4cf; --paper-right: #f5e3cd; }
+  .memory-theatre [data-memory="mustang"] { --paper-left: #f5e3d0; --paper-right: #f8e6d2; }
+  .memory-theatre [data-memory="sochi-cafe"] { --paper-left: #f8dec1; --paper-right: #f8dfc2; }
+  .memory-theatre [data-memory="sochi-sunset"] { --paper-left: #f3e2cc; --paper-right: #f3e2ce; }
+  .memory-theatre [data-memory="mountains"] { --paper-left: #f5e2c9; --paper-right: #f4e1c7; }
+  .memory-theatre [data-memory="matchday"] { --paper-left: #f1dfcd; --paper-right: #f4e3d1; }
+  .memory-theatre [data-memory="poliana"] { --paper-left: #f4dfcb; --paper-right: #f4e0cd; }
+  .memory-theatre [data-memory="fishing"] { --paper-left: #f3e2cf; --paper-right: #f4e2d0; }
   .memory-theatre .memory-photo { object-position: var(--memory-photo-position, 50% 50%); }
   .memory-theatre .memory-paper figcaption { align-items: center; text-align: center; padding: 10px 2px 12px; gap: 5px; }
   .memory-theatre .memory-caption-title { font-size: clamp(15px, 4.2vw, 18px); line-height: 1.2; overflow-wrap: normal; text-wrap: balance; }
