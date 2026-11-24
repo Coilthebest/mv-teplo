@@ -6,6 +6,7 @@ const telegram = require('./telegram');
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const types = {review:'Отзыв',suggestion:'Предложение',question:'Вопрос'};
 const site = 'https://mv-teplo.ru';
+const inProgress = new Set();
 function error(status,message) { throw Object.assign(Error(message),{status}); }
 function clean(value,max) {
   if(typeof value!=='string'||value.length>max)error(400,'Проверьте длину полей.');
@@ -17,19 +18,14 @@ async function read(target) {
 }
 async function write(target,value) {
   await fs.mkdir(path.dirname(target),{recursive:true});
-  const temporary=target+'.'+crypto.randomUUID()+'.tmp';
-  await fs.writeFile(temporary,JSON.stringify(value));await fs.rename(temporary,target);
+  // Mounted Object Storage supports overwrite with storage.uploader, not rename/delete.
+  await fs.writeFile(target,JSON.stringify(value));
 }
 async function locked(mount,id,operation) {
-  const lock=file(mount,'locks',id);await fs.mkdir(path.dirname(lock),{recursive:true});
-  let handle;
-  try{handle=await fs.open(lock,'wx');}catch(e){
-    if(e.code!=='EEXIST')throw e;
-    const age=await fs.stat(lock).then(stat=>Date.now()-stat.mtimeMs).catch(()=>0);
-    if(age>120000){await fs.unlink(lock).catch(()=>{});return locked(mount,id,operation);}
-    error(429,'Запрос обрабатывается. Повторите через минуту.');
-  }
-  try{return await operation();}finally{await handle.close();await fs.unlink(lock).catch(()=>{});}
+  const key=mount+'/'+id;
+  if(inProgress.has(key))error(429,'Запрос обрабатывается. Повторите через минуту.');
+  inProgress.add(key);
+  try{return await operation();}finally{inProgress.delete(key);}
 }
 function sign(value,env) {
   if(!env.TELEGRAM_BOT_TOKEN)error(503,'Сервис временно недоступен.');
@@ -55,7 +51,7 @@ async function files(mount,folder) {
 }
 async function list(mount,env,iamToken) {
   const entries=await Promise.all((await files(mount,'published')).map(id=>read(file(mount,'published',id))));
-  const items=entries.filter(Boolean).map(e=>publicEntry(e,e.reply||'')).sort((a,b)=>b.date.localeCompare(a.date));
+  const items=entries.filter(e=>e&&!e.hidden).map(e=>publicEntry(e,e.reply||'')).sort((a,b)=>b.date.localeCompare(a.date));
   const rated=items.filter(e=>e.type==='review'&&e.verified&&e.rating>=1&&e.rating<=5);
   return {version:2,verificationRequired:true,available:emailReady(env,iamToken)&&await telegram.ready(env),items,
     rating:{count:rated.length,average:rated.length?rated.reduce((sum,e)=>sum+e.rating,0)/rated.length:null}};
@@ -124,7 +120,7 @@ async function admin(body,mount,env) {
   if(body.action!=='list')return moderate(body,mount,env);
   const items=await Promise.all((await files(mount,'received')).map(async id=>{
     const entry=await read(file(mount,'received',id)),published=await read(file(mount,'published',id));
-    return entry?{id,entry,published:Boolean(published),reply:published?.reply||entry.reply||''}:null;
+    return entry?{id,entry,published:Boolean(published&&!published.hidden),reply:published?.reply||entry.reply||''}:null;
   }));
   return {items:items.filter(Boolean).sort((a,b)=>b.entry.date.localeCompare(a.entry.date))};
 }
@@ -141,11 +137,11 @@ async function moderate(body,mount,env) {
     }else if(action==='hide'){
       const previous=await read(publishedFile);
       if(previous?.reply&&!entry.reply){entry.reply=previous.reply;await write(target,entry);}
-      await fs.unlink(publishedFile).catch(e=>{if(e.code!=='ENOENT')throw e;});
+      if(previous)await write(publishedFile,{...previous,hidden:true});
     }
     else if(action!=='read')error(400,'Неизвестное действие.');
     const published=await read(publishedFile);
-    return {entry,published:Boolean(published),reply:entry.reply||published?.reply||'',adminUrl:site+'/feedback-admin.html#admin.'+adminToken(env)};
+    return {entry,published:Boolean(published&&!published.hidden),reply:entry.reply||published?.reply||'',adminUrl:site+'/feedback-admin.html#admin.'+adminToken(env)};
   });
 }
 module.exports={list,submit,verify,admin,moderate,maskedEmail};

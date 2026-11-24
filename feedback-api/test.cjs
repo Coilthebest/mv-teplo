@@ -14,7 +14,8 @@ test('verified feedback: mail gate, replay, moderation, privacy and legacy repli
   const telegram={ready:async()=>true,sendMessage:async(text,env,markup)=>{if(telegramFails)throw Error('delivery failed');messages.push({text,markup});return messages.length;}};
   const filename=path.join(__dirname,'feedback.js');
   const loaded=new Module(filename,module);loaded.filename=filename;loaded.paths=module.paths;
-  loaded.require=id=>id==='./telegram'?telegram:require(id);
+  const mountedFs={...fs,rename:async()=>{throw Error('Object Storage rename forbidden');},unlink:async()=>{throw Error('storage.uploader cannot delete');}};
+  loaded.require=id=>id==='./telegram'?telegram:id==='node:fs/promises'?mountedFs:require(id);
   loaded._compile(await fs.readFile(filename,'utf8'),filename);
   const raw=loaded.exports,iamToken='test-runtime-iam-token';
   const feedback={...raw,list:(mount,env)=>raw.list(mount,env,iamToken),submit:(body,mount,env,ip)=>raw.submit(body,mount,env,ip,iamToken)};
