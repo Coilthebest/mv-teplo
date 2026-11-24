@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="garland.css?v=wide-catalog1">
   <script src="garland.js?v=story-delete1" defer></script>
   <link rel="stylesheet" href="feedback.css?v=verified2">
-  <script src="feedback.js?v=verified2" defer></script>
+  <script src="feedback.js?v=verified3" defer></script>
   <script src="app.js?v=story-delete1" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
@@ -283,7 +283,7 @@
           <div id="feedback-list" class="feedback-list"></div>
           <button class="button button-outline" id="feedback-more" type="button" hidden>Показать ещё</button>
         </div>
-        <form class="feedback-form" id="feedback-form" aria-describedby="feedback-consent">
+        <form class="feedback-form" id="feedback-form">
           <div class="feedback-fields">
             <label>Тип сообщения
               <select name="type"><option value="review">Отзыв</option><option value="suggestion">Предложение</option></select>
@@ -305,9 +305,6 @@
             <textarea name="text" rows="3" minlength="5" maxlength="1000" required></textarea>
           </label>
           <div hidden><label>Веб-сайт<input name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
-          <label class="feedback-consent"><input type="checkbox" name="consent" required>
-            <span id="feedback-consent">Разрешаю обработать почту для подтверждения, передать сообщение мастерской и опубликовать после проверки с частично скрытым адресом. Пожалуйста, не указывайте контакты и данные заказа в тексте.</span>
-          </label>
           <button class="button button-primary" id="feedback-send" type="submit" disabled>Отправить отзыв</button>
           <p class="feedback-status" id="feedback-status" role="status"></p>
           <noscript><p>Включите JavaScript, чтобы увидеть сообщения и отправить своё.</p></noscript>
@@ -324,7 +321,6 @@
             <label>Ваш вопрос<textarea name="text" rows="3" minlength="5" maxlength="1000" required></textarea></label>
             <p class="feedback-email-note">Для отправки вопроса подтвердите ссылку на своей почте.</p>
             <div hidden><input name="website" type="text" tabindex="-1" autocomplete="off"></div>
-            <label class="feedback-consent"><input type="checkbox" name="consent" required><span>Разрешаю обработать почту для подтверждения, передать вопрос мастерской и опубликовать его с частично скрытым адресом.</span></label>
             <button type="submit" class="button button-primary" disabled>Подтвердить почту и отправить</button><p class="feedback-status" role="status"></p>
           </form>
         </div>

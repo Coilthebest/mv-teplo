@@ -43,7 +43,7 @@
     form.addEventListener('submit',async event=>{
       event.preventDefault();if(sending||!available)return;
       const fields=new FormData(form);
-      const data={type:fields.get('type'),name:fields.get('name')||'',email:fields.get('email'),rating:fields.get('type')==='review'?Number(fields.get('rating')):null,text:fields.get('text'),website:fields.get('website')||'',consent:fields.has('consent')};
+      const data={type:fields.get('type'),name:fields.get('name')||'',email:fields.get('email'),rating:fields.get('type')==='review'?Number(fields.get('rating')):null,text:fields.get('text'),website:fields.get('website')||'',consent:true};
       const key=JSON.stringify(data);if(draft?.key!==key)draft={key,id:crypto.randomUUID()};
       sending=true;send.disabled=true;delete status.dataset.error;status.textContent='Отправляем письмо подтверждения…';
       try{
