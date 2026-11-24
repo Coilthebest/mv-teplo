@@ -65,7 +65,7 @@
     let posts=[],shown=0;
     const questionsPanel=document.querySelector('#customer-questions');
     questionsPanel.addEventListener('toggle',()=>{questionsPanel.querySelector('.question-summary-action').textContent=questionsPanel.open?'Скрыть вопросы −':'Открыть вопросы +';});
-    function next(){const batch=posts.slice(shown,shown+4);list.append(...batch.map(card));shown+=batch.length;more.hidden=shown>=posts.length;}
+    function next(){const batch=posts.slice(shown,shown+5);list.append(...batch.map(card));shown+=batch.length;more.hidden=shown>=posts.length;}
     more.addEventListener('click',next);
     try{
       const result=await request('feedback');
@@ -74,7 +74,8 @@
       document.querySelector('#feedback-empty').hidden=posts.length>0;
       document.querySelector('#feedback-empty').textContent='Поделитесь впечатлениями — ваш отзыв может стать первым.';
       document.querySelector('#questions-empty').hidden=questions.length>0;
-      document.querySelector('#questions-list').replaceChildren(...questions.map(card));next();
+      document.querySelector('#questions-list').replaceChildren(...questions.map(card));
+      list.replaceChildren();shown=0;next();
       const rated=posts.filter(p=>p.type==='review'&&p.verified&&Number.isInteger(p.rating)&&p.rating>=1&&p.rating<=5);
       const average=rated.length?rated.reduce((sum,p)=>sum+p.rating,0)/rated.length:0;
       document.querySelector('#feedback-average').textContent=rated.length?average.toFixed(1).replace('.',','):'—';
@@ -82,7 +83,11 @@
       const count=rated.length,word=count%10===1&&count%100!==11?'оценка':count%10>=2&&count%10<=4&&(count%100<12||count%100>14)?'оценки':'оценок';
       document.querySelector('#feedback-rating-count').textContent=count?`${count} ${word} · из 5`:'Пока нет подтверждённых оценок';
       setters.forEach(set=>set(result.version===2&&result.verificationRequired===true&&result.available));
-    }catch(e){document.querySelector('#feedback-empty').textContent='Не удалось загрузить отзывы. Обновите страницу позже.';setters.forEach(set=>set(false));}
+    }catch(e){
+      // Keep published HTML reviews visible when the live service is unavailable.
+      if(!list.children.length){const empty=document.querySelector('#feedback-empty');empty.hidden=false;empty.textContent='Не удалось обновить отзывы. Попробуйте позже.';}
+      setters.forEach(set=>set(false));
+    }
   }
   async function confirm(){
     const [id,token]=location.hash.slice(1).split('.');history.replaceState(null,'',location.pathname);

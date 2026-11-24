@@ -48,7 +48,7 @@
   <link rel="stylesheet" href="garland.css?v=wide-catalog1">
   <script src="garland.js?v=story-delete1" defer></script>
   <link rel="stylesheet" href="feedback.css?v=verified2">
-  <script src="feedback.js?v=verified3" defer></script>
+  <script src="feedback.js?v=prerender1" defer></script>
   <script src="app.js?v=seo-products1" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
@@ -311,10 +311,14 @@
       <div class="container feedback-layout">
         <div class="feedback-stories">
           <h2 id="feedback-heading">Отзывы <em>и предложения</em></h2>
-          <div class="feedback-rating" aria-label="Средняя оценка опубликованных отзывов"><strong id="feedback-average">—</strong><div><span class="rating-stars" aria-hidden="true">★★★★★</span><p id="feedback-rating-count">Пока нет оценок</p></div></div>
+          <!-- feedback:rating:start -->
+          <div class="feedback-rating" aria-label="Средняя оценка опубликованных отзывов"><strong id="feedback-average">—</strong><div><span class="rating-stars" aria-hidden="true" style="--rating-percent:0%">★★★★★</span><p id="feedback-rating-count">Пока нет подтверждённых оценок</p></div></div>
+          <!-- feedback:rating:end -->
+          <!-- feedback:items:start -->
           <p id="feedback-empty" class="feedback-muted" role="status">Загружаем сообщения…</p>
           <div id="feedback-list" class="feedback-list"></div>
           <button class="button button-outline" id="feedback-more" type="button" hidden>Показать ещё</button>
+          <!-- feedback:items:end -->
         </div>
         <form class="feedback-form" id="feedback-form">
           <div class="feedback-fields">
