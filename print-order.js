@@ -109,7 +109,7 @@
   }
 
   let activeRefresh;
-  async function image(index) {
+  async function originalBlob(index) {
     if (Date.now() + 60000 >= delivery.expires) {
       activeRefresh ||= request('payment-prints').then(payment => {
         if (!payment.delivery) throw Error('order_unavailable');
@@ -124,8 +124,9 @@
       chunks.push(Uint8Array.from(atob(result.data), character => character.charCodeAt(0)));
       if (result.last) break;
     }
-    return TeploIllustration.loadImage(new Blob(chunks, {type:'image/png'}));
+    return new Blob(chunks, {type:'image/png'});
   }
+  async function image(index) { return TeploIllustration.loadImage(await originalBlob(index)); }
 
   const pending = new Map();
   function prepare(index) {
@@ -233,6 +234,39 @@
 
   const archive = document.querySelector('#download-all');
   const archiveStatus = document.querySelector('#archive-status');
+  const hd = document.querySelector('#download-hd');
+  const hdStatus = document.querySelector('#hd-status');
+  hd.hidden = false;
+  hd.addEventListener('click', async () => {
+    hd.disabled = true;
+    try {
+      const entries = [];
+      const seen = new Set();
+      for (let index = 0; index < files.length; index++) {
+        hdStatus.textContent = 'Готовим HD-иллюстрацию ' + (index + 1) + ' из ' + files.length + '…';
+        const item = files[index];
+        const original = await originalBlob(index);
+        const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', await original.arrayBuffer()));
+        const key = JSON.stringify([Array.from(digest), item.caption || '', item.year || '', Boolean(item.yearLines)]);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const label = [item.caption, item.year].filter(Boolean).join(' ').replace(/[\\/:*?"<>|\x00-\x1f]/g, ' ').trim() || 'Иллюстрация';
+        const name = String(entries.length + 1).padStart(2, '0') + ' — ' + label + '.jpg';
+        const bytes = await captionedJpeg(original, {caption:item.caption, year:item.year, yearLines:item.yearLines});
+        entries.push({name, bytes});
+      }
+      if (!entries.length) throw Error('empty_hd');
+      const single = entries.length === 1;
+      const download = create('a', single ? 'Скачать HD JPG' : 'Скачать ZIP с HD-иллюстрациями');
+      download.href = localUrl(single ? new Blob([entries[0].bytes], {type:'image/jpeg'}) : orderZip(entries));
+      download.download = single ? entries[0].name : 'Teplo-' + number + '-HD.zip';
+      hd.replaceWith(download);
+      hdStatus.textContent = 'Готово. Файлов: ' + entries.length + '.';
+    } catch {
+      hd.disabled = false;
+      hdStatus.textContent = 'Не удалось подготовить HD-иллюстрации. Попробуйте ещё раз.';
+    }
+  });
   archive.hidden = false;
   archive.addEventListener('click', async () => {
     archive.disabled = true;
