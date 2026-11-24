@@ -127,13 +127,13 @@
   .memory-toolbar { grid-template-columns: 1fr; grid-template-areas: "controls"; }
   .memory-toolbar .motion-status { display: none; }
   .memory-garland-heading { height: auto; margin-top: 14px; }
-  .memory-garland-link { top: 0; width: min(94%, 300px); }
+  .memory-garland-link { top: 18px; width: min(94%, 300px); }
   .memory-garland-wide { display: none; }
   .memory-garland-arc { display: block; width: 100%; height: auto; aspect-ratio: 2125 / 480; overflow: hidden; }
   .memory-theatre { margin-top: 0; touch-action: pan-y; mask-image: none; }
   .memory-theatre.is-carousel .memory-cards { width: 100%; margin: 0; }
   .memory-theatre .memory-paper { padding: 9px 9px 0; border-radius: 3px; }
-  .memory-theatre .memory-image { aspect-ratio: 5 / 4; background: #fffcf4; }
+  .memory-theatre .memory-image { aspect-ratio: 3 / 4; background: #fffcf4; }
   .memory-theatre .memory-art { object-fit: contain; background: linear-gradient(90deg, var(--paper-left, #f3e1cc), var(--paper-right, #f3e1cc)); }
   .memory-theatre [data-memory="couple"] { --paper-left: #f6e2ca; --paper-right: #f7e3cb; }
   .memory-theatre [data-memory="lia"] { --paper-left: #f5e2cc; --paper-right: #f6e2cb; }
