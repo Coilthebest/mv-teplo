@@ -9,11 +9,12 @@
   const giftGallery = $('#gift-views');
   const showGridButton = $('#workshop-show-grid');
 
-  function showGiftGrid(show) {
+  function showGiftGrid(show, focus = true) {
     previewStage.classList.toggle('workshop-grid', show);
-    showGridButton.hidden = !state.illustration || show;
+    showGridButton.hidden = show;
     if (show && phoneLayout.matches) {
       updatePreviewMode();
+      if (!focus) return;
       previewStage.scrollIntoView({ block: 'nearest' });
       giftGallery.querySelector('button').focus({ preventScroll: true });
     }
@@ -180,11 +181,13 @@
       $('#garland-picker-status').textContent = `Выбрано ${garland.count} из ${garland.format} иллюстраций`;
       $('#garland-pick').textContent = garland.count ? 'Изменить иллюстрации' : 'Выбрать иллюстрации';
     }
-    if (state.illustration && phoneLayout.matches && previewStage.classList.contains('workshop-grid')) {
-      mode.replaceChildren(dot, document.createTextNode('Иллюстрация готова · выберите изделие'));
+    const gridOpen = previewStage.classList.contains('workshop-grid');
+    if (phoneLayout.matches && gridOpen) {
+      const label = state.illustration ? 'Ваша иллюстрация' : hasPhoto ? 'Ваше фото' : 'Примеры мастерской';
+      mode.replaceChildren(dot, document.createTextNode(label + ' · выберите изделие'));
     }
-    if (!state.illustration) previewStage.classList.remove('workshop-grid');
-    showGridButton.hidden = !state.illustration || previewStage.classList.contains('workshop-grid');
+    previewStage.classList.toggle('has-illustration', Boolean(state.illustration));
+    showGridButton.hidden = gridOpen;
     $('#add-to-cart').disabled = !canOrderProduct() || savingCart || state.generating;
   }
 
@@ -635,8 +638,8 @@
     if (view !== 'garland') {
       TeploMockups.paint(target, view, item);
     } else if (state.illustration && (target !== canvas || !garland.count)) {
-      const [left, middle, right] = TeploMockups.examples();
-      TeploMockups.paintGarland(target, [left, poster, middle, right], 4);
+      const [first, second, fourth, fifth] = TeploMockups.examples();
+      TeploMockups.paintGarland(target, [first, second, poster, fourth, fifth], 5);
     } else {
       garland.paint(target, target !== canvas);
     }
@@ -657,10 +660,11 @@
     const isGarland = selected === 'garland';
     const buttons = $$('[data-gift-view]');
     const example = (!state.upload || isGarland) && choiceExample.naturalWidth ? choiceExample : null;
-    gallery.hidden = !state.illustration && !example && !isGarland;
-    const showMockup = isGarland || Boolean((state.illustration || example) && (buttons.some(button => button.dataset.giftView === selected) || selected === 'paper' || selected === 'digital'));
+    const photoPreview = phoneLayout.matches ? state.upload : null;
+    gallery.hidden = !phoneLayout.matches && !state.illustration && !example && !isGarland;
+    const showMockup = isGarland || Boolean((state.illustration || photoPreview || example) && (buttons.some(button => button.dataset.giftView === selected) || selected === 'paper' || selected === 'digital'));
     $('#preview-stage').classList.toggle('gift-mockup', showMockup);
-    let poster = example ? AI.printInk(example) : null;
+    let poster = photoPreview || (example ? AI.printInk(example) : null);
     if (state.illustration) {
       poster = AI.compose(state.illustration, $('#caption').value, $('#year').value, $('#year-lines').checked);
     }
@@ -670,7 +674,9 @@
     }
     if (isGarland) {
       if (canvas.width !== 1000) canvas.width = 1000;
-      if (canvas.height !== currentCanvasHeight()) canvas.height = currentCanvasHeight();
+      const catalogPreview = !state.illustration && !garland.count && garland.format === '5';
+      const height = catalogPreview ? 500 : currentCanvasHeight();
+      if (canvas.height !== height) canvas.height = height;
       renderGift(canvas, selected, poster);
       canvas.setAttribute('aria-label', selectedProductName() + ' · ' + currentSpec());
       return;
@@ -1083,6 +1089,8 @@
         $('#product-format').value = format;
         updateProductSpec();
       }
+    } else if (phoneLayout.matches && !state.upload) {
+      showGiftGrid(true, false);
     }
   }
   const garland = window.setupGarland({
@@ -1094,6 +1102,7 @@
     busy: () => restoring || state.generating || savingCart,
     onChange() { if (state.product === 'garland') setProduct('garland'); }
   });
+  phoneLayout.addEventListener('change', () => { updatePreviewMode(); scheduleDraw(); });
   $('#garland-pick').addEventListener('click', garland.open);
   $('.builder').inert = true;
   initialize();

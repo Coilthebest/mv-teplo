@@ -52,6 +52,8 @@ window.setupGarland = ({ stories, upload, busy, onChange }) => {
     target.height = count === 10 ? 770 : 400;
     $('garland-preview-label').textContent = chosen.length ? `Предпросмотр: ${chosen.length} из ${count} ваших иллюстраций` : 'Пример оформления гирлянды';
     await TeploMockups.ready;
+    if (version !== previewVersion) return;
+    if (!chosen.length && count === 5) { TeploMockups.paintCatalogGarland(target); return; }
     const posters = chosen.length ? await composePosters(chosen) : examples(count);
     if (version === previewVersion) TeploMockups.paintGarland(target, posters, count);
   }
@@ -189,6 +191,7 @@ window.setupGarland = ({ stories, upload, busy, onChange }) => {
     },
     paint(target, thumbnail = false) {
       const count = thumbnail ? 5 : Number(mainFormat);
+      if (!applied.length && count === 5) { TeploMockups.paintCatalogGarland(target); return; }
       TeploMockups.paintGarland(target, applied.length ? appliedPosters.slice(0,count) : examples(count), count);
     },
     item(qty, preview) {

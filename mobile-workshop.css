@@ -21,6 +21,7 @@
   .workshop-in-view #cart-floating {display:none}
   .builder .preview-actions {grid-template-columns:1fr;gap:6px;margin:10px 0}
   .preview-actions .workshop-cart {display:block;grid-column:1;min-height:44px;font-size:14px;padding:4px 10px}
+  .builder-controls #preview-stage {margin-inline:-10px}
   #preview-stage #gift-views {display:none}
   #preview-stage.workshop-grid {height:auto;aspect-ratio:auto}
   #preview-stage.workshop-grid #art-object,
@@ -36,19 +37,21 @@
     border-color:#75422238;box-shadow:none;font-weight:600
   }
   #preview-stage.workshop-grid .gift-views canvas {
-    width:100%;height:auto;aspect-ratio:5 / 6;margin:0;border-radius:0
+    width:100%;height:auto;aspect-ratio:2 / 3;margin:0;border-radius:0
   }
   #workshop-show-grid:not([hidden]) {
     display:block;min-height:44px;margin-top:4px;padding:4px 8px;background:none;
-    border:0;color:#704127;font-weight:600;text-decoration:underline;text-underline-offset:3px
+    width:100%;border:1px solid #cba984;border-radius:8px;background:#fff6e7;color:#704127;font-weight:600
   }
-  .builder:has(#workshop-show-grid:not([hidden]), .workshop-grid) :is(.ai-privacy, #ai-panel, #upload-status:not(.error)) {display:none}
+  .builder:has(#preview-stage.has-illustration) :is(.ai-privacy, #ai-panel, #upload-status:not(.error)) {display:none}
   .builder:has(.workshop-grid) #workshop-placement,
   .builder:has(.workshop-grid) #garland-picker,
   .builder:has(.workshop-grid) .preview-bottom,
   .builder:has(.workshop-grid) #add-to-cart {display:none}
   .builder-controls .preview-bottom {margin:4px 0;padding:10px 0 0}
-  #preview-stage:not(.workshop-grid):not([data-product=garland]) {height:clamp(215px,37svh,335px);min-height:0}
+  #preview-stage:not(.workshop-grid):not([data-product=garland]) {height:clamp(269px,46.25svh,419px);min-height:0}
+  #preview-stage[data-product=garland]:not(.workshop-grid) {aspect-ratio:2 / 1}
+  #preview-stage[data-product=garland][data-garland-count="10"]:not(.workshop-grid) {aspect-ratio:1.08}
   #workshop-placement:has(#print-controls:not([hidden])) {display:block;margin:8px 0}
   #workshop-placement summary {
     min-height:44px;padding:9px 12px;cursor:pointer;

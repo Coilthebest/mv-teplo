@@ -5,6 +5,7 @@
 window.TeploMockups = (() => {
   const shells = {};
   const background = new Image();
+  const catalogGarland = new Image();
   const sampleImages = ['couple-art.webp', 'lia-art.webp', 'balloon-art.webp', 'disneyland-family-art.webp', 'mountains-art.webp'].map(name => {
     const image = new Image();
     image.src = `assets/${name}`;
@@ -25,6 +26,7 @@ window.TeploMockups = (() => {
     return image.decode().catch(() => null);
   }
   const ready = Promise.all([
+    readImage(catalogGarland, 'assets/catalog-garland.webp'),
     readImage(background, 'assets/preview-travertine.webp'),
     ...Object.keys(surfaces).map(name => {
       const image = shells[name] = new Image();
@@ -119,6 +121,18 @@ window.TeploMockups = (() => {
     } else if (item.poster) printArea(g, view, item, x, y, w, h);
     g.restore();
   }
+  function paintCatalogGarland(target) {
+    if (!available(catalogGarland)) { paintGarland(target, examples(), 5); return; }
+    const g = target.getContext('2d');
+    const width = catalogGarland.naturalWidth;
+    // The catalog displays the central 2:1 strip with all five cards on the cord.
+    const height = width / 2;
+    const scale = Math.min(target.width / width, target.height / height);
+    const w = width * scale, h = height * scale;
+    g.clearRect(0, 0, target.width, target.height);
+    g.drawImage(catalogGarland, 0, (catalogGarland.naturalHeight - height) / 2, width, height,
+      (target.width - w) / 2, (target.height - h) / 2, w, h);
+  }
   function paintGarland(target, posters, count = 5) {
     const g = target.getContext('2d');
     g.clearRect(0, 0, target.width, target.height);
@@ -164,5 +178,5 @@ window.TeploMockups = (() => {
     }
     g.drawImage(target,0,0); return out;
   }
-  return { ready, paint, paintGarland, examples, withBackground };
+  return { ready, paint, paintGarland, paintCatalogGarland, examples, withBackground };
 })();
