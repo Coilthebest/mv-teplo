@@ -121,17 +121,24 @@ window.TeploMockups = (() => {
     } else if (item.poster) printArea(g, view, item, x, y, w, h);
     g.restore();
   }
+  let catalogPosters;
+  function garlandPosters() {
+    if (!available(catalogGarland)) return examples();
+    if (catalogPosters) return catalogPosters;
+    // Centres and tilt of the five paper inserts in the original 1050 × 700 photograph.
+    catalogPosters = [[122,345,.117],[324,373,.075],[530,383,-.009],[732,372,-.061],[927,350,-.104]].map(([x,y,tilt]) => {
+      const insert = document.createElement('canvas');
+      insert.width = 137; insert.height = 198;
+      const g = insert.getContext('2d');
+      g.translate(insert.width/2, insert.height/2);
+      g.rotate(-tilt);
+      g.drawImage(catalogGarland,-x,-y);
+      return insert;
+    });
+    return catalogPosters;
+  }
   function paintCatalogGarland(target) {
-    if (!available(catalogGarland)) { paintGarland(target, examples(), 5); return; }
-    const g = target.getContext('2d');
-    const width = catalogGarland.naturalWidth;
-    // The catalog displays the central 2:1 strip with all five cards on the cord.
-    const height = width / 2;
-    const scale = Math.min(target.width / width, target.height / height);
-    const w = width * scale, h = height * scale;
-    g.clearRect(0, 0, target.width, target.height);
-    g.drawImage(catalogGarland, 0, (catalogGarland.naturalHeight - height) / 2, width, height,
-      (target.width - w) / 2, (target.height - h) / 2, w, h);
+    paintGarland(target, garlandPosters(), 5);
   }
   function paintGarland(target, posters, count = 5) {
     const g = target.getContext('2d');
@@ -178,5 +185,5 @@ window.TeploMockups = (() => {
     }
     g.drawImage(target,0,0); return out;
   }
-  return { ready, paint, paintGarland, paintCatalogGarland, examples, withBackground };
+  return { ready, paint, paintGarland, paintCatalogGarland, garlandPosters, examples, withBackground };
 })();

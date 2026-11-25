@@ -132,6 +132,10 @@
     }
     async function load(){
       try{
+        if(token && !document.querySelector('#order-office-link')){
+          const office=element('a','Заказы мастерской');office.id='order-office-link';office.href='order-office.html#admin.'+token;
+          document.querySelector('#moderation-navigation').append(office);
+        }
         if(token){const result=await request('feedback-admin',{adminToken:token,action:'list'});rows=result.items;}
         else if(id&&signature){
           const result=await request('feedback-moderation',{id,signature,action:'read'});rows=[{id,...result}];

@@ -33,7 +33,8 @@
     resize.width = Math.round(image.naturalWidth * scale); resize.height = Math.round(image.naturalHeight * scale);
     resize.getContext('2d').drawImage(image, 0, 0, resize.width, resize.height);
     const photo = resize.toDataURL('image/jpeg', .85);
-    return call('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: photo }) });
+    const security = await window.TeploGeneration.proof();
+    return call('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: photo, ...security }) });
   }
   function poll(job) { return call('https://functions.yandexcloud.net/d4e6gbqek4evf54etp5m?route=poll&job=' + encodeURIComponent(job)); }
   function imageBlob(data) {

@@ -1,0 +1,14 @@
+.order-page {max-width:850px;margin:auto;padding:clamp(24px,6vw,72px) 18px;color:#4d301f}
+.order-page h1 {margin:28px 0 18px;font:clamp(34px,6vw,56px)/1.08 var(--serif,Georgia)}
+.order-page a,.credit-box a {color:#774529;text-underline-offset:4px}
+.order-card,.credit-box {padding:clamp(16px,3vw,25px);margin:16px 0;border:1px solid #e0cbb1;border-radius:16px;background:#fffbf3}
+.order-card h2 {margin:0 0 10px;font:26px/1.2 var(--serif,Georgia)}
+.order-form {display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.order-form label {display:grid;gap:5px}.order-form input,.order-page select {min-width:0;width:100%;padding:10px 12px;border:1px solid #cbb298;background:#fffcf7;border-radius:8px;font:inherit}
+.order-page button,.credit-box button {min-height:44px;padding:8px 18px;background:#653b25;color:#fff9ee;border:0;border-radius:9px;cursor:pointer;font:inherit}
+.order-page button:disabled,.credit-box button:disabled {opacity:.55}
+.order-form button {grid-column:1/-1}.order-page ol,.order-page ul {padding-left:20px}
+.order-stage {display:inline-block;padding:5px 12px;border-radius:20px;background:#e8ecdc;color:#425337;font-size:.92rem}
+.order-meta {color:#795f46;font-size:.9rem}.order-update {display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0}
+.order-update select {width:auto}.credit-box {margin:12px clamp(14px,3vw,32px)}.credit-box p {margin:4px 0 10px}.order-page [role=status]:empty,.credit-box [role=status]:empty {display:none}
+@media(max-width:540px){.order-form {grid-template-columns:1fr}}

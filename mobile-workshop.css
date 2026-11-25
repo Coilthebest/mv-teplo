@@ -73,3 +73,30 @@
   .workshop-fields input:not([type=checkbox]),.workshop-fields select {font-size:16px}
   .workshop-fields .examples-jump {margin:0 0 12px}
 }
+
+@media (max-width:680px) {
+  #workshop-show-grid:not([hidden]) {
+    width:fit-content; min-height:44px; margin:0; padding:6px 4px;
+    border:0; background:transparent; color:#805236; font-size:.88rem; font-weight:500;
+  }
+  .workshop-tools {
+    margin:4px 0 8px; padding:4px; gap:2px;
+    background:#f3e9d9; border:1px solid #e3d3bc; border-radius:15px;
+  }
+  .workshop-tools button {
+    min-width:0; border:0; border-radius:11px; background:#fffaf1;
+    box-shadow:0 1px 3px #57371e14; font-size:.9rem;
+  }
+  #workshop-placement summary {
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:0; border-radius:10px; background:#f1dfc2; padding:10px 14px; font-size:.9rem;
+  }
+  #workshop-placement summary::-webkit-details-marker {display:none}
+  #workshop-placement summary::after {
+    content:''; width:8px; height:8px; margin-right:3px;
+    border:solid currentColor; border-width:0 1.5px 1.5px 0; transform:rotate(45deg);
+  }
+  #workshop-placement[open] summary::after {transform:rotate(225deg)}
+  .workshop-tools button:focus-visible,#workshop-placement summary:focus-visible,
+  #workshop-show-grid:focus-visible {outline:2px solid #875530;outline-offset:2px}
+}

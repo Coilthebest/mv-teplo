@@ -638,7 +638,7 @@
     if (view !== 'garland') {
       TeploMockups.paint(target, view, item);
     } else if (state.illustration && (target !== canvas || !garland.count)) {
-      const [first, second, fourth, fifth] = TeploMockups.examples();
+      const [first, second, , fourth, fifth] = TeploMockups.garlandPosters();
       TeploMockups.paintGarland(target, [first, second, poster, fourth, fifth], 5);
     } else {
       garland.paint(target, target !== canvas);

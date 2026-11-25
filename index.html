@@ -41,16 +41,17 @@
   <script src="story-storage.js?v=1" defer></script>
   <script src="cart.js?v=checkout2" defer></script>
   <link rel="stylesheet" href="illustration.css?v=mobile-workshop2">
-  <script src="illustration.js?v=digital-paper4" defer></script>
+  <script src="illustration.js?v=quota1" defer></script>
   <script src="preview-mark.js" defer></script>
   <script src="print-placement.js?v=product-preview1" defer></script>
-  <script src="realistic-mockups.js?v=five-1" defer></script>
+  <script src="realistic-mockups.js?v=ribbon2" defer></script>
   <link rel="stylesheet" href="garland.css?v=wide-catalog1">
   <script src="garland.js?v=five-1" defer></script>
-  <link rel="stylesheet" href="mobile-workshop.css?v=3">
+  <link rel="stylesheet" href="mobile-workshop.css?v=4">
   <link rel="stylesheet" href="feedback.css?v=verified2">
   <script src="feedback.js?v=prerender1" defer></script>
-  <script src="app.js?v=mobile-workshop3" defer></script>
+  <link rel="stylesheet" href="orders.css"><script defer src="generation-wallet.js"></script>
+  <script src="app.js?v=workshop4" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -185,6 +186,7 @@
               <small id="photo-formats">JPG, PNG, WebP · до 15 МБ</small>
               <p id="upload-status" class="input-status" aria-live="polite"></p>
               <p class="ai-privacy">После подтверждения отправим фото для создания иллюстрации. Название и год добавим отдельно.</p>
+              <p class="ai-privacy" id="generation-offer" hidden>3 бесплатные генерации в день. <button type="button" class="text-link" id="open-credit-cart">Ещё 10 за 50 ₽</button></p>
               <div id="ai-panel" class="ai-panel" aria-busy="false"><p id="ai-status" class="ai-status" role="status">Подключаем создание иллюстраций…</p><button id="ai-retry" class="button button-primary ai-retry" type="button" hidden>Создать иллюстрацию</button></div>
             </div>
             <div class="control-group">
@@ -247,7 +249,7 @@
               <p>Нажмите плюс, чтобы добавить фото, или выберите рисунок. Крестик удаляет фото.</p>
               <div class="story-grid" id="story-grid" role="group" aria-labelledby="stories-title"></div>
             </section>
-            <button type="button" id="workshop-show-grid" hidden>← Все шесть вариантов</button>
+            <button type="button" id="workshop-show-grid" hidden>← К шести вариантам</button>
             <div class="workshop-tools" aria-label="Настройки эскиза" role="group">
               <button type="button" data-editor="caption" aria-haspopup="dialog">Надпись и год</button>
               <button type="button" data-editor="product" aria-haspopup="dialog">Выбрать изделие</button>
@@ -383,6 +385,7 @@
       <span>© Teplo, 2026</span>
       <span class="seller-details">ИП [ФИО], ИНН [номер], ОГРНИП [номер]</span>
       <nav class="footer-legal" aria-label="Документы и фотографии">
+        <a href="orders.html">Мои заказы</a>
         <a href="#feedback">Отзывы и предложения</a>
         <a href="#legal-dialog" data-legal-document>Договор оферты</a>
         <a href="#legal-dialog" data-legal-document>Политика конфиденциальности</a>
@@ -440,6 +443,7 @@
   </dialog>
   <dialog id="cart-dialog" class="cart-dialog" aria-labelledby="cart-title">
     <div class="cart-header"><div><p class="eyebrow">Ваши маленькие истории</p><h2 id="cart-title">Корзина <span id="cart-title-count">0</span></h2></div><button type="button" id="close-cart" class="cart-close" aria-label="Закрыть корзину">×</button></div>
+    <section class="credit-box" id="credit-box" hidden><strong>Ещё 10 генераций</strong><p>Пакет за 50 ₽ оплачивается отдельно от подарков.</p><button type="button" id="buy-credits">Оплатить 50 ₽</button><p role="status" id="credit-note"></p></section>
     <div id="cart-empty" class="cart-empty"><span aria-hidden="true">♡</span><h3>Начнём с одной истории?</h3><p>Добавьте фото и выберите подарки.<br>Для доставки нужно от 3 любых вещей или одна арт-гирлянда.</p><button type="button" class="button button-primary" data-cart-continue>Собрать свою историю ↗</button><small>Электронную версию можно заказать отдельно.</small></div>
     <div id="cart-filled" class="cart-layout" hidden>
       <div class="cart-items-column"><div class="cart-progress"><strong id="cart-minimum"></strong><div class="cart-progress-track" aria-hidden="true"><span id="cart-progress-fill"></span></div><p>Считаем штуки, а не разные виды товаров.</p></div><div id="cart-items"></div><button type="button" class="cart-add-more" data-cart-continue>+ Добавить ещё одну историю</button><section id="cart-recipient" class="cart-recipient" aria-labelledby="recipient-title">
