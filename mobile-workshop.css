@@ -1,0 +1,32 @@
+.workshop-tools, #workshop-placement, .preview-actions .workshop-cart {display:none}
+@media (max-width:680px) {
+  .builder-controls > .control-group {padding-bottom:0;border:0}
+  .workshop-tools {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .workshop-tools button, #workshop-done, .preview-actions .workshop-cart {
+    min-height:44px;padding:8px 10px;border:1px solid #cba984;border-radius:8px;
+    background:#fffaf2;color:#663e29;font:inherit;font-weight:500;cursor:pointer
+  }
+  .builder #gift-views, .workshop-in-view #cart-floating {display:none}
+  .preview-actions .workshop-cart {display:block;grid-column:2;grid-row:2;font-size:14px}
+  .builder .preview-actions {grid-template-columns:1fr 1fr;margin:10px 0}
+  .builder .preview-actions #view-selection {grid-column:1;grid-row:2}
+  .builder-controls .preview-bottom {margin:4px 0;padding:10px 0 0}
+  #preview-stage:not([data-product=garland]) {height:clamp(215px,37svh,335px);min-height:0}
+  #workshop-placement:has(#print-controls:not([hidden])) {display:block;margin:12px 0}
+  #workshop-placement summary {padding:10px 0;cursor:pointer}
+  #workshop-editor {position:fixed;inset:auto 0 0;margin:0 auto;padding:0;width:100%;
+    max-width:680px;max-height:85dvh;border:1px solid #dcc7ab;border-bottom:0;
+    border-radius:20px 20px 0 0;background:#fffaf2;color:#543521}
+  #workshop-editor[open] {display:flex;flex-direction:column}
+  #workshop-editor::backdrop {background:rgb(50 34 24 / 45%)}
+  body:has(#workshop-editor[open]) {overflow:hidden}
+  #workshop-editor header {display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:14px 18px;border-bottom:1px solid #e8d8c2}
+  #workshop-editor h3 {margin:0;font:25px/1.2 var(--serif)}
+  #workshop-done {background:#663b25;color:white;padding-inline:18px}
+  .workshop-fields {padding:16px 18px max(20px,env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain}
+  .workshop-fields .control-group {border:0;margin:0;padding:0}
+  .workshop-fields .control-heading,.workshop-fields #choice-preview {display:none}
+  .workshop-fields input:not([type=checkbox]),.workshop-fields select {font-size:16px}
+  .workshop-fields .examples-jump {margin:0 0 12px}
+}

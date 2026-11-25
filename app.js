@@ -4,11 +4,45 @@
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const phoneLayout = matchMedia('(max-width: 680px)');
-  const previewParts = ['.preview-top', '#preview-stage', '#print-controls', '#gift-views', '#garland-picker', '.stories'].map($);
-  function placePreview() {
-    const anchor = phoneLayout.matches ? $('#drop-zone') : $('.preview-bottom');
-    anchor.before(...previewParts);
+  const editor = $('#workshop-editor');
+  const editorGroups = {
+    caption: $('#caption').closest('.control-group'),
+    product: $('#product-format').closest('.control-group')
+  };
+  const mobileParts = ['.preview-top', '#preview-stage', '.workshop-tools', '#garland-picker',
+    '.preview-bottom', '.preview-actions', '#cart-add-error', '#cancel-cart-edit',
+    '#workshop-placement', '.stories'].map($);
+  // Keep the live controls (and their listeners) when rotating a phone or resizing.
+  const homes = new Map();
+  for (const node of [...mobileParts, $('#print-controls'), ...Object.values(editorGroups)]) {
+    const anchor = document.createComment('workshop');
+    node.before(anchor);
+    homes.set(node, anchor);
   }
+  function placePreview() {
+    if (phoneLayout.matches) {
+      $('#drop-zone').before(...mobileParts);
+      $('#workshop-placement').append($('#print-controls'));
+      $('.workshop-fields').append(...Object.values(editorGroups));
+    } else {
+      if (editor.open) editor.close();
+      for (const [node, anchor] of homes) anchor.after(node);
+      for (const group of Object.values(editorGroups)) group.hidden = false;
+    }
+  }
+  for (const button of $$('[data-editor]')) {
+    button.addEventListener('click', () => {
+      for (const [key, group] of Object.entries(editorGroups)) group.hidden = key !== button.dataset.editor;
+      $('#workshop-editor-title').textContent = button.textContent;
+      editor.showModal();
+      $('.workshop-fields').scrollTop = 0;
+    });
+  }
+  $('#workshop-done').addEventListener('click', () => editor.close());
+  $('.examples-jump').addEventListener('click', () => { if (editor.open) editor.close(); });
+  new IntersectionObserver(([entry]) => {
+    document.body.classList.toggle('workshop-in-view', entry.isIntersecting);
+  }).observe($('.builder'));
   placePreview();
   phoneLayout.addEventListener('change', placePreview);
   const canvas = $('#artwork-canvas');
@@ -870,7 +904,7 @@
     restoreFormat(item.format);
     $('#item-quantity').value = copy ? 1 : item.qty;
     updateProductSpec(); updateCaption(); updatePurchase();
-    $('#caption').focus({ preventScroll: true });
+    (phoneLayout.matches ? $('[data-editor=caption]') : $('#caption')).focus({ preventScroll: true });
     notify(!canOrderArtwork() ? 'Создайте иллюстрацию из сохранённого фото и обновите товар в корзине.' : copy ? 'Рисунок уже здесь. Выберите другую вещь для него.' : 'Измените товар и нажмите «Обновить в корзине».');
   });
   document.addEventListener('teplo:cart-removed', event => { if (state.editingCartId === event.detail) endCartEdit(); });

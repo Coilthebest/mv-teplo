@@ -47,9 +47,10 @@
   <script src="realistic-mockups.js?v=1" defer></script>
   <link rel="stylesheet" href="garland.css?v=wide-catalog1">
   <script src="garland.js?v=story-delete1" defer></script>
+  <link rel="stylesheet" href="mobile-workshop.css?v=1">
   <link rel="stylesheet" href="feedback.css?v=verified2">
   <script src="feedback.js?v=prerender1" defer></script>
-  <script src="app.js?v=seo-products1" defer></script>
+  <script src="app.js?v=mobile-workshop1" defer></script>
   <script src="memory-motion.js?v=polished-garland1" defer></script>
 <style>img, canvas, svg image { -webkit-touch-callout: none; -webkit-user-drag: none; }</style>
   <script src="image-interactions.js" defer></script>
@@ -242,8 +243,17 @@
               <p>Нажмите плюс, чтобы добавить фото, или выберите рисунок. Крестик удаляет фото.</p>
               <div class="story-grid" id="story-grid" role="group" aria-labelledby="stories-title"></div>
             </section>
+            <div class="workshop-tools" aria-label="Настройки эскиза" role="group">
+              <button type="button" data-editor="caption" aria-haspopup="dialog">Надпись и год</button>
+              <button type="button" data-editor="product" aria-haspopup="dialog">Выбрать изделие</button>
+            </div>
+            <details id="workshop-placement"><summary>Размер и положение принта</summary></details>
+            <dialog id="workshop-editor" aria-labelledby="workshop-editor-title">
+              <header><h3 id="workshop-editor-title"></h3><button type="button" id="workshop-done">Готово</button></header>
+              <div class="workshop-fields"></div>
+            </dialog>
             <div class="preview-bottom"><div><strong id="product-name">История в рамке</strong><span id="product-spec">10 × 15 см</span></div><strong class="preview-price" id="preview-price">760 ₽</strong></div>
-            <div class="preview-actions"><button type="button" id="add-to-cart" class="button button-primary" disabled>Добавить в корзину <span aria-hidden="true">+</span></button><button id="view-selection" class="button button-outline" disabled>Посмотреть эскиз <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button></div>
+            <div class="preview-actions"><button type="button" class="workshop-cart" data-open-cart>Корзина · <b data-cart-count>0</b></button><button type="button" id="add-to-cart" class="button button-primary" disabled>Добавить в корзину <span aria-hidden="true">+</span></button><button id="view-selection" class="button button-outline" disabled>Посмотреть эскиз <svg class="arrow-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button></div>
             <p id="cart-add-error" role="alert" hidden></p>
             <button type="button" id="cancel-cart-edit" class="cancel-cart-edit" hidden>Отменить редактирование товара</button>
             <p class="preview-disclaimer">Здесь показан эскиз изделия с вашей иллюстрацией. Цвет и пропорции готового изделия могут отличаться. HD-файл можно получить после оплаты заказа.</p>
