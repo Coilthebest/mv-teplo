@@ -1,4 +1,16 @@
-.workshop-tools, #workshop-placement, .preview-actions .workshop-cart {display:none}
+.workshop-tools, #workshop-placement, .preview-actions .workshop-cart, #workshop-show-grid {display:none}
+
+#drop-zone {
+  width:100%;min-height:48px;justify-content:center;gap:9px;
+  background:#804724;color:#fffaf2;border:1px solid #804724;border-radius:9px;
+  font-size:16px
+}
+#drop-zone svg {width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7}
+#drop-zone:hover, #drop-zone.drag-over {background:#62351f;border-color:#62351f}
+#photo-formats {display:block;margin-top:5px;color:#73563e;font-size:12px;text-align:center}
+#confirm-photo form .button {min-height:44px}
+#confirm-photo [value="generate"] {background:#834820;color:#fffaf2}
+#confirm-photo [value="generate"]:hover {background:#66361c}
 @media (max-width:680px) {
   .builder-controls > .control-group {padding-bottom:0;border:0}
   .workshop-tools {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
@@ -6,14 +18,42 @@
     min-height:44px;padding:8px 10px;border:1px solid #cba984;border-radius:8px;
     background:#fffaf2;color:#663e29;font:inherit;font-weight:500;cursor:pointer
   }
-  .builder #gift-views, .workshop-in-view #cart-floating {display:none}
-  .preview-actions .workshop-cart {display:block;grid-column:2;grid-row:2;font-size:14px}
-  .builder .preview-actions {grid-template-columns:1fr 1fr;margin:10px 0}
-  .builder .preview-actions #view-selection {grid-column:1;grid-row:2}
+  .workshop-in-view #cart-floating {display:none}
+  .builder .preview-actions {grid-template-columns:1fr;gap:6px;margin:10px 0}
+  .preview-actions .workshop-cart {display:block;grid-column:1;min-height:44px;font-size:14px;padding:4px 10px}
+  #preview-stage #gift-views {display:none}
+  #preview-stage.workshop-grid {height:auto;aspect-ratio:auto}
+  #preview-stage.workshop-grid #art-object,
+  #preview-stage.workshop-grid .key-ring,
+  #preview-stage.workshop-grid #stage-annotation {display:none}
+  #preview-stage.workshop-grid #gift-views:not([hidden]) {
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;margin:0;padding:8px;gap:6px
+  }
+  #preview-stage.workshop-grid .gift-views button {
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:3px 2px 7px;background:rgb(255 250 242 / 48%);border-radius:7px;
+    border-color:#75422238;box-shadow:none;font-weight:600
+  }
+  #preview-stage.workshop-grid .gift-views canvas {
+    width:100%;height:auto;aspect-ratio:5 / 6;margin:0;border-radius:0
+  }
+  #workshop-show-grid:not([hidden]) {
+    display:block;min-height:44px;margin-top:4px;padding:4px 8px;background:none;
+    border:0;color:#704127;font-weight:600;text-decoration:underline;text-underline-offset:3px
+  }
+  .builder:has(#workshop-show-grid:not([hidden]), .workshop-grid) :is(.ai-privacy, #ai-panel, #upload-status:not(.error)) {display:none}
+  .builder:has(.workshop-grid) #workshop-placement,
+  .builder:has(.workshop-grid) #garland-picker,
+  .builder:has(.workshop-grid) .preview-bottom,
+  .builder:has(.workshop-grid) #add-to-cart {display:none}
   .builder-controls .preview-bottom {margin:4px 0;padding:10px 0 0}
-  #preview-stage:not([data-product=garland]) {height:clamp(215px,37svh,335px);min-height:0}
-  #workshop-placement:has(#print-controls:not([hidden])) {display:block;margin:12px 0}
-  #workshop-placement summary {padding:10px 0;cursor:pointer}
+  #preview-stage:not(.workshop-grid):not([data-product=garland]) {height:clamp(215px,37svh,335px);min-height:0}
+  #workshop-placement:has(#print-controls:not([hidden])) {display:block;margin:8px 0}
+  #workshop-placement summary {
+    min-height:44px;padding:9px 12px;cursor:pointer;
+    border:1px solid #c48c50;border-radius:8px;background:#f3debc;color:#60371f;font-weight:600
+  }
   #workshop-editor {position:fixed;inset:auto 0 0;margin:0 auto;padding:0;width:100%;
     max-width:680px;max-height:85dvh;border:1px solid #dcc7ab;border-bottom:0;
     border-radius:20px 20px 0 0;background:#fffaf2;color:#543521}

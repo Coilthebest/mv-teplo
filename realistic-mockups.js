@@ -123,6 +123,8 @@ window.TeploMockups = (() => {
     const g = target.getContext('2d');
     g.clearRect(0, 0, target.width, target.height);
     const rows = count > 5 ? 2 : 1;
+    const cardsPerRow = Math.min(count, 5);
+    const spacing = 1000 / cardsPerRow;
     const w = 1000, h = 385 * rows;
     // Fit within both thumbnail and larger, responsive garland dialog canvases.
     const scale = Math.min(target.width / w, target.height / h);
@@ -133,10 +135,10 @@ window.TeploMockups = (() => {
       const ropeY = x => top + 42 + 40 * (1 - ((x-500)/500)**2);
       g.beginPath(); g.moveTo(0, top+42); g.quadraticCurveTo(500,top+122,1000,top+42);
       g.strokeStyle='#ad885b'; g.lineWidth=5; g.stroke(); g.strokeStyle='#e6cba0'; g.lineWidth=1.4; g.stroke();
-      for (let i = 0; i < 5; i++) {
-        const center = 100 + i * 200, cardWidth = 172, cardHeight = 282;
-        const image = posters[row * 5 + i];
-        g.save(); g.translate(center, ropeY(center)); g.rotate((i-2)*-.038);
+      for (let i = 0; i < cardsPerRow; i++) {
+        const center = (i + .5) * spacing, cardWidth = 172, cardHeight = 282;
+        const image = posters[row * cardsPerRow + i];
+        g.save(); g.translate(center, ropeY(center)); g.rotate((i - (cardsPerRow - 1) / 2) * -.038);
         const x = -cardWidth/2, y = -31;
         if (available(shell)) {
           placeShell(g,shell,x,y,cardWidth,cardHeight);

@@ -5,23 +5,37 @@
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const phoneLayout = matchMedia('(max-width: 680px)');
   const editor = $('#workshop-editor');
+  const previewStage = $('#preview-stage');
+  const giftGallery = $('#gift-views');
+  const showGridButton = $('#workshop-show-grid');
+
+  function showGiftGrid(show) {
+    previewStage.classList.toggle('workshop-grid', show);
+    showGridButton.hidden = !state.illustration || show;
+    if (show && phoneLayout.matches) {
+      updatePreviewMode();
+      previewStage.scrollIntoView({ block: 'nearest' });
+      giftGallery.querySelector('button').focus({ preventScroll: true });
+    }
+  }
   const editorGroups = {
     caption: $('#caption').closest('.control-group'),
     product: $('#product-format').closest('.control-group')
   };
-  const mobileParts = ['.preview-top', '#preview-stage', '.workshop-tools', '#garland-picker',
-    '.preview-bottom', '.preview-actions', '#cart-add-error', '#cancel-cart-edit',
-    '#workshop-placement', '.stories'].map($);
+  const mobileParts = ['.preview-top', '#preview-stage', '#workshop-show-grid', '.workshop-tools',
+    '#workshop-placement', '#garland-picker', '.preview-bottom', '.preview-actions',
+    '#cart-add-error', '#cancel-cart-edit', '.stories'].map($);
   // Keep the live controls (and their listeners) when rotating a phone or resizing.
   const homes = new Map();
-  for (const node of [...mobileParts, $('#print-controls'), ...Object.values(editorGroups)]) {
+  for (const node of [...mobileParts, giftGallery, $('#print-controls'), ...Object.values(editorGroups)]) {
     const anchor = document.createComment('workshop');
     node.before(anchor);
     homes.set(node, anchor);
   }
   function placePreview() {
     if (phoneLayout.matches) {
-      $('#drop-zone').before(...mobileParts);
+      $('#ai-panel').after(...mobileParts);
+      previewStage.append(giftGallery);
       $('#workshop-placement').append($('#print-controls'));
       $('.workshop-fields').append(...Object.values(editorGroups));
     } else {
@@ -42,7 +56,7 @@
   $('.examples-jump').addEventListener('click', () => { if (editor.open) editor.close(); });
   new IntersectionObserver(([entry]) => {
     document.body.classList.toggle('workshop-in-view', entry.isIntersecting);
-  }).observe($('.builder'));
+  }, { root: document }).observe($('.builder'));
   placePreview();
   phoneLayout.addEventListener('change', placePreview);
   const canvas = $('#artwork-canvas');
@@ -89,7 +103,7 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'story-slot';
-    button.addEventListener('click', () => selectSlot(index, true));
+    button.addEventListener('click', () => slots[index] ? selectSlot(index) : choosePhoto(index));
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'story-delete';
@@ -105,6 +119,8 @@
   const defaultDisclaimer = $('.preview-disclaimer').textContent;
   let uploadUrl = null;
   let uploadVersion = 0;
+  let pendingPhotoSlot = 0;
+  let readingPhoto = false;
   let drawScheduled = false;
   let toastTimeout;
   let savingCart = false;
@@ -140,14 +156,12 @@
     clearTimeout(draftTimer); storyId = null; photoHash = null; $('#ai-retry').hidden = true;
     aiStatus(aiConfig.ready ? 'Загрузите фото — создадим одну иллюстрацию. Надпись и год можно менять без повторной обработки.' : 'Создание иллюстраций временно недоступно. Попробуйте позже.');
     $('#photo-input').value = '';
-    $('#upload-label').textContent = 'Загрузите своё фото';
     setStatus('');
   }
 
   function updatePreviewMode() {
     renderSlots();
     const hasPhoto = Boolean(state.upload);
-    const hasArtwork = Boolean(state.illustration || state.legacy);
     const isTshirt = state.product === 'tshirt';
     const mode = $('#preview-mode');
     mode.replaceChildren();
@@ -166,7 +180,11 @@
       $('#garland-picker-status').textContent = `Выбрано ${garland.count} из ${garland.format} иллюстраций`;
       $('#garland-pick').textContent = garland.count ? 'Изменить иллюстрации' : 'Выбрать иллюстрации';
     }
-    $('#view-selection').disabled = state.product === 'garland' ? !garland.ready : !hasArtwork;
+    if (state.illustration && phoneLayout.matches && previewStage.classList.contains('workshop-grid')) {
+      mode.replaceChildren(dot, document.createTextNode('Иллюстрация готова · выберите изделие'));
+    }
+    if (!state.illustration) previewStage.classList.remove('workshop-grid');
+    showGridButton.hidden = !state.illustration || previewStage.classList.contains('workshop-grid');
     $('#add-to-cart').disabled = !canOrderProduct() || savingCart || state.generating;
   }
 
@@ -214,6 +232,7 @@
 
   function setProduct(key, material = 'sticker') {
     if (!products[key]) return;
+    showGiftGrid(false);
     state.product = key;
     if (key === 'paper') state.material = material === 'matte' ? 'matte' : 'sticker';
     updateProduct();
@@ -390,13 +409,12 @@
     $('#item-quantity').value = 1;
     $('#caption').value = ''; $('#year').value = ''; $('#year-lines').checked = true;
     state.layouts={}; state.material = 'sticker'; state.shirtColor = 'white'; state.shirtSize = 'M';
-    $('#summary-image').removeAttribute('src');
     $('#cart-add-error').hidden = true;
     setProduct('frame'); updateCaption();
   }
 
   async function restoreRecord(saved) {
-    if (!await loadUpload(saved.sourceFile, { confirmGeneration: false })) return;
+    if (!await loadUpload(saved.sourceFile)) return;
     storyId = saved.storyId || crypto.randomUUID();
     photoHash = saved.photoHash || null;
     $('#caption').value = saved.caption || ''; $('#year').value = saved.year || ''; $('#year-lines').checked = saved.yearLines !== false;
@@ -421,7 +439,7 @@
     updateProductSpec(); updatePreviewMode(); updateCaption(); updatePurchase();
   }
 
-  async function selectSlot(index, pick = false) {
+  async function selectSlot(index) {
     if (state.generating || restoring || savingCart) return;
     if (index === activeSlot && slots[index] && state.upload) return;
     const keepGarland = state.product === 'garland';
@@ -440,7 +458,6 @@
     if (!saved) {
       showGarland();
       renderSlots();
-      if (pick) $('#photo-input').click();
       return;
     }
     restoring = true; $('.builder').inert = true;
@@ -518,10 +535,14 @@
       state.generating = false; $('#ai-panel').setAttribute('aria-busy', 'false'); $('#photo-input').disabled = false; $('#reset-button').disabled = false;
       updatePreviewMode(); updatePurchase(); updateCaption();
       if (completed && version === uploadVersion) {
-        const ready = $('#ready-dialog');
-        ready.showModal();
-        const timer = setTimeout(() => ready.close(), 3200);
-        ready.addEventListener('close', () => clearTimeout(timer), { once: true });
+        if (phoneLayout.matches) {
+          showGiftGrid(true);
+        } else {
+          const ready = $('#ready-dialog');
+          ready.showModal();
+          const timer = setTimeout(() => ready.close(), 3200);
+          ready.addEventListener('close', () => clearTimeout(timer), { once: true });
+        }
       }
     }
   }
@@ -611,9 +632,14 @@
       format: view === state.product ? $('#product-format').value : '',
       printLayout: placement(view),
     };
-    if (view === 'garland') {
+    if (view !== 'garland') {
+      TeploMockups.paint(target, view, item);
+    } else if (state.illustration && (target !== canvas || !garland.count)) {
+      const [left, middle, right] = TeploMockups.examples();
+      TeploMockups.paintGarland(target, [left, poster, middle, right], 4);
+    } else {
       garland.paint(target, target !== canvas);
-    } else TeploMockups.paint(target, view, item);
+    }
   }
 
   function draw() {
@@ -645,7 +671,7 @@
     if (isGarland) {
       if (canvas.width !== 1000) canvas.width = 1000;
       if (canvas.height !== currentCanvasHeight()) canvas.height = currentCanvasHeight();
-      garland.paint(canvas);
+      renderGift(canvas, selected, poster);
       canvas.setAttribute('aria-label', selectedProductName() + ' · ' + currentSpec());
       return;
     }
@@ -698,7 +724,7 @@
     }
   }
 
-  async function loadUpload(file, { confirmGeneration = true } = {}) {
+  async function loadUpload(file, slot = null) {
     if (!file || savingCart) return;
     if (state.generating) { notify('Дождитесь текущей иллюстрации, затем можно заменить фото.'); return; }
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -710,8 +736,8 @@
       setStatus('Файл больше 15 МБ. Попробуйте уменьшить фотографию и загрузить снова.', true);
       return;
     }
-    const requestId = ++uploadVersion;
-    if (confirmGeneration) {
+    let requestId = ++uploadVersion;
+    if (slot !== null) {
       // Keep our own bytes after the iOS photo picker releases its temporary file.
       try { file = new File([await file.arrayBuffer()], file.name, { type: file.type, lastModified: file.lastModified }); }
       catch { setStatus('Не удалось прочитать фото. Выберите его ещё раз.', true); return; }
@@ -726,21 +752,13 @@
       await image.decode();
       if (requestId !== uploadVersion) { URL.revokeObjectURL(objectUrl); return; }
       if (image.naturalWidth * image.naturalHeight > 64_000_000) throw new Error('too_large');
-      if (confirmGeneration) {
-        const dialog = $('#confirm-photo');
-        const preview = $('#confirm-photo-image');
-        dialog.returnValue = '';
-        preview.src = objectUrl;
-        const closed = new Promise(resolve => dialog.addEventListener('close', resolve, { once: true }));
-        dialog.showModal();
-        await closed;
-        preview.removeAttribute('src');
-        $('#photo-input').value = '';
-        if (dialog.returnValue !== 'generate' || requestId !== uploadVersion) {
-          URL.revokeObjectURL(objectUrl);
-          setStatus(state.sourceFile ? state.sourceFile.name : '');
-          return;
-        }
+      if (slot !== null && slot !== activeSlot) {
+        const keepGarland = state.product === 'garland';
+        persistDraft();
+        clearEditor();
+        requestId = uploadVersion;
+        setActiveSlot(slot);
+        if (keepGarland) setProduct('garland');
       }
       if (uploadUrl) URL.revokeObjectURL(uploadUrl);
       uploadUrl = objectUrl;
@@ -749,14 +767,14 @@
       state.sourceFile = file;
       state.sourceHash = null;
       state.illustration = null; state.illustrationFile = null; state.sealedArtwork = null; state.shirtPrint = null; state.job = null; state.legacy = false;
-      $('#upload-label').textContent = 'Заменить фотографию';
+      $('#ai-retry').textContent = 'Создать иллюстрацию';
+      $('#ai-retry').hidden = slot === null;
       setStatus(`${file.name} · оригинал загружен.`);
       updatePreviewMode();
       updateCaption();
-      if (confirmGeneration) {
+      if (slot !== null) {
+        aiStatus('Фото добавлено. Подтвердите создание иллюстрации.');
         await persistDraft();
-        if (requestId !== uploadVersion) return;
-        await runGeneration();
       }
       return true;
     } catch (error) {
@@ -766,17 +784,46 @@
     }
   }
 
-  function openSelection() {
-    if (state.product === 'garland' ? !garland.ready : !state.upload) return;
-    draw();
-    $('#summary-image').src = TeploMockups.withBackground(canvas).toDataURL('image/png');
-    $('#summary-caption').textContent = state.product === 'garland' ? 'Ваши выбранные иллюстрации' : $('#caption').value.trim() || 'Без надписи';
-    $('#summary-year').textContent = state.product === 'garland' ? 'Сохранены на каждой карточке' : $('#year').value.trim() || 'Без даты';
-    $('#summary-product').textContent = selectedProductName();
-    $('#summary-format').textContent = currentSpec();
-    $('#summary-format').previousElementSibling.textContent = state.product === 'tshirt' ? 'Цвет и размер' : 'Формат';
-    $('#summary-image').alt = state.product === 'tshirt' ? `Эскиз футболки: ${currentSpec()}` : 'Собранный вами эскиз';
-    $('#selection-dialog').showModal();
+  function choosePhoto(slot = slots.findIndex(record => !record)) {
+    if (readingPhoto || restoring || state.generating || savingCart) return;
+    if (slot < 0) {
+      $('#story-grid').scrollIntoView({ block: 'center' });
+      notify('Все 10 ячеек заняты. Освободите ячейку крестиком, чтобы добавить фото.');
+      return;
+    }
+    pendingPhotoSlot = slot;
+    $('#photo-input').click();
+  }
+
+  async function confirmPhoto() {
+    if (!uploadUrl || state.generating || savingCart) return;
+    const dialog = $('#confirm-photo');
+    if (dialog.open) return;
+    const preview = $('#confirm-photo-image');
+    dialog.returnValue = '';
+    preview.src = uploadUrl;
+    const closed = new Promise(resolve => dialog.addEventListener('close', resolve, { once: true }));
+    dialog.showModal();
+    await closed;
+    preview.removeAttribute('src');
+    if (dialog.returnValue === 'generate') await runGeneration();
+    else aiStatus('Фото сохранено. Создать иллюстрацию можно позже.');
+  }
+
+  async function addPhoto(file, slot) {
+    if (!file || readingPhoto || restoring || state.generating || savingCart) return;
+    if (slot < 0) { choosePhoto(slot); return; }
+    if (slots[slot]) return;
+    readingPhoto = true;
+    $('.builder').inert = true;
+    let loaded;
+    try { loaded = await loadUpload(file, slot); }
+    finally {
+      readingPhoto = false;
+      $('.builder').inert = false;
+      $('#photo-input').value = '';
+    }
+    if (loaded) await confirmPhoto();
   }
 
   function updatePurchase() {
@@ -867,7 +914,7 @@
   document.addEventListener('teplo:notice', event => notify(event.detail));
   document.addEventListener('teplo:edit-cart', async event => {
     const { item, copy } = event.detail;
-    if (restoring || state.generating || savingCart) { notify('Дождитесь окончания обработки.'); return; }
+    if (readingPhoto || restoring || state.generating || savingCart) { notify('Дождитесь окончания обработки.'); return; }
     if (item.product === 'garland') {
       state.editingCartId = copy ? null : item.id;
       $('#item-quantity').value = copy ? 1 : item.qty;
@@ -883,7 +930,7 @@
     restoring = true; $('.builder').inert = true;
     clearEditor();
     try {
-      if (!await loadUpload(item.sourceFile, { confirmGeneration: false })) return;
+      if (!await loadUpload(item.sourceFile)) return;
       storyId = item.storyId || storyId; photoHash = item.photoHash || null;
       if (item.generatedFile instanceof Blob && item.sealedArtwork?.objectId && !item.testArtwork) { await applyIllustration(item.generatedFile, item.previewMarked || item.sealedArtwork?.previewMark); state.sealedArtwork = item.sealedArtwork; }
       else state.legacy = true;
@@ -915,10 +962,16 @@
   $('#add-to-cart').addEventListener('click', addToCart);
 
   $$('[data-gift-view]').forEach(button => button.addEventListener('click', () => {
+    const fromGrid = phoneLayout.matches && previewStage.classList.contains('workshop-grid');
     const view = button.dataset.giftView;
     if (view === 'sticker') setProduct('paper');
     else setProduct(view);
+    if (fromGrid) {
+      previewStage.scrollIntoView({ block: 'nearest' });
+      showGridButton.focus({ preventScroll: true });
+    }
   }));
+  showGridButton.addEventListener('click', () => showGiftGrid(true));
   $$('.product-option').forEach((button) => button.addEventListener('click', () => setProduct(button.dataset.product, button.dataset.material)));
   $$('[data-choose-product]').forEach((link) => link.addEventListener('click', () => {
     setProduct(link.dataset.chooseProduct, link.dataset.chooseMaterial);
@@ -958,13 +1011,14 @@
     updateTshirtControls();
     updateProductSpec();
   }));
-  $('#photo-input').addEventListener('change', (event) => loadUpload(event.target.files[0]));
-  $('#ai-retry').addEventListener('click', runGeneration);
-  $('#preview-upload').addEventListener('click', () => $('#photo-input').click());
+  $('#photo-input').addEventListener('change', event => addPhoto(event.target.files[0], pendingPhotoSlot));
+  $('#ai-retry').addEventListener('click', () => state.job ? runGeneration() : confirmPhoto());
+  $('#preview-upload').addEventListener('click', () => choosePhoto());
   const zone = $('#drop-zone');
+  zone.addEventListener('click', () => choosePhoto());
   ['dragenter', 'dragover'].forEach((type) => zone.addEventListener(type, (event) => { event.preventDefault(); zone.classList.add('drag-over'); }));
   ['dragleave', 'drop'].forEach((type) => zone.addEventListener(type, (event) => { event.preventDefault(); zone.classList.remove('drag-over'); }));
-  zone.addEventListener('drop', (event) => loadUpload(event.dataTransfer.files[0]));
+  zone.addEventListener('drop', event => addPhoto(event.dataTransfer.files[0], slots.findIndex(record => !record)));
   document.addEventListener('dragover', (event) => { if (event.dataTransfer.types.includes('Files')) event.preventDefault(); });
   document.addEventListener('drop', (event) => { if (event.dataTransfer.types.includes('Files')) event.preventDefault(); });
   $('#reset-button').addEventListener('click', () => {
@@ -978,15 +1032,7 @@
     clearEditor(); renderSlots();
     notify('Начнём новую историю. Загрузите свою фотографию.');
   });
-  document.addEventListener('teplo:next-story', () => {
-    if (restoring || state.generating || savingCart) return;
-    const empty = slots.findIndex(record => !record);
-    if (empty >= 0) selectSlot(empty, true);
-    else { slotButtons[0].focus(); notify('Все 10 ячеек заняты. Выберите рисунок или освободите ячейку крестиком.'); }
-  });
-  $('#view-selection').addEventListener('click', openSelection);
-  $('#close-dialog').addEventListener('click', () => $('#selection-dialog').close());
-  $('#dialog-back').addEventListener('click', () => $('#selection-dialog').close());
+  document.addEventListener('teplo:next-story', () => choosePhoto());
   $('#privacy-button').addEventListener('click', () => $('#privacy-dialog').showModal());
   $('#close-privacy').addEventListener('click', () => $('#privacy-dialog').close());
   const legalDialog = $('#legal-dialog');
@@ -1044,13 +1090,7 @@
       persistDraft();
       return slots;
     },
-    upload() {
-      const empty = slots.findIndex(record => !record);
-      if (empty < 0) {
-        $('#story-grid').scrollIntoView({ block: 'center' });
-        notify('Все ячейки заняты. Выберите фото в конструкторе или освободите ячейку крестиком.');
-      } else selectSlot(empty, true);
-    },
+    upload: () => choosePhoto(),
     busy: () => restoring || state.generating || savingCart,
     onChange() { if (state.product === 'garland') setProduct('garland'); }
   });

@@ -41,7 +41,7 @@
 .story-delete:focus-visible{outline:2px solid #8b5e43;outline-offset:1px;border-radius:5px}
 .story-delete[hidden]{display:none}
 .story-delete:disabled{opacity:.65;cursor:wait}
-@media(max-width:680px){.story-delete{width:32px;height:32px}.story-delete::before{width:19px;height:19px;font-size:15px}}
+@media(max-width:680px){.story-delete{width:min(32px,46%);height:32px}.story-delete::before{width:19px;height:19px;font-size:15px}}
 @media(min-width:960px){.bundle-offers{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:681px) and (max-width:959px){.bundle-offers{grid-template-columns:1fr}}
 @media(max-width:1100px){.story-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.story-slot{aspect-ratio:5/4}}
@@ -52,15 +52,12 @@
 .year-rules input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:#79492e}
 
 @media(max-width:680px){
-  .builder-controls #drop-zone{display:none}
-  .builder-controls:has(#preview-stage:not(.is-empty)) #drop-zone{display:inline-flex;position:relative;min-height:44px;height:auto;width:auto;padding:8px 12px;gap:6px;border-style:solid}
-  .builder-controls #drop-zone small,.builder-controls #drop-zone svg{display:none}
   .builder-controls .preview-top{margin-bottom:10px}
   .builder-controls #preview-stage{background-color:#f3e2ca}
 }
 
 /* One photographic stone surface, independent of the editable product/print. */
-#preview-stage, .builder-controls #preview-stage, #choice-canvas, #summary-image, #garland-preview-canvas {
+#preview-stage, .builder-controls #preview-stage, #choice-canvas, #garland-preview-canvas {
   background: #f3e2ca url('assets/preview-travertine.webp') center / cover no-repeat;
   border-radius: 6px;
 }
