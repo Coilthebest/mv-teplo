@@ -9,7 +9,7 @@
   const next = document.querySelector('#memory-next');
   if (!stage || !track || !template || !toggle || !previous || !next) return;
 
-  const stories = window.TEPLO_MEMORIES.filter((memory) => memory.key !== 'matchday-minimal');
+  const stories = window.TEPLO_MEMORIES;
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   const smallScreen = matchMedia('(max-width:900px)');
   const phone = matchMedia('(max-width:680px)');

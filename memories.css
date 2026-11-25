@@ -142,7 +142,6 @@
   .memory-theatre [data-memory="sochi-cafe"] { --paper-left: #f8dec1; --paper-right: #f8dfc2; }
   .memory-theatre [data-memory="sochi-sunset"] { --paper-left: #f3e2cc; --paper-right: #f3e2ce; }
   .memory-theatre [data-memory="mountains"] { --paper-left: #f5e2c9; --paper-right: #f4e1c7; }
-  .memory-theatre [data-memory="matchday"] { --paper-left: #f1dfcd; --paper-right: #f4e3d1; }
   .memory-theatre [data-memory="poliana"] { --paper-left: #f4dfcb; --paper-right: #f4e0cd; }
   .memory-theatre [data-memory="fishing"] { --paper-left: #f3e2cf; --paper-right: #f4e2d0; }
   .memory-theatre .memory-photo { object-position: var(--memory-photo-position, 50% 50%); }
