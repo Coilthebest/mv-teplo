@@ -8,11 +8,13 @@
     const response=await fetch(endpoint+route,{method:data?'POST':'GET',cache:'no-store',headers:data?{'Content-Type':'application/json'}:undefined,
       body:data?JSON.stringify(data):undefined,signal:AbortSignal.timeout(18000)});
     const result=await response.json();
-    if(!response.ok)throw Error(typeof result.error==='string'?result.error:'Сервис временно недоступен.');
+    if(!response.ok)throw Object.assign(Error(typeof result.error==='string'?result.error:'Сервис временно недоступен.'),{status:response.status});
     return result;
   }
   async function proof() {
-    const {ticket}=await request('generation-check');
+    let check;
+    try {check=await request('generation-check');} catch(e){if(e.status===404)return {};throw e;}
+    const {ticket}=check;
     const enc=new TextEncoder();
     for(let counter=0;counter<1000000;counter+=32) {
       const results=await Promise.all(Array.from({length:32},(_,i)=>crypto.subtle.digest('SHA-256',enc.encode(ticket+':'+(counter+i)))));
