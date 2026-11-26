@@ -165,6 +165,14 @@
   window.TeploCart = Object.freeze({ ready, add, open, spec, printSpec });
   const input = $('#cart-promo'), feedback = $('#promo-status');
   let timer, revision = 0;
+  const promoFromLink = () => new URLSearchParams(location.search).get('promo') === 'ts' ? 'Царицыно' : '';
+  function clearPromoLink() {
+    if (!promoFromLink()) return false;
+    const url = new URL(location.href);
+    url.searchParams.delete('promo');
+    history.replaceState(history.state, '', url.href);
+    return true;
+  }
   function rememberPromo(value) {
     try {
       if (value) sessionStorage.setItem('teplo-promo', value.code);
@@ -176,6 +184,7 @@
     clearTimeout(timer);
     promo = null;
     rememberPromo(null);
+    clearPromoLink();
     input.value = '';
     feedback.textContent = '';
     $('#promo-chip').hidden = true;
@@ -202,6 +211,7 @@
         $('#promo-chip').hidden = false;
         feedback.textContent = keepPrevious ? 'Сохранён более выгодный промокод.' : 'Промокод принят. Применяется самая выгодная скидка.';
         render();
+        if (clearPromoLink()) notice(`Промокод «${promo.code}» применён.`);
       } catch {
         if (version === revision) feedback.textContent = 'Не удалось проверить промокод. Нажмите Enter для повторной проверки.';
       }
@@ -212,11 +222,17 @@
       feedback.textContent = '';
       if (value) timer = setTimeout(() => check(value, version), immediate ? 0 : 450);
     }
-    input.addEventListener('input', () => schedule(false));
+    input.addEventListener('input', () => {
+      clearPromoLink();
+      schedule(false);
+    });
     input.addEventListener('keydown', event => {
       if (event.key === 'Enter') { event.preventDefault(); schedule(true); }
     });
-    try { input.value = sessionStorage.getItem('teplo-promo') || ''; } catch {}
+    input.value = promoFromLink();
+    if (!input.value) {
+      try { input.value = sessionStorage.getItem('teplo-promo') || ''; } catch {}
+    }
     schedule(true);
   }
   window.startPayment(() => ({ ...calculation(), pack, promoCode: promo?.code, promoDraft: !!input.value.trim() }), enablePromo);
